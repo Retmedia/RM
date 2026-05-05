@@ -473,9 +473,9 @@ async function renderChannelView(key) {
   main.appendChild(h('div', { class: 'view-header' },
     h('div', {},
       h('h1', {}, ch.title || ch.key),
-      h('p', { class: 'subtitle' },
-        h('a', { href: ch.url, target: '_blank', rel: 'noopener' }, ch.url || ''),
-      ),
+      ch.url
+        ? h('p', { class: 'subtitle' }, h('a', { href: ch.url, target: '_blank', rel: 'noopener' }, ch.url))
+        : null,
       subtitleParts.length
         ? h('p', { class: 'subtitle dim', style: { marginTop: '0.25rem' } }, subtitleParts.join('  •  '))
         : null,
@@ -927,6 +927,11 @@ async function onStartJob(e) {
     channelUrl: fd.get('channelUrl'),
     language: fd.get('language') || 'en',
   };
+  // Guard: refuse to spawn a second pull for a URL that's already running.
+  const dupActive = state.jobs.find((j) => j.channelUrl === body.channelUrl && isJobActive(j));
+  if (dupActive) {
+    return toast('A pull for that URL is already running.', { type: 'info' });
+  }
   const customerName = (fd.get('customerName') || '').toString().trim();
   try {
     const { jobId } = await api('/api/jobs', { method: 'POST', body });
@@ -984,6 +989,10 @@ async function resumeJob(j) {
 
 async function startResumeFromUrl(url) {
   if (!url) return toastError(new Error('No source URL on this channel'));
+  const dupActive = state.jobs.find((j) => j.channelUrl === url && isJobActive(j));
+  if (dupActive) {
+    return toast('A pull for this channel is already running — see Jobs.', { type: 'info' });
+  }
   try {
     await api('/api/jobs', { method: 'POST', body: { channelUrl: url } });
     toast('Re-archive started — already-pulled videos will be skipped', { type: 'success' });
