@@ -1,18 +1,44 @@
+const path = require('node:path');
 const fs = require('node:fs/promises');
+const { EventEmitter } = require('node:events');
 const { listChannelVideos, getChannelMetadata } = require('./youtube');
 const { pullTranscript } = require('./transcripts');
 const storage = require('./storage');
-const { sleep } = require('./utils');
+const { sleep, writeJSONAtomic, readJSONIfExists } = require('./utils');
+
+const ACTIVE_STATUSES = new Set([
+  'starting', 'fetching-channel', 'listing-videos', 'archiving', 'cancelling',
+]);
 
 const jobs = new Map();
+const events = new EventEmitter();
+events.setMaxListeners(0);
 
-function newJobId() {
-  return `job_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
+const JOBS_DIR = path.join(storage.VAULT_ROOT, '_jobs');
+
+function jobsDir() { return JOBS_DIR; }
+function jobFile(id) { return path.join(JOBS_DIR, `${id}.json`); }
 
 function publicView(state) {
   const { controller, ...rest } = state;
   return rest;
+}
+
+function emit() {
+  events.emit('jobs', listJobs());
+}
+
+async function persist(state) {
+  try {
+    await fs.mkdir(JOBS_DIR, { recursive: true });
+    await writeJSONAtomic(jobFile(state.id), publicView(state));
+  } catch (err) {
+    console.error('Failed to persist job state:', err.message);
+  }
+}
+
+function newJobId() {
+  return `job_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function getJob(id) {
@@ -21,17 +47,27 @@ function getJob(id) {
 }
 
 function listJobs() {
-  return [...jobs.values()].map(publicView);
+  return [...jobs.values()]
+    .map(publicView)
+    .sort((a, b) => String(b.started_at || '').localeCompare(String(a.started_at || '')));
 }
 
 function cancelJob(id) {
   const state = jobs.get(id);
   if (!state) return false;
-  state.controller.abort = true;
-  if (state.status === 'archiving' || state.status === 'starting') {
+  if (state.controller) state.controller.abort = true;
+  if (ACTIVE_STATUSES.has(state.status) && state.status !== 'cancelling') {
     state.status = 'cancelling';
+    persist(state);
+    emit();
   }
   return true;
+}
+
+function setStatus(state, status) {
+  state.status = status;
+  persist(state);
+  emit();
 }
 
 async function startArchiveJob({ channelUrl, includeShorts = false, language = 'en' }) {
@@ -45,21 +81,28 @@ async function startArchiveJob({ channelUrl, includeShorts = false, language = '
     progress: { total: 0, done: 0, skipped: 0, failed: 0, current: null },
     error: null,
     channelKey: null,
+    options: { includeShorts: !!includeShorts, language },
     controller: { abort: false },
   };
   jobs.set(id, state);
+  await persist(state);
+  emit();
 
-  run(state, { includeShorts, language }).catch((err) => {
+  run(state).catch((err) => {
     state.status = 'error';
     state.error = err.message;
     state.finished_at = new Date().toISOString();
+    persist(state);
+    emit();
   });
 
   return id;
 }
 
-async function run(state, { includeShorts, language }) {
-  state.status = 'fetching-channel';
+async function run(state) {
+  const { includeShorts, language } = state.options;
+
+  setStatus(state, 'fetching-channel');
   const meta = await getChannelMetadata(state.channelUrl);
 
   const channelKey = storage.makeChannelKey(meta);
@@ -74,9 +117,9 @@ async function run(state, { includeShorts, language }) {
     fetched_at: new Date().toISOString(),
   });
 
-  if (state.controller.abort) { state.status = 'cancelled'; state.finished_at = new Date().toISOString(); return; }
+  if (state.controller.abort) return finalize(state, 'cancelled');
 
-  state.status = 'listing-videos';
+  setStatus(state, 'listing-videos');
   const all = await listChannelVideos(state.channelUrl);
   const filtered = all.filter((v) => {
     if (!v.id) return false;
@@ -86,7 +129,7 @@ async function run(state, { includeShorts, language }) {
   });
 
   state.progress.total = filtered.length;
-  state.status = 'archiving';
+  setStatus(state, 'archiving');
 
   const tDir = storage.transcriptDir(channelKey);
   await fs.mkdir(tDir, { recursive: true });
@@ -99,6 +142,7 @@ async function run(state, { includeShorts, language }) {
     if (existing && existing.transcript_status === 'ok') {
       state.progress.skipped++;
       state.progress.done++;
+      emit();
       continue;
     }
 
@@ -122,13 +166,61 @@ async function run(state, { includeShorts, language }) {
 
     if (!result.ok) state.progress.failed++;
     state.progress.done++;
+    emit();
+    persist(state);
 
     await sleep(750);
   }
 
   state.progress.current = null;
-  state.status = state.controller.abort ? 'cancelled' : 'done';
-  state.finished_at = new Date().toISOString();
+  finalize(state, state.controller.abort ? 'cancelled' : 'done');
 }
 
-module.exports = { startArchiveJob, getJob, listJobs, cancelJob };
+function finalize(state, status) {
+  state.status = status;
+  state.finished_at = new Date().toISOString();
+  persist(state);
+  emit();
+}
+
+async function loadPersistedJobs() {
+  try {
+    await fs.mkdir(JOBS_DIR, { recursive: true });
+    const entries = await fs.readdir(JOBS_DIR);
+    for (const f of entries) {
+      if (!f.endsWith('.json')) continue;
+      const data = await readJSONIfExists(path.join(JOBS_DIR, f));
+      if (!data || !data.id) continue;
+      // Anything that was active when the process died is now interrupted.
+      if (ACTIVE_STATUSES.has(data.status)) {
+        data.status = 'interrupted';
+        data.finished_at = data.finished_at || new Date().toISOString();
+      }
+      jobs.set(data.id, { ...data, controller: { abort: false } });
+    }
+    // Persist the corrected statuses back to disk.
+    for (const s of jobs.values()) {
+      if (s.status === 'interrupted' && !s.finished_at_persisted) {
+        await persist(s);
+        s.finished_at_persisted = true;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load persisted jobs:', err.message);
+  }
+}
+
+function subscribe(handler) {
+  events.on('jobs', handler);
+  return () => events.off('jobs', handler);
+}
+
+module.exports = {
+  startArchiveJob,
+  getJob,
+  listJobs,
+  cancelJob,
+  loadPersistedJobs,
+  subscribe,
+  jobsDir,
+};
