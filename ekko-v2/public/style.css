@@ -500,8 +500,62 @@ progress::-moz-progress-bar { background: var(--violet); }
 .checkbox-group { display: flex; flex-direction: column; gap: 0.5rem; }
 .helper { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
 
+.stats-card {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem;
+}
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 2px solid var(--violet-line);
+  background: var(--bg-2);
+  border-radius: var(--radius-sm);
+}
+.stat-value {
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.stat-sub {
+  font-size: 0.72rem;
+  color: var(--violet-2);
+}
+
+.notes-card {
+  border-left: 3px solid var(--violet);
+}
+.notes-card > div:first-child {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.3rem;
+  color: var(--muted);
+}
+.notes-card > div:last-child {
+  white-space: pre-wrap;
+  font-size: 0.92rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 5rem;
+  font-family: inherit;
+}
+
 @media (max-width: 720px) {
   body { grid-template-columns: 1fr; grid-template-areas: "main" "bar"; }
   aside { display: none; }
   main { padding: 1rem; }
+  .stats-card { grid-template-columns: repeat(2, 1fr); }
 }

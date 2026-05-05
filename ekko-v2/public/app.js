@@ -7,11 +7,18 @@ const state = {
   view: 'home',
   channels: [],
   jobs: [],
+  stats: null,
   currentChannel: null,
   currentVideos: [],
   health: null,
   transcriptCursor: null,
-  filters: { search: '', status: 'all', kind: 'all', sort: 'date_desc' },
+  filters: { search: '', status: 'all', sort: 'date_desc' },
+  // Track which job ids we've already toasted as "finished" so the SSE handler
+  // doesn't fire a fresh toast on every reconnect / refresh.
+  toastedFinishedJobIds: new Set(),
+  // Customer-name-on-create saves keyed by jobId. The Home form captures the
+  // name before the channel exists; we apply it once the job emits a channelKey.
+  pendingCustomerNameByJobId: new Map(),
 };
 
 // ---- API ----
@@ -110,11 +117,25 @@ function toastError(err) {
 }
 
 // ---- Modal ----
+// Single global Esc handler shared across modal generations. When a modal opens
+// on top of another (e.g. email preview from the export dialog), the previous
+// modal's listener would otherwise leak onto document forever.
+let activeModalCloser = null;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && activeModalCloser) {
+    e.preventDefault();
+    activeModalCloser();
+  }
+});
+
 function openModal({ title, body, footer, size }) {
   const root = $('#modal-root');
-  const close = () => { root.innerHTML = ''; document.removeEventListener('keydown', onKey); };
-  const onKey = (e) => { if (e.key === 'Escape') close(); };
-  document.addEventListener('keydown', onKey);
+  const close = () => {
+    root.innerHTML = '';
+    if (activeModalCloser === close) activeModalCloser = null;
+  };
+  activeModalCloser = close;
+
   const modal = h('div', { class: `modal ${size === 'small' ? 'small' : ''}` },
     h('header', {},
       h('h3', {}, title),
@@ -137,7 +158,10 @@ function connectStream() {
     evtSource = new EventSource('/api/jobs/stream');
     evtSource.addEventListener('jobs', (e) => {
       try {
-        state.jobs = JSON.parse(e.data);
+        const next = JSON.parse(e.data);
+        detectJobCompletions(state.jobs, next);
+        applyPendingCustomerNames(next);
+        state.jobs = next;
         renderStatusBar();
         renderNavCounts();
         if (state.view === 'jobs') renderJobsView();
@@ -149,6 +173,45 @@ function connectStream() {
     });
   } catch (err) {
     console.error('SSE unsupported:', err);
+  }
+}
+
+// Compare prev/next snapshots; when a job flips into a terminal state, fire a
+// toast summary the user can click to jump to the channel.
+function detectJobCompletions(prev, next) {
+  const prevById = new Map(prev.map((j) => [j.id, j]));
+  for (const j of next) {
+    const before = prevById.get(j.id);
+    const wasActive = before ? isJobActive(before) : false;
+    const nowFinal = ['done', 'cancelled', 'error', 'interrupted'].includes(j.status);
+    if (wasActive && nowFinal && !state.toastedFinishedJobIds.has(j.id)) {
+      state.toastedFinishedJobIds.add(j.id);
+      // Refresh channels + stats so the home stats card and sidebar reflect new totals.
+      refreshChannels();
+      refreshStats();
+      toastJobFinished(j);
+    }
+  }
+}
+
+function toastJobFinished(j) {
+  const p = j.progress || {};
+  const ok = (p.done || 0) - (p.skipped || 0) - (p.failed || 0);
+  if (j.status === 'done') {
+    const summary = `${ok} archived, ${p.skipped || 0} skipped, ${p.failed || 0} failed`;
+    toast(`✓ Pull complete — ${summary}`, {
+      type: 'success',
+      timeout: 9000,
+      actions: j.channelKey
+        ? [{ label: 'View channel', run: () => navigate('channel', { key: j.channelKey }) }]
+        : [],
+    });
+  } else if (j.status === 'error') {
+    toastError(new Error(j.error || 'Job failed'));
+  } else if (j.status === 'cancelled') {
+    toast('Pull cancelled', { type: 'info' });
+  } else if (j.status === 'interrupted') {
+    toast('Pull was interrupted by a server restart', { type: 'info', timeout: 6000 });
   }
 }
 
@@ -169,9 +232,15 @@ function renderStatusBar() {
   if (active.length) {
     const total = active.reduce((s, j) => s + (j.progress?.total || 0), 0);
     const done = active.reduce((s, j) => s + (j.progress?.done || 0), 0);
-    text.textContent = active.length === 1
+    let label = active.length === 1
       ? `Archiving ${done}/${total || '?'}`
       : `${active.length} jobs running · ${done}/${total || '?'}`;
+    // Show the current video title from the single active job (if any).
+    if (active.length === 1) {
+      const t = active[0].progress?.currentTitle;
+      if (t) label += ` · ${truncate(t, 60)}`;
+    }
+    text.textContent = label;
     pill.onclick = () => navigate('jobs');
     pill.style.cursor = 'pointer';
   } else {
@@ -225,16 +294,24 @@ function renderHome() {
     ),
   ));
 
+  // Vault stats card — derived from rolled-up totals on each channel record.
+  const s = state.stats || { channels: 0, delivered: 0, total_videos: 0, total_words: 0 };
+  const statsCard = h('div', { class: 'card stats-card' },
+    statTile('Channels', String(s.channels), s.delivered ? `${s.delivered} delivered` : ''),
+    statTile('Videos archived', s.total_videos.toLocaleString('en-US')),
+    statTile('Total words', formatWordCountClient(s.total_words)),
+    statTile('Active jobs', String(activeJobs().length)),
+  );
+  main.appendChild(statsCard);
+
   // Archive form card
   const form = h('form', { id: 'job-form', onsubmit: onStartJob },
     h('label', {}, 'Channel URL',
       h('input', { type: 'url', name: 'channelUrl', placeholder: 'https://www.youtube.com/@channel', required: true, autofocus: true })),
+    h('label', {}, 'Customer name (optional — used in delivery email)',
+      h('input', { type: 'text', name: 'customerName', placeholder: 'e.g. Jamie' })),
     h('label', {}, 'Subtitle language',
       h('input', { type: 'text', name: 'language', value: 'en' })),
-    h('label', { class: 'row' },
-      h('input', { type: 'checkbox', name: 'includeShorts' }),
-      h('span', {}, 'Include Shorts (vertical clips and short videos)'),
-    ),
     h('div', {}, h('button', { type: 'submit', class: 'primary' }, 'Start archive')),
   );
   const archiveCard = h('div', { class: 'card' }, h('h2', {}, 'Archive a channel'), form);
@@ -282,6 +359,28 @@ function renderHome() {
   }
 }
 
+function statTile(label, value, sub) {
+  return h('div', { class: 'stat-tile' },
+    h('div', { class: 'stat-value' }, value),
+    h('div', { class: 'stat-label' }, label),
+    sub ? h('div', { class: 'stat-sub' }, sub) : null,
+  );
+}
+
+// Mirror server-side formatWordCount so the home stats tile matches what the
+// export pipeline would produce. Kept in sync manually with server/format.js.
+function formatWordCountClient(n) {
+  const v = Math.max(0, Math.round(Number(n) || 0));
+  if (v < 10000) return v.toLocaleString('en-US');
+  if (v < 1000000) {
+    const k = Math.round(v / 1000) * 1000;
+    return k.toLocaleString('en-US');
+  }
+  const m = v / 1000000;
+  const rounded = Math.round(m * 10) / 10;
+  return `${m >= 10 ? Math.round(m) : rounded.toFixed(1)} million`;
+}
+
 function jobStatusClass(s) {
   if (s === 'done') return 'ok';
   if (s === 'error') return 'err';
@@ -309,7 +408,7 @@ function renderJobsView() {
   } else {
     const tbl = h('table', {}, h('thead', {}, h('tr', {},
       h('th', {}, 'Status'), h('th', {}, 'Channel'), h('th', {}, 'Progress'),
-      h('th', {}, 'Failed'), h('th', {}, 'Started'), h('th', {}, ''),
+      h('th', {}, 'Now pulling'), h('th', {}, 'Failed'), h('th', {}, 'Started'), h('th', {}, ''),
     )));
     const tb = h('tbody', {});
     for (const j of state.jobs) {
@@ -320,10 +419,14 @@ function renderJobsView() {
       if (j.status === 'interrupted') {
         acts.appendChild(h('button', { class: 'primary', onclick: () => resumeJob(j) }, 'Resume'));
       }
+      if (j.channelKey && (j.status === 'done' || j.status === 'cancelled' || j.status === 'interrupted')) {
+        acts.appendChild(h('button', { onclick: () => navigate('channel', { key: j.channelKey }) }, 'Open'));
+      }
       tb.appendChild(h('tr', {},
         h('td', {}, h('span', { class: `tag ${jobStatusClass(j.status)}` }, j.status)),
         h('td', {}, j.channelUrl),
         h('td', {}, h('div', {}, `${p.done || 0}/${p.total || 0}`, h('progress', { value: pct, max: 100 }))),
+        h('td', { class: 'dim' }, isJobActive(j) && p.currentTitle ? truncate(p.currentTitle, 50) : ''),
         h('td', {}, String(p.failed || 0)),
         h('td', { class: 'dim' }, fmtDateTime(j.started_at)),
         h('td', {}, acts),
@@ -347,7 +450,14 @@ async function renderChannelView(key) {
   const main = $('#main');
   main.innerHTML = '';
 
-  const ch = state.channels.find((c) => c.key === key);
+  // Always re-fetch the canonical record so customer_name / delivered status
+  // reflect any edits made elsewhere.
+  let ch;
+  try {
+    ch = await api(`/api/channels/${encodeURIComponent(key)}`);
+  } catch (_) {
+    ch = state.channels.find((c) => c.key === key) || null;
+  }
   if (!ch) {
     main.appendChild(emptyState({ glyph: '◌', title: 'Channel not found', body: 'It may have been deleted from your vault.' }));
     return;
@@ -355,17 +465,37 @@ async function renderChannelView(key) {
   state.currentChannel = ch;
   renderChannelList();
 
+  const subtitleParts = [];
+  if (ch.customer_name) subtitleParts.push(`For: ${ch.customer_name}`);
+  if (ch.last_pull_finished_at) subtitleParts.push(`Last pulled ${fmtDateTime(ch.last_pull_finished_at)}`);
+  else if (ch.fetched_at) subtitleParts.push(`Registered ${fmtDateTime(ch.fetched_at)}`);
+  if (ch.delivered) subtitleParts.push('✓ Delivered');
+
   // Header
   main.appendChild(h('div', { class: 'view-header' },
     h('div', {},
       h('h1', {}, ch.title || ch.key),
-      h('p', { class: 'subtitle' }, ch.url || ch.uploader || ''),
+      h('p', { class: 'subtitle' },
+        h('a', { href: ch.url, target: '_blank', rel: 'noopener' }, ch.url || ''),
+      ),
+      subtitleParts.length
+        ? h('p', { class: 'subtitle dim', style: { marginTop: '0.25rem' } }, subtitleParts.join('  •  '))
+        : null,
     ),
     h('div', { class: 'actions' },
-      h('button', { onclick: () => openExportDialog(ch) }, '⬇ Export Vault'),
+      h('button', { class: 'primary', onclick: () => openExportDialog(ch) }, '⬇ Export Vault'),
       h('button', { onclick: () => startResumeFromUrl(ch.url) }, '↻ Pull new videos'),
+      h('button', { onclick: () => openChannelEditDialog(ch) }, '✎ Edit'),
+      h('button', { class: 'danger', onclick: () => confirmDeleteChannel(ch) }, '🗑 Delete'),
     ),
   ));
+
+  if (ch.notes) {
+    main.appendChild(h('div', { class: 'card notes-card' },
+      h('div', { class: 'dim' }, 'Notes'),
+      h('div', {}, ch.notes),
+    ));
+  }
 
   // Load videos
   const card = h('div', { class: 'card' });
@@ -390,7 +520,8 @@ async function renderChannelView(key) {
     return;
   }
 
-  // Toolbar
+  // Toolbar — search + transcript-status filter. Duration filter removed since
+  // Shorts are always excluded by default.
   const toolbar = h('div', { class: 'toolbar' },
     h('div', { class: 'search-wrap' },
       h('input', {
@@ -406,12 +537,6 @@ async function renderChannelView(key) {
       h('option', { value: 'ok' }, 'Pulled OK'),
       h('option', { value: 'unavailable' }, 'Unavailable'),
     ),
-    h('select', { id: 'filter-kind', value: state.filters.kind,
-      onchange: (e) => { state.filters.kind = e.target.value; renderVideoTable(); } },
-      h('option', { value: 'all' }, 'All durations'),
-      h('option', { value: 'long' }, 'Long-form (≥60s)'),
-      h('option', { value: 'short' }, 'Shorts (<60s)'),
-    ),
     h('span', { class: 'dim', id: 'video-count-tag' }),
   );
   card.appendChild(toolbar);
@@ -419,6 +544,100 @@ async function renderChannelView(key) {
   const tableWrap = h('div', { id: 'video-table-wrap' });
   card.appendChild(tableWrap);
   renderVideoTable();
+}
+
+// ---- Channel edit / delete ----
+function openChannelEditDialog(ch) {
+  const body = h('div', {},
+    h('label', {}, 'Display title',
+      h('input', { type: 'text', id: 'edit-title', value: ch.title || '' })),
+    h('label', { style: { marginTop: '0.6rem' } }, 'Customer name',
+      h('input', { type: 'text', id: 'edit-customer', value: ch.customer_name || '', placeholder: 'e.g. Jamie' })),
+    h('label', { style: { marginTop: '0.6rem' } }, 'Notes (visible only to you)',
+      h('textarea', { id: 'edit-notes', rows: 4, placeholder: 'Anything you want to remember about this channel.' }, ch.notes || '')),
+    h('label', { class: 'row', style: { marginTop: '0.7rem' } },
+      h('input', { type: 'checkbox', id: 'edit-delivered', checked: !!ch.delivered }),
+      h('span', {}, 'Mark as delivered'),
+    ),
+  );
+  const footer = h('div', {},
+    h('span', { class: 'dim' }, ''),
+    h('div', { class: 'nav-arrows' },
+      h('button', { class: 'ghost', onclick: () => $('#modal-root').innerHTML = '' }, 'Cancel'),
+      h('button', { class: 'primary', id: 'btn-save-channel', onclick: () => saveChannelEdits(ch) }, 'Save'),
+    ),
+  );
+  openModal({ title: `Edit: ${ch.title || ch.key}`, body, footer, size: 'small' });
+  // Set the textarea value programmatically — the h() helper passes children
+  // as text nodes which work for empty textareas but the explicit set is safer.
+  const ta = $('#edit-notes');
+  if (ta) ta.value = ch.notes || '';
+}
+
+async function saveChannelEdits(ch) {
+  const title = $('#edit-title').value;
+  const customer_name = $('#edit-customer').value;
+  const notes = $('#edit-notes').value;
+  const delivered = $('#edit-delivered').checked;
+  const btn = $('#btn-save-channel');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    await api(`/api/channels/${encodeURIComponent(ch.key)}`, {
+      method: 'PATCH',
+      body: { title, customer_name, notes, delivered },
+    });
+    toast('Channel updated', { type: 'success' });
+    $('#modal-root').innerHTML = '';
+    await refreshChannels();
+    await renderChannelView(ch.key);
+  } catch (err) {
+    toastError(err);
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+function confirmDeleteChannel(ch) {
+  const body = h('div', {},
+    h('p', {}, h('strong', {}, ch.title || ch.key), ' will be permanently removed from your vault.'),
+    h('p', { class: 'dim' }, 'This deletes the channel folder and every transcript inside it. You can re-pull from the same URL to bring it back, but any custom notes will be lost.'),
+    h('label', {}, 'Type the channel name to confirm:',
+      h('input', { type: 'text', id: 'confirm-name', placeholder: ch.title || ch.key, autofocus: true })),
+  );
+  const footer = h('div', {},
+    h('span', { class: 'dim' }, ''),
+    h('div', { class: 'nav-arrows' },
+      h('button', { class: 'ghost', onclick: () => $('#modal-root').innerHTML = '' }, 'Cancel'),
+      h('button', { class: 'danger', id: 'btn-delete-channel', onclick: () => doDeleteChannel(ch) }, 'Delete forever'),
+    ),
+  );
+  openModal({ title: `Delete channel`, body, footer, size: 'small' });
+}
+
+async function doDeleteChannel(ch) {
+  const typed = ($('#confirm-name')?.value || '').trim();
+  const expected = (ch.title || ch.key).trim();
+  if (typed !== expected) {
+    toastError(new Error('Channel name doesn\'t match — refusing to delete.'));
+    return;
+  }
+  const btn = $('#btn-delete-channel');
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    await api(`/api/channels/${encodeURIComponent(ch.key)}`, { method: 'DELETE' });
+    toast(`Deleted ${ch.title || ch.key}`, { type: 'success' });
+    $('#modal-root').innerHTML = '';
+    state.currentChannel = null;
+    await refreshChannels();
+    await refreshStats();
+    navigate('home');
+  } catch (err) {
+    toastError(err);
+    btn.disabled = false;
+    btn.textContent = 'Delete forever';
+  }
 }
 
 function applyFilters(videos) {
@@ -430,8 +649,6 @@ function applyFilters(videos) {
   }
   if (f.status === 'ok') v = v.filter((x) => x.transcript_status === 'ok');
   if (f.status === 'unavailable') v = v.filter((x) => x.transcript_status !== 'ok');
-  if (f.kind === 'short') v = v.filter((x) => (x.duration ?? 999) < 60);
-  if (f.kind === 'long') v = v.filter((x) => (x.duration ?? 0) >= 60);
   v.sort((a, b) => {
     switch (f.sort) {
       case 'date_asc': return String(a.upload_date || '').localeCompare(String(b.upload_date || ''));
@@ -560,8 +777,8 @@ function openExportDialog(ch) {
       h('label', { class: 'row' }, h('input', { type: 'checkbox', id: 'opt-individual', checked: true }), h('span', {}, 'Include individual transcript files')),
       h('label', { class: 'row' }, h('input', { type: 'checkbox', id: 'opt-srt' }), h('span', {}, 'Include SRT subtitle files')),
     ),
-    h('label', {}, 'Customer name (optional, used in delivery email)',
-      h('input', { type: 'text', id: 'opt-customer', placeholder: 'e.g. Jamie' })),
+    h('label', {}, 'Customer name (used in delivery email)',
+      h('input', { type: 'text', id: 'opt-customer', value: ch.customer_name || '', placeholder: 'e.g. Jamie' })),
     h('div', { style: { marginTop: '0.7rem' } },
       h('a', { href: '#', onclick: (e) => { e.preventDefault(); previewEmail(ch); } }, 'Preview delivery email →'),
     ),
@@ -578,9 +795,24 @@ function openExportDialog(ch) {
 async function buildZip(ch) {
   const includeIndividual = $('#opt-individual').checked;
   const includeSrt = $('#opt-srt').checked;
+  const customer = ($('#opt-customer')?.value || '').trim();
   const btn = $('#btn-build-zip');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Building…';
+
+  // Persist the customer name back onto the channel record so it sticks for
+  // future exports, the email preview, and the channel header.
+  if (customer && customer !== (ch.customer_name || '')) {
+    try {
+      await api(`/api/channels/${encodeURIComponent(ch.key)}`, {
+        method: 'PATCH', body: { customer_name: customer },
+      });
+      refreshChannels();
+    } catch (err) {
+      console.warn('Could not persist customer name:', err.message);
+    }
+  }
+
   try {
     const url = `/api/channels/${encodeURIComponent(ch.key)}/export`
       + `?individual=${includeIndividual ? 1 : 0}`
@@ -610,7 +842,9 @@ async function buildZip(ch) {
 async function previewEmail(ch) {
   const customer = $('#opt-customer')?.value || '';
   try {
-    const url = `/api/channels/${encodeURIComponent(ch.key)}/delivery-email?customerName=${encodeURIComponent(customer)}&downloadUrl=${encodeURIComponent('https://example.com/download')}`;
+    // Don't pass a downloadUrl — let the server keep the literal {DownloadURL}
+    // placeholder so the operator sees clearly where to paste the real link.
+    const url = `/api/channels/${encodeURIComponent(ch.key)}/delivery-email?customerName=${encodeURIComponent(customer)}`;
     const data = await api(url);
     const body = h('div', {},
       h('label', {}, 'Subject', h('input', { type: 'text', value: data.subject, readonly: true })),
@@ -693,18 +927,49 @@ async function onStartJob(e) {
   const fd = new FormData(e.target);
   const body = {
     channelUrl: fd.get('channelUrl'),
-    includeShorts: fd.get('includeShorts') === 'on',
     language: fd.get('language') || 'en',
   };
+  const customerName = (fd.get('customerName') || '').toString().trim();
   try {
-    await api('/api/jobs', { method: 'POST', body });
+    const { jobId } = await api('/api/jobs', { method: 'POST', body });
     toast('Archive started', { type: 'success' });
+
+    // If a customer name was provided, save it onto the channel record once the
+    // server has resolved the channelKey (the job emits it as soon as
+    // fetching-channel completes). Poll the job briefly for the key.
+    if (customerName) {
+      saveCustomerNameWhenReady(jobId, customerName);
+    }
+
     e.target.reset();
     e.target.querySelector('input[name=language]').value = 'en';
     await refreshChannels();
     navigate('jobs');
   } catch (err) {
     toastError(err);
+  }
+}
+
+// Customer name comes in via the Home form before the channel exists. Stash it
+// against the jobId; applyPendingCustomerNames() drains the map whenever the
+// SSE update reveals a channelKey.
+function saveCustomerNameWhenReady(jobId, customerName) {
+  state.pendingCustomerNameByJobId.set(jobId, customerName);
+  // Safety: drop after 5 minutes if for some reason no channelKey ever lands.
+  setTimeout(() => state.pendingCustomerNameByJobId.delete(jobId), 5 * 60_000);
+}
+
+function applyPendingCustomerNames(jobs) {
+  if (!state.pendingCustomerNameByJobId.size) return;
+  for (const j of jobs) {
+    if (!j.channelKey) continue;
+    const name = state.pendingCustomerNameByJobId.get(j.id);
+    if (!name) continue;
+    state.pendingCustomerNameByJobId.delete(j.id);
+    api(`/api/channels/${encodeURIComponent(j.channelKey)}`, {
+      method: 'PATCH', body: { customer_name: name },
+    }).then(() => refreshChannels())
+      .catch((err) => console.warn('Failed to save customer name:', err.message));
   }
 }
 
@@ -732,6 +997,13 @@ async function refreshChannels() {
   try {
     state.channels = await api('/api/channels');
     renderChannelList();
+  } catch (err) { console.error(err); }
+}
+
+async function refreshStats() {
+  try {
+    state.stats = await api('/api/stats');
+    if (state.view === 'home') renderHome();
   } catch (err) { console.error(err); }
 }
 
@@ -779,14 +1051,16 @@ function onGlobalKey(e) {
     return;
   }
 
-  // ←/→ in transcript modal
-  if (state.transcriptCursor && $('.modal') && !inField) {
+  // ←/→ only paginate when the transcript modal is the open one (detect by
+  // looking for the segments container that only the transcript modal renders).
+  if (state.transcriptCursor && $('.transcript-segments') && !inField) {
     if (e.key === 'ArrowLeft') { e.preventDefault(); showTranscript(state.transcriptCursor.index - 1); return; }
     if (e.key === 'ArrowRight') { e.preventDefault(); showTranscript(state.transcriptCursor.index + 1); return; }
   }
 
-  // g-prefixed chords
-  if (!inField) {
+  // g-prefixed chords. Block when a modal is open so users editing channel
+  // info don't accidentally teleport away.
+  if (!inField && !$('.modal')) {
     if (pendingChord === 'g') {
       pendingChord = null;
       if (e.key === 'h') { e.preventDefault(); navigate('home'); return; }
@@ -816,6 +1090,7 @@ async function init() {
     console.error(err);
   }
   await refreshChannels();
+  await refreshStats();
   connectStream();
   await handleRoute();
 }
