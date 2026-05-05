@@ -5,6 +5,7 @@ const { listChannelVideos, getChannelMetadata } = require('./youtube');
 const { pullTranscript } = require('./transcripts');
 const storage = require('./storage');
 const { sleep, writeJSONAtomic, readJSONIfExists } = require('./utils');
+const { wordCount } = require('./format');
 
 const ACTIVE_STATUSES = new Set([
   'starting', 'fetching-channel', 'listing-videos', 'archiving', 'cancelling',
@@ -90,7 +91,7 @@ async function startArchiveJob({ channelUrl, includeShorts = false, language = '
     status: 'starting',
     started_at: new Date().toISOString(),
     finished_at: null,
-    progress: { total: 0, done: 0, skipped: 0, failed: 0, current: null },
+    progress: { total: 0, done: 0, skipped: 0, failed: 0, current: null, currentTitle: null },
     error: null,
     channelKey: null,
     options: { includeShorts: !!includeShorts, language },
@@ -120,7 +121,8 @@ async function run(state) {
   const channelKey = storage.makeChannelKey(meta);
   state.channelKey = channelKey;
 
-  await storage.saveChannelMeta(channelKey, {
+  // Preserve user-set fields (customer_name, notes, delivered, etc.) on re-pull.
+  await storage.patchChannelMeta(channelKey, {
     id: meta.channel_id || meta.id,
     title: meta.channel || meta.uploader || meta.title,
     uploader: meta.uploader,
@@ -149,6 +151,7 @@ async function run(state) {
   for (const v of filtered) {
     if (state.controller.abort) break;
     state.progress.current = v.id;
+    state.progress.currentTitle = v.title || null;
 
     const existing = await storage.getVideo(channelKey, v.id);
     if (existing && existing.transcript_status === 'ok') {
@@ -159,6 +162,7 @@ async function run(state) {
     }
 
     const result = await pullTranscript(v.id, tDir, language);
+    const segText = result.ok ? result.segments.map((s) => s.text).join(' ') : '';
     const record = {
       id: v.id,
       title: v.title || existing?.title || null,
@@ -172,6 +176,7 @@ async function run(state) {
       transcript_reason: result.ok ? null : result.reason,
       transcript_segments: result.ok ? result.segments.length : 0,
       transcript_file: result.ok ? result.file : null,
+      word_count: result.ok ? wordCount(segText) : 0,
       archived_at: new Date().toISOString(),
     };
     await storage.saveVideo(channelKey, record);
@@ -185,6 +190,15 @@ async function run(state) {
   }
 
   state.progress.current = null;
+  state.progress.currentTitle = null;
+
+  // Roll up totals onto the channel record for fast Home-view stats.
+  try {
+    await storage.recomputeChannelTotals(channelKey);
+  } catch (err) {
+    console.error('Failed to recompute channel totals:', err.message);
+  }
+
   finalize(state, state.controller.abort ? 'cancelled' : 'done');
 }
 

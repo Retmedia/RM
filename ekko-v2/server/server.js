@@ -9,7 +9,7 @@ const {
 const { isSafeChannelUrl } = require('./utils');
 const { buildVaultZip } = require('./export');
 const { renderDeliveryEmail } = require('./email');
-const { wordCount, formatWordCount } = require('./format');
+const { formatWordCount } = require('./format');
 const { parseVTT } = require('./transcripts');
 
 const app = express();
@@ -22,6 +22,48 @@ app.get('/api/health', (_req, res) => {
 
 app.get('/api/channels', async (_req, res, next) => {
   try { res.json(await storage.listChannels()); } catch (e) { next(e); }
+});
+
+app.get('/api/stats', async (_req, res, next) => {
+  try { res.json(await storage.getVaultStats()); } catch (e) { next(e); }
+});
+
+app.get('/api/channels/:key', async (req, res, next) => {
+  try {
+    const c = await storage.getChannel(req.params.key);
+    if (!c) return res.status(404).json({ error: 'Channel not found' });
+    res.json(c);
+  } catch (e) { next(e); }
+});
+
+app.patch('/api/channels/:key', async (req, res, next) => {
+  try {
+    const existing = await storage.getChannel(req.params.key);
+    if (!existing) return res.status(404).json({ error: 'Channel not found' });
+
+    const body = req.body || {};
+    const patch = {};
+    // Whitelist: only mutable user-set fields. Never overwrite the channel id,
+    // url, etc. via PATCH — those are derived from yt-dlp metadata.
+    if (typeof body.title === 'string') patch.title = body.title.trim().slice(0, 200);
+    if (typeof body.customer_name === 'string') patch.customer_name = body.customer_name.trim().slice(0, 120);
+    if (typeof body.notes === 'string') patch.notes = body.notes.trim().slice(0, 4000);
+    if (typeof body.delivered === 'boolean') {
+      patch.delivered = body.delivered;
+      patch.delivered_at = body.delivered ? new Date().toISOString() : null;
+    }
+    const updated = await storage.patchChannelMeta(req.params.key, patch);
+    res.json({ key: req.params.key, ...updated });
+  } catch (e) { next(e); }
+});
+
+app.delete('/api/channels/:key', async (req, res, next) => {
+  try {
+    const existing = await storage.getChannel(req.params.key);
+    if (!existing) return res.status(404).json({ error: 'Channel not found' });
+    await storage.deleteChannel(req.params.key);
+    res.json({ ok: true });
+  } catch (e) { next(e); }
 });
 
 app.get('/api/channels/:key/videos', async (req, res, next) => {
@@ -68,21 +110,31 @@ app.get('/api/channels/:key/delivery-email', async (req, res, next) => {
     const channel = await storage.getChannel(req.params.key);
     if (!channel) return res.status(404).json({ error: 'Channel not found' });
 
-    // Cheap stats for the email — counts but doesn't read every transcript.
-    const videos = await storage.listVideos(req.params.key);
-    const ok = videos.filter((v) => v.transcript_status === 'ok');
-    let totalWords = 0;
-    for (const v of ok) {
-      const vtt = await storage.readTranscriptVtt(req.params.key, v.id);
-      if (vtt) totalWords += wordCount(parseVTT(vtt).map((s) => s.text).join(' '));
+    // Prefer the rolled-up totals on the channel record (cheap). Fall back to a
+    // per-video sum if the channel was archived before rollups existed.
+    let videoCount = Number(channel.total_videos);
+    let totalWords = Number(channel.total_words);
+    if (!Number.isFinite(videoCount) || !Number.isFinite(totalWords)) {
+      const videos = await storage.listVideos(req.params.key);
+      const ok = videos.filter((v) => v.transcript_status === 'ok');
+      videoCount = ok.length;
+      totalWords = ok.reduce((sum, v) => {
+        if (Number.isFinite(v.word_count)) return sum + v.word_count;
+        return sum;
+      }, 0);
     }
+
+    // Customer name precedence: explicit query param > stored channel record > "".
+    const explicit = typeof req.query.customerName === 'string' ? req.query.customerName.trim() : '';
+    const stored = typeof channel.customer_name === 'string' ? channel.customer_name.trim() : '';
+    const customerName = explicit || stored || '';
 
     const rendered = await renderDeliveryEmail({
       channelName: channel.title || channel.key,
-      customerName: typeof req.query.customerName === 'string' ? req.query.customerName : '',
+      customerName,
       downloadUrl: typeof req.query.downloadUrl === 'string' && req.query.downloadUrl
         ? req.query.downloadUrl : '{DownloadURL}',
-      videoCount: ok.length,
+      videoCount,
       wordCount: formatWordCount(totalWords),
     });
     res.json(rendered);
@@ -147,8 +199,14 @@ app.post('/api/reveal-vault', (_req, res) => {
     'xdg-open';
   try {
     const child = spawn(opener, [storage.VAULT_ROOT], { detached: true, stdio: 'ignore' });
+    // Attach an error listener BEFORE unref — otherwise a missing opener (e.g.
+    // xdg-open not installed) triggers an unhandled 'error' event that takes
+    // the whole server down.
+    child.on('error', (err) => {
+      console.warn(`reveal-vault: failed to spawn '${opener}':`, err.message);
+    });
     child.unref();
-    res.json({ ok: true });
+    res.json({ ok: true, opener });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
