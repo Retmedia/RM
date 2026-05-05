@@ -282,7 +282,6 @@ function setView(name) {
 }
 
 function renderHome() {
-  if (state.view !== 'home') return;
   setView('home');
   const main = $('#main');
   main.innerHTML = '';
@@ -392,7 +391,6 @@ function isJobActive(j) {
 }
 
 function renderJobsView() {
-  if (state.view !== 'jobs') return;
   setView('jobs');
   const main = $('#main');
   main.innerHTML = '';
