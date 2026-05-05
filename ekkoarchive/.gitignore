@@ -1,0 +1,7 @@
+node_modules/
+bin/yt-dlp
+bin/yt-dlp.exe
+bin/yt-dlp_macos
+.archive-vault/
+*.log
+.DS_Store

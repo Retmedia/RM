@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EkkoArchive</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>EkkoArchive</h1>
+    <p>Pull a YouTube channel's videos and transcripts into a local vault.</p>
+  </header>
+
+  <section>
+    <h2>Archive a channel</h2>
+    <form id="job-form">
+      <label>Channel URL
+        <input type="url" name="channelUrl" placeholder="https://www.youtube.com/@channel" required />
+      </label>
+      <label class="row"><input type="checkbox" name="includeShorts" /> Include shorts (&lt; 60s)</label>
+      <label>Subtitle language
+        <input type="text" name="language" value="en" />
+      </label>
+      <button type="submit">Start archive</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Active jobs</h2>
+    <ul id="jobs"><li class="muted">No jobs yet.</li></ul>
+  </section>
+
+  <section>
+    <h2>Vault</h2>
+    <ul id="channels"><li class="muted">No channels archived yet.</li></ul>
+    <div id="videos"></div>
+  </section>
+
+  <script src="/app.js"></script>
+</body>
+</html>
