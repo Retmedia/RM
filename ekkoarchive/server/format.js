@@ -53,7 +53,10 @@ function formatWordCount(n) {
     return k.toLocaleString('en-US');
   }
   const m = v / 1_000_000;
-  const fixed = m >= 10 ? m.toFixed(0) : m.toFixed(1);
+  // toFixed rounds inconsistently for floats like 2.15 (stored as 2.1499...);
+  // round to one decimal explicitly so the boundary cases match user intuition.
+  const rounded = Math.round(m * 10) / 10;
+  const fixed = m >= 10 ? Math.round(m).toString() : rounded.toFixed(1);
   return `${fixed} million`;
 }
 
