@@ -233,7 +233,7 @@ function renderHome() {
       h('input', { type: 'text', name: 'language', value: 'en' })),
     h('label', { class: 'row' },
       h('input', { type: 'checkbox', name: 'includeShorts' }),
-      h('span', {}, 'Include Shorts (under 60s)'),
+      h('span', {}, 'Include Shorts (vertical clips and short videos)'),
     ),
     h('div', {}, h('button', { type: 'submit', class: 'primary' }, 'Start archive')),
   );

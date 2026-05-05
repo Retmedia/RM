@@ -10,6 +10,18 @@ const ACTIVE_STATUSES = new Set([
   'starting', 'fetching-channel', 'listing-videos', 'archiving', 'cancelling',
 ]);
 
+// YouTube raised the Shorts cap to 180s in late 2024. Detect Shorts via:
+//   1) URL pattern (definitive when yt-dlp returns the /shorts/ form)
+//   2) Duration < 60s (always-true Shorts heuristic that doesn't false-positive
+//      on legitimate sub-3-minute long-form clips). 60–180s entries that don't
+//      have a /shorts/ URL are treated as long-form to avoid eating real videos.
+const SHORTS_DURATION_HEURISTIC_S = 60;
+function isShort(v) {
+  if (typeof v.url === 'string' && /\/shorts\//i.test(v.url)) return true;
+  if (typeof v.duration === 'number' && v.duration > 0 && v.duration < SHORTS_DURATION_HEURISTIC_S) return true;
+  return false;
+}
+
 const jobs = new Map();
 const events = new EventEmitter();
 events.setMaxListeners(0);
@@ -124,7 +136,7 @@ async function run(state) {
   const filtered = all.filter((v) => {
     if (!v.id) return false;
     if (v.is_live || v.live_status === 'is_live' || v.live_status === 'is_upcoming') return false;
-    if (!includeShorts && typeof v.duration === 'number' && v.duration > 0 && v.duration < 60) return false;
+    if (!includeShorts && isShort(v)) return false;
     return true;
   });
 
