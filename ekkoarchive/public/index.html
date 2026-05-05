@@ -3,39 +3,42 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EkkoArchive</title>
+  <title>Ekko</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header>
-    <h1>EkkoArchive</h1>
-    <p>Pull a YouTube channel's videos and transcripts into a local vault.</p>
-  </header>
+  <aside>
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Ekko</span>
+    </div>
 
-  <section>
-    <h2>Archive a channel</h2>
-    <form id="job-form">
-      <label>Channel URL
-        <input type="url" name="channelUrl" placeholder="https://www.youtube.com/@channel" required />
-      </label>
-      <label class="row"><input type="checkbox" name="includeShorts" /> Include shorts (&lt; 60s)</label>
-      <label>Subtitle language
-        <input type="text" name="language" value="en" />
-      </label>
-      <button type="submit">Start archive</button>
-    </form>
-  </section>
+    <div class="nav-item active" data-view="home">
+      <span>Home</span>
+    </div>
+    <div class="nav-item" data-view="jobs">
+      <span>Jobs</span>
+      <span class="count" id="nav-job-count">0</span>
+    </div>
+    <div class="nav-item" data-view="settings">
+      <span>Settings</span>
+    </div>
 
-  <section>
-    <h2>Active jobs</h2>
-    <ul id="jobs"><li class="muted">No jobs yet.</li></ul>
-  </section>
+    <div class="nav-group-label">Channels</div>
+    <div class="channel-list" id="channel-list">
+      <div class="empty">No channels yet</div>
+    </div>
+  </aside>
 
-  <section>
-    <h2>Vault</h2>
-    <ul id="channels"><li class="muted">No channels archived yet.</li></ul>
-    <div id="videos"></div>
-  </section>
+  <main id="main"></main>
+
+  <div id="status-bar">
+    <span class="pill idle" id="status-pill"><span class="dot"></span><span id="status-text">Idle</span></span>
+    <span class="vault-path" id="vault-path"></span>
+  </div>
+
+  <div id="toasts"></div>
+  <div id="modal-root"></div>
 
   <script src="/app.js"></script>
 </body>
