@@ -9,8 +9,8 @@ const {
 const { isSafeChannelUrl } = require('./utils');
 const { buildVaultZip } = require('./export');
 const { renderDeliveryEmail } = require('./email');
-const { formatWordCount } = require('./format');
-const { parseVTT } = require('./transcripts');
+const { formatWordCount, wordCount } = require('./format');
+const { parseVTT, pullTranscript } = require('./transcripts');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -68,6 +68,37 @@ app.delete('/api/channels/:key', async (req, res, next) => {
 
 app.get('/api/channels/:key/videos', async (req, res, next) => {
   try { res.json(await storage.listVideos(req.params.key)); } catch (e) { next(e); }
+});
+
+// Manually re-pull the transcript for one video — used by the "Retry" button
+// in the transcript modal when YouTube rate-limited the original pull. This
+// can take 1–2 minutes if the rate-limit retry ladder kicks in (10s/30s/90s).
+app.post('/api/channels/:key/videos/:videoId/retry', async (req, res, next) => {
+  try {
+    const channel = await storage.getChannel(req.params.key);
+    if (!channel) return res.status(404).json({ error: 'Channel not found' });
+    const existing = await storage.getVideo(req.params.key, req.params.videoId);
+    if (!existing) return res.status(404).json({ error: 'Video not found' });
+
+    const tDir = storage.transcriptDir(req.params.key);
+    await require('node:fs/promises').mkdir(tDir, { recursive: true });
+    const language = (req.body && typeof req.body.language === 'string' && req.body.language.trim()) || 'en';
+
+    const result = await pullTranscript(req.params.videoId, tDir, language);
+    const segText = result.ok ? result.segments.map((s) => s.text).join(' ') : '';
+    const updated = {
+      ...existing,
+      transcript_status: result.ok ? 'ok' : 'unavailable',
+      transcript_reason: result.ok ? null : result.reason,
+      transcript_segments: result.ok ? result.segments.length : (existing.transcript_segments || 0),
+      transcript_file: result.ok ? result.file : existing.transcript_file,
+      word_count: result.ok ? wordCount(segText) : (existing.word_count || 0),
+      archived_at: new Date().toISOString(),
+    };
+    await storage.saveVideo(req.params.key, updated);
+    await storage.recomputeChannelTotals(req.params.key);
+    res.json({ ...updated, rate_limited: !!result.rateLimited });
+  } catch (e) { next(e); }
 });
 
 app.get('/api/channels/:key/videos/:videoId/transcript', async (req, res, next) => {

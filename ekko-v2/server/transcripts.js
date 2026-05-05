@@ -19,10 +19,20 @@ const PERMANENT_REASONS = [
   /this\s+video\s+is\s+(unavailable|private)/i,
 ];
 
+// Transient network blip — short backoff is enough.
 const RETRY_DELAYS_MS = [500, 2000, 5000];
+
+// HTTP 429 / Too Many Requests. YouTube doesn't forgive these in seconds —
+// give it real time before retrying. Without this, a small channel can
+// rate-limit out and false-flag dozens of videos as "no captions".
+const RATE_LIMIT_DELAYS_MS = [10_000, 30_000, 90_000];
 
 function isPermanent(stderr) {
   return PERMANENT_REASONS.some((re) => re.test(stderr));
+}
+
+function isRateLimited(stderr) {
+  return /HTTP\s*Error\s*429|Too\s+Many\s+Requests|rate[- ]?limit/i.test(stderr);
 }
 
 async function runYtDlp(videoId, workDir, language) {
@@ -48,11 +58,14 @@ async function pullTranscript(videoId, workDir, language = 'en') {
   if (!isVideoId(videoId)) throw new Error('Invalid video id');
   await fs.mkdir(workDir, { recursive: true });
 
+  const MAX_ATTEMPTS = 4; // initial + 3 retries
   let lastErr = null;
-  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+  let rateLimited = false;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
       await runYtDlp(videoId, workDir, language);
       lastErr = null;
+      rateLimited = false;
       break;
     } catch (e) {
       const stderr = (e.stderr || e.message || '').toString();
@@ -60,11 +73,14 @@ async function pullTranscript(videoId, workDir, language = 'en') {
       if (isPermanent(stderr)) {
         return { ok: false, reason: lastErr, permanent: true };
       }
-      if (attempt < RETRY_DELAYS_MS.length) {
-        await sleep(RETRY_DELAYS_MS[attempt]);
-        continue;
+      const isRL = isRateLimited(stderr);
+      rateLimited = isRL;
+      const isLastAttempt = attempt >= MAX_ATTEMPTS - 1;
+      if (isLastAttempt) {
+        return { ok: false, reason: lastErr, rateLimited };
       }
-      return { ok: false, reason: lastErr };
+      const delays = isRL ? RATE_LIMIT_DELAYS_MS : RETRY_DELAYS_MS;
+      await sleep(delays[attempt] ?? delays[delays.length - 1]);
     }
   }
 
@@ -116,4 +132,4 @@ function collapseRepeats(s) {
   return s.replace(/\b(\w+)( \1\b)+/gi, '$1');
 }
 
-module.exports = { pullTranscript, parseVTT, isPermanent };
+module.exports = { pullTranscript, parseVTT, isPermanent, isRateLimited };

@@ -730,9 +730,21 @@ async function showTranscript(index) {
 
   let body;
   if (v.transcript_status !== 'ok') {
+    const reason = v.transcript_reason || 'YouTube did not return captions for this video.';
+    const looksLikeRateLimit = /429|too\s+many\s+requests|rate[- ]?limit/i.test(reason);
     body = h('div', { class: 'empty-state' },
       h('h3', {}, 'No transcript available'),
-      h('p', {}, v.transcript_reason || 'YouTube did not return captions for this video.'),
+      h('p', {}, reason),
+      looksLikeRateLimit
+        ? h('p', { class: 'dim', style: { fontSize: '0.8rem', marginTop: '0.4rem' } },
+            'This was a YouTube rate limit, not a missing caption. Retrying usually pulls it.')
+        : null,
+      h('button', {
+        class: 'primary',
+        id: `btn-retry-${v.id}`,
+        onclick: (e) => retryVideoPull(v, e.currentTarget),
+        style: { marginTop: '1rem' },
+      }, '↻ Retry pull for this video'),
     );
   } else {
     body = h('div', {}, h('div', { class: 'transcript-meta' }, h('span', {}, h('span', { class: 'spinner' }), ' Loading transcript…')));
@@ -765,6 +777,60 @@ async function showTranscript(index) {
     ),
   );
   openModal({ title: v.title || v.id, body, footer });
+}
+
+// ---- Retry a single video's transcript pull ----
+async function retryVideoPull(v, btn) {
+  const ch = state.currentChannel;
+  if (!ch) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Retrying — up to 2 min if rate-limited…';
+  }
+  try {
+    const updated = await api(
+      `/api/channels/${encodeURIComponent(ch.key)}/videos/${encodeURIComponent(v.id)}/retry`,
+      { method: 'POST', body: { language: 'en' } },
+    );
+
+    // Patch the in-memory caches so the UI reflects the new state immediately.
+    const idx = state.currentVideos.findIndex((x) => x.id === v.id);
+    if (idx >= 0) state.currentVideos[idx] = updated;
+    if (state.transcriptCursor) {
+      const lidx = state.transcriptCursor.list.findIndex((x) => x.id === v.id);
+      if (lidx >= 0) state.transcriptCursor.list[lidx] = updated;
+    }
+    refreshChannels();
+    refreshStats();
+    // Re-render the table behind the modal so the badge updates.
+    if (state.view === 'channel') renderVideoTable();
+
+    if (updated.transcript_status === 'ok') {
+      toast('✓ Transcript pulled', { type: 'success' });
+      // Re-open the modal at this index so the user sees the fresh transcript.
+      if (state.transcriptCursor) {
+        showTranscript(state.transcriptCursor.index);
+      }
+    } else if (updated.rate_limited) {
+      toast('Still rate-limited. Wait a couple minutes, then try again.', { type: 'error', timeout: 8000 });
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '↻ Retry pull for this video';
+      }
+    } else {
+      toast(`Still unavailable: ${truncate(updated.transcript_reason || '', 60)}`, { type: 'error' });
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '↻ Retry pull for this video';
+      }
+    }
+  } catch (err) {
+    toastError(err);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '↻ Retry pull for this video';
+    }
+  }
 }
 
 // ---- Export dialog ----
