@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "youtube-leads"
+version = "0.1.0"
+description = "Local tool to discover YouTube creators and prepare outreach lead lists"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+youtube-leads = "youtube_leads.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/youtube_leads"]
