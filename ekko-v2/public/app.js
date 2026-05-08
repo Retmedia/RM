@@ -844,33 +844,64 @@ async function showTranscript(index) {
 async function retryVideoPull(v, btn) {
   const ch = state.currentChannel;
   if (!ch) return;
+  // Capture identity at start so the result handler can check whether the
+  // user is still viewing this exact video when the retry completes.
+  const startedChannelKey = ch.key;
+  const videoId = v.id;
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Retrying — up to 2 min if rate-limited…';
+    btn.innerHTML = '<span class="spinner"></span> Retrying — up to 2 min. Safe to close this and keep working.';
   }
   try {
     const updated = await api(
-      `/api/channels/${encodeURIComponent(ch.key)}/videos/${encodeURIComponent(v.id)}/retry`,
+      `/api/channels/${encodeURIComponent(startedChannelKey)}/videos/${encodeURIComponent(videoId)}/retry`,
       { method: 'POST', body: { language: 'en' } },
     );
 
-    // Patch the in-memory caches so the UI reflects the new state immediately.
-    const idx = state.currentVideos.findIndex((x) => x.id === v.id);
+    // Patch the in-memory caches whether or not the user is still here.
+    const idx = state.currentVideos.findIndex((x) => x.id === videoId);
     if (idx >= 0) state.currentVideos[idx] = updated;
     if (state.transcriptCursor) {
-      const lidx = state.transcriptCursor.list.findIndex((x) => x.id === v.id);
+      const lidx = state.transcriptCursor.list.findIndex((x) => x.id === videoId);
       if (lidx >= 0) state.transcriptCursor.list[lidx] = updated;
     }
     refreshChannels();
     refreshStats();
-    // Re-render the table behind the modal so the badge updates.
     if (state.view === 'channel') renderVideoTable();
 
+    // Only re-open the modal if the user is STILL looking at this same video.
+    // If they've closed the modal or paged to another video, just toast — no
+    // unexpected pop-ups.
+    const modalOpen = !!$('.modal');
+    const stillOnSameVideo = modalOpen && state.transcriptCursor &&
+      state.transcriptCursor.list[state.transcriptCursor.index]?.id === videoId;
+
     if (updated.transcript_status === 'ok') {
-      toast('✓ Transcript pulled', { type: 'success' });
-      // Re-open the modal at this index so the user sees the fresh transcript.
-      if (state.transcriptCursor) {
+      if (stillOnSameVideo) {
+        toast('✓ Transcript pulled', { type: 'success' });
         showTranscript(state.transcriptCursor.index);
+      } else {
+        // Background retry succeeded while user was elsewhere. Offer a one-
+        // click action to come back and view it.
+        toast(`✓ Pulled "${truncate(updated.title || videoId, 50)}"`, {
+          type: 'success',
+          timeout: 9000,
+          actions: [{
+            label: 'View',
+            run: () => {
+              // Navigate to the channel, then open the transcript modal for
+              // this specific video. handleRoute is async so wait briefly.
+              if (state.view !== 'channel' || state.currentChannel?.key !== startedChannelKey) {
+                navigate('channel', { key: startedChannelKey });
+              }
+              setTimeout(() => {
+                const list = state.currentVideos;
+                const target = list.find((x) => x.id === videoId);
+                if (target) openTranscriptViewer(target, list);
+              }, 400);
+            },
+          }],
+        });
       }
     } else if (updated.rate_limited) {
       toast('Still rate-limited. Wait a couple minutes, then try again.', { type: 'error', timeout: 8000 });
