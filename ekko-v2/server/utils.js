@@ -22,8 +22,13 @@ function slugify(input) {
     .slice(0, 80) || 'untitled';
 }
 
+// Atomic write via tmp + rename. Tmp filename includes pid + timestamp + a
+// per-call counter so concurrent calls within the same millisecond (e.g.
+// rapid jobs.persist + storage.patchChannelMeta from the same SSE tick)
+// can't collide on the temp file.
+let _atomicCounter = 0;
 async function writeJSONAtomic(filepath, data) {
-  const tmp = `${filepath}.${process.pid}.${Date.now()}.tmp`;
+  const tmp = `${filepath}.${process.pid}.${Date.now()}.${_atomicCounter++}.tmp`;
   await fs.mkdir(path.dirname(filepath), { recursive: true });
   await fs.writeFile(tmp, JSON.stringify(data, null, 2));
   await fs.rename(tmp, filepath);

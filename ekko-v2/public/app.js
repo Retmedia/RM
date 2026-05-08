@@ -165,7 +165,10 @@ function connectStream() {
         renderStatusBar();
         renderNavCounts();
         if (state.view === 'jobs') renderJobsView();
-        if (state.view === 'home') renderHome();
+        // Don't re-render Home from SSE — it would wipe whatever the user is
+        // typing into the form. The status bar already shows live progress;
+        // the stats card refreshes on completion via detectJobCompletions().
+        if (state.view === 'channel') maybeRefreshChannelVideos(next);
       } catch (err) { console.error(err); }
     });
     evtSource.addEventListener('error', () => {
@@ -221,6 +224,38 @@ function activeJobs() {
   );
 }
 
+// While viewing a channel, if a pull is updating that same channel, re-fetch
+// the video list and re-render JUST the table (toolbar + scroll position +
+// search input focus all preserved). Throttled so we re-fetch at most every
+// 2 seconds even if SSE ticks every 750ms.
+let channelRefreshInFlight = false;
+let channelRefreshScheduled = false;
+function maybeRefreshChannelVideos(jobs) {
+  if (!state.currentChannel) return;
+  const key = state.currentChannel.key;
+  const relevant = jobs.some((j) => j.channelKey === key && isJobActive(j));
+  if (!relevant) return;
+  if (channelRefreshInFlight) { channelRefreshScheduled = true; return; }
+  channelRefreshInFlight = true;
+  api(`/api/channels/${encodeURIComponent(key)}/videos`)
+    .then((videos) => {
+      // The user may have navigated away during the fetch; only patch state if
+      // they're still on the same channel.
+      if (state.currentChannel?.key === key) {
+        state.currentVideos = videos;
+        renderVideoTable();
+      }
+    })
+    .catch((err) => console.warn('Channel auto-refresh failed:', err.message))
+    .finally(() => {
+      channelRefreshInFlight = false;
+      if (channelRefreshScheduled) {
+        channelRefreshScheduled = false;
+        setTimeout(() => maybeRefreshChannelVideos(state.jobs), 2000);
+      }
+    });
+}
+
 function renderStatusBar() {
   const bar = $('#status-bar');
   const pill = $('#status-pill');
@@ -253,6 +288,14 @@ function renderStatusBar() {
 
 function renderNavCounts() {
   $('#nav-job-count').textContent = String(activeJobs().length);
+  // Keep the active-jobs tile on Home in sync without rebuilding the form.
+  if (state.view === 'home') {
+    const tiles = $$('.stats-card .stat-tile');
+    if (tiles.length === 4) {
+      const v = tiles[3].querySelector('.stat-value');
+      if (v) v.textContent = String(activeJobs().length);
+    }
+  }
 }
 
 // ---- Channel list (sidebar) ----
@@ -1185,8 +1228,28 @@ async function refreshChannels() {
 async function refreshStats() {
   try {
     state.stats = await api('/api/stats');
-    if (state.view === 'home') renderHome();
+    // Refresh the on-screen tiles in place rather than re-rendering Home —
+    // re-rendering would clobber whatever the user is typing in the form.
+    if (state.view === 'home') updateStatsTiles();
   } catch (err) { console.error(err); }
+}
+
+// Patch the four stat tiles in place. Falls back silently if Home isn't
+// currently rendered (the next renderHome() will paint the fresh numbers).
+function updateStatsTiles() {
+  const tiles = $$('.stats-card .stat-tile');
+  if (tiles.length !== 4) return;
+  const s = state.stats || { channels: 0, delivered: 0, total_videos: 0, total_words: 0 };
+  const set = (i, value, sub) => {
+    const v = tiles[i].querySelector('.stat-value');
+    if (v) v.textContent = value;
+    const sb = tiles[i].querySelector('.stat-sub');
+    if (sb) sb.textContent = sub || '';
+  };
+  set(0, String(s.channels), s.delivered ? `${s.delivered} delivered` : '');
+  set(1, s.total_videos.toLocaleString('en-US'), '');
+  set(2, formatWordCountClient(s.total_words), '');
+  set(3, String(activeJobs().length), '');
 }
 
 // ---- Router ----

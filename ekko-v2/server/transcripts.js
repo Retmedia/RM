@@ -35,7 +35,9 @@ function isRateLimited(stderr) {
   return /HTTP\s*Error\s*429|Too\s+Many\s+Requests|rate[- ]?limit/i.test(stderr);
 }
 
-async function runYtDlp(videoId, workDir, language) {
+// Run yt-dlp, optionally registering the spawned child on a controller so
+// cancelJob() can SIGTERM it and skip the (up-to-3-minute) timeout.
+function runYtDlp(videoId, workDir, language, controller) {
   const outTemplate = path.join(workDir, '%(id)s.%(ext)s');
   const args = [
     '--skip-download',
@@ -50,10 +52,22 @@ async function runYtDlp(videoId, workDir, language) {
     '-o', outTemplate,
     `https://www.youtube.com/watch?v=${videoId}`,
   ];
-  return execFileP(YT_DLP, args, {
-    encoding: 'utf8',
-    timeout: 3 * 60 * 1000,
-    maxBuffer: 16 * 1024 * 1024,
+  return new Promise((resolve, reject) => {
+    const child = execFile(YT_DLP, args, {
+      encoding: 'utf8',
+      timeout: 3 * 60 * 1000,
+      maxBuffer: 16 * 1024 * 1024,
+    }, (err, stdout, stderr) => {
+      if (controller && controller.currentChild === child) controller.currentChild = null;
+      if (err) {
+        err.stdout = stdout;
+        err.stderr = stderr;
+        reject(err);
+      } else {
+        resolve({ stdout, stderr });
+      }
+    });
+    if (controller) controller.currentChild = child;
   });
 }
 
@@ -86,7 +100,7 @@ async function probeAvailableLanguages(videoId) {
   }
 }
 
-async function pullTranscript(videoId, workDir, language = 'en') {
+async function pullTranscript(videoId, workDir, language = 'en', controller = null) {
   if (!isVideoId(videoId)) throw new Error('Invalid video id');
   await fs.mkdir(workDir, { recursive: true });
 
@@ -94,12 +108,20 @@ async function pullTranscript(videoId, workDir, language = 'en') {
   let lastErr = null;
   let rateLimited = false;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    if (controller && controller.abort) {
+      return { ok: false, reason: 'cancelled', cancelled: true };
+    }
     try {
-      await runYtDlp(videoId, workDir, language);
+      await runYtDlp(videoId, workDir, language, controller);
       lastErr = null;
       rateLimited = false;
       break;
     } catch (e) {
+      // SIGTERM from cancelJob shows up as a child-process error; treat it
+      // as a clean cancel rather than retrying or marking the video failed.
+      if (controller && controller.abort) {
+        return { ok: false, reason: 'cancelled', cancelled: true };
+      }
       const stderr = (e.stderr || e.message || '').toString();
       lastErr = stderr.slice(0, 500);
       if (isPermanent(stderr)) {

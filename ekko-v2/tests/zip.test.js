@@ -99,7 +99,7 @@ async function writeFixtureVault() {
   process.env.EKKOARCHIVE_VAULT = root;
   // Wipe require cache so storage picks up the new env var.
   for (const k of Object.keys(require.cache)) {
-    if (k.includes('/ekkoarchive/server/')) delete require.cache[k];
+    if (k.includes('/ekko-v2/server/')) delete require.cache[k];
   }
   const storage = require('../server/storage');
   const channelKey = 'jack-neel-abcd1234';
@@ -140,6 +140,7 @@ async function writeFixtureVault() {
       transcript_reason: v.body ? null : 'no transcript available',
       transcript_segments: v.body ? 1 : 0,
       transcript_file: file,
+      word_count: v.body ? v.body.split(/\s+/).filter(Boolean).length : 0,
       archived_at: '2024-03-01T00:00:00Z',
     });
   }
@@ -284,4 +285,82 @@ test('renderDeliveryEmail — uses provided customer name', async () => {
     wordCount: '8,000',
   });
   assert.match(out.body, /Hi Jamie,/);
+});
+
+// ===========================================================================
+// Storage CRUD coverage — these test the disk operations directly without
+// going through the HTTP layer, so they're fast and deterministic.
+// ===========================================================================
+
+test('storage.patchChannelMeta — preserves user fields when totals are recomputed', async () => {
+  const { root, channelKey } = await writeFixtureVault();
+  try {
+    const storage = require('../server/storage');
+    // Operator sets a customer name + notes + delivered flag.
+    await storage.patchChannelMeta(channelKey, {
+      customer_name: 'Jamie Smith',
+      notes: 'May launch',
+      delivered: true,
+      delivered_at: '2026-05-05T00:00:00Z',
+    });
+    // A subsequent re-pull then writes new totals — must not blow away the
+    // operator's fields.
+    const after = await storage.recomputeChannelTotals(channelKey);
+    assert.equal(after.total_videos, 2);
+    const ch = await storage.getChannel(channelKey);
+    assert.equal(ch.customer_name, 'Jamie Smith');
+    assert.equal(ch.notes, 'May launch');
+    assert.equal(ch.delivered, true);
+    assert.equal(ch.delivered_at, '2026-05-05T00:00:00Z');
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test('storage.deleteChannel — refuses path traversal and underscore-prefixed keys', async () => {
+  const { root } = await writeFixtureVault();
+  try {
+    const storage = require('../server/storage');
+    await assert.rejects(() => storage.deleteChannel('../etc'), /invalid/);
+    await assert.rejects(() => storage.deleteChannel('foo/bar'), /invalid/);
+    await assert.rejects(() => storage.deleteChannel('_jobs'), /invalid/);
+    await assert.rejects(() => storage.deleteChannel(''), /required/);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test('storage.getVaultStats — sums rolled-up totals across channels', async () => {
+  const { root, channelKey } = await writeFixtureVault();
+  try {
+    const storage = require('../server/storage');
+    await storage.recomputeChannelTotals(channelKey);
+    await storage.patchChannelMeta(channelKey, { delivered: true });
+    const stats = await storage.getVaultStats();
+    assert.equal(stats.channels, 1);
+    assert.equal(stats.delivered, 1);
+    assert.equal(stats.total_videos, 2);
+    assert.ok(stats.total_words > 0);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test('buildVaultZip — refuses to export a channel with no successful transcripts', async () => {
+  const { root, channelKey } = await writeFixtureVault();
+  try {
+    const storage = require('../server/storage');
+    // Wipe every video record so 0 are transcript_status === 'ok'.
+    const videos = await storage.listVideos(channelKey);
+    for (const v of videos) {
+      await storage.saveVideo(channelKey, { ...v, transcript_status: 'unavailable', transcript_file: null });
+    }
+    const { buildVaultZip } = require('../server/export');
+    await assert.rejects(
+      () => buildVaultZip(channelKey),
+      /no successfully-pulled transcripts/i,
+    );
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
 });

@@ -446,6 +446,13 @@ async function buildVaultZip(channelKey, opts = {}) {
   if (!channel) throw new Error('Channel not found');
 
   const items = await loadVideosForExport(channelKey);
+  // Refuse to ship a half-empty deliverable. If 0 videos pulled OK there is
+  // literally nothing to package — better to surface the problem than email
+  // a customer a ZIP with an empty COMBINED_MASTER and no individual files.
+  const okCount = items.filter((x) => x.text).length;
+  if (okCount === 0) {
+    throw new Error('Nothing to export — this channel has no successfully-pulled transcripts yet.');
+  }
   const generated = new Date();
   const dateStr = localISODate(generated);
   const channelSlug = pascalCaseChannelName(channel.title, channel.uploader || channel.key);

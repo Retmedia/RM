@@ -1,4 +1,5 @@
 const path = require('node:path');
+const fs = require('node:fs/promises');
 const { spawn } = require('node:child_process');
 const express = require('express');
 const storage = require('./storage');
@@ -81,7 +82,7 @@ app.post('/api/channels/:key/videos/:videoId/retry', async (req, res, next) => {
     if (!existing) return res.status(404).json({ error: 'Video not found' });
 
     const tDir = storage.transcriptDir(req.params.key);
-    await require('node:fs/promises').mkdir(tDir, { recursive: true });
+    await fs.mkdir(tDir, { recursive: true });
     const language = (req.body && typeof req.body.language === 'string' && req.body.language.trim()) || 'en';
 
     const result = await pullTranscript(req.params.videoId, tDir, language);
@@ -122,9 +123,9 @@ app.post('/api/channels/:key/videos/:videoId/manual-transcript', async (req, res
 
     const vtt = segmentsToVtt(segments);
     const tDir = storage.transcriptDir(req.params.key);
-    await require('node:fs/promises').mkdir(tDir, { recursive: true });
+    await fs.mkdir(tDir, { recursive: true });
     const filename = `${req.params.videoId}.manual.vtt`;
-    await require('node:fs/promises').writeFile(require('node:path').join(tDir, filename), vtt);
+    await fs.writeFile(path.join(tDir, filename), vtt);
 
     const segText = segments.map((s) => s.text).join(' ');
     const updated = {
@@ -256,20 +257,40 @@ app.get('/api/jobs/stream', (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders?.();
 
-  const send = (jobs) => {
-    res.write(`event: jobs\n`);
-    res.write(`data: ${JSON.stringify(jobs)}\n\n`);
-  };
-
-  // Send initial state, then subscribe to updates.
-  send(listJobs());
-  const unsub = subscribe(send);
-  const heartbeat = setInterval(() => res.write(`: ping\n\n`), 25_000);
-
-  req.on('close', () => {
+  let closed = false;
+  const stop = () => {
+    if (closed) return;
+    closed = true;
     clearInterval(heartbeat);
     unsub();
-  });
+  };
+
+  // Wrap every write so a closed socket can't bring the server down via an
+  // unhandled 'error' event. Express's res.write on a destroyed connection
+  // will emit ECONNRESET / EPIPE; we'd rather note it and unsubscribe.
+  const send = (jobs) => {
+    if (closed || res.writableEnded || res.destroyed) return stop();
+    try {
+      res.write(`event: jobs\n`);
+      res.write(`data: ${JSON.stringify(jobs)}\n\n`);
+    } catch (err) {
+      console.warn('SSE write failed, dropping subscriber:', err.message);
+      stop();
+    }
+  };
+
+  send(listJobs());
+  const unsub = subscribe(send);
+  const heartbeat = setInterval(() => {
+    if (closed || res.writableEnded || res.destroyed) return stop();
+    try { res.write(`: ping\n\n`); } catch { stop(); }
+  }, 25_000);
+
+  // Belt-and-braces: 'close' on the request, 'close' on the response, and
+  // an 'error' listener on the socket all converge on stop().
+  req.on('close', stop);
+  res.on('close', stop);
+  res.on('error', stop);
 });
 
 app.get('/api/jobs/:id', (req, res) => {

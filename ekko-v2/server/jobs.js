@@ -33,7 +33,10 @@ function jobsDir() { return JOBS_DIR; }
 function jobFile(id) { return path.join(JOBS_DIR, `${id}.json`); }
 
 function publicView(state) {
-  const { controller, ...rest } = state;
+  // controller holds the abort flag + a reference to the live yt-dlp child;
+  // both are runtime-only. finished_at_persisted is a one-shot bookkeeping
+  // flag from loadPersistedJobs that callers don't need to see.
+  const { controller, finished_at_persisted, ...rest } = state;
   return rest;
 }
 
@@ -68,7 +71,16 @@ function listJobs() {
 function cancelJob(id) {
   const state = jobs.get(id);
   if (!state) return false;
-  if (state.controller) state.controller.abort = true;
+  if (state.controller) {
+    state.controller.abort = true;
+    // Kill the in-flight yt-dlp call so cancel takes ~seconds rather than
+    // up to the 3-minute per-video timeout. The job loop catches the kill
+    // as a thrown error, sees the abort flag, and breaks.
+    const child = state.controller.currentChild;
+    if (child && !child.killed) {
+      try { child.kill('SIGTERM'); } catch { /* already gone */ }
+    }
+  }
   if (ACTIVE_STATUSES.has(state.status) && state.status !== 'cancelling') {
     state.status = 'cancelling';
     persist(state);
@@ -95,7 +107,7 @@ async function startArchiveJob({ channelUrl, includeShorts = false, language = '
     error: null,
     channelKey: null,
     options: { includeShorts: !!includeShorts, language },
-    controller: { abort: false },
+    controller: { abort: false, currentChild: null },
   };
   jobs.set(id, state);
   await persist(state);
@@ -161,7 +173,10 @@ async function run(state) {
       continue;
     }
 
-    const result = await pullTranscript(v.id, tDir, language);
+    const result = await pullTranscript(v.id, tDir, language, state.controller);
+    // If a cancel landed mid-pull, exit cleanly without persisting a bogus
+    // "unavailable" record for the killed video.
+    if (state.controller.abort) break;
     const segText = result.ok ? result.segments.map((s) => s.text).join(' ') : '';
     const record = {
       id: v.id,
@@ -188,7 +203,11 @@ async function run(state) {
     emit();
     persist(state);
 
-    await sleep(750);
+    // Pause between videos to stay below YouTube's per-IP rate limit.
+    // Real-world testing on a 100-video channel hit 429s with 750ms; 1500ms
+    // is comfortably below the threshold while only adding ~1 minute to a
+    // 100-video pull.
+    await sleep(1500);
   }
 
   state.progress.current = null;
