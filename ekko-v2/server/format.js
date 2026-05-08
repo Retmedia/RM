@@ -80,6 +80,72 @@ function wordCount(text) {
   return String(text || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
+// Parse text the user pasted from YouTube's "Show transcript" panel. Handles:
+//   1) Standalone-timestamp + text-on-next-line ("0:03\nhello and welcome")
+//   2) Inline-timestamp ("0:03 hello and welcome")
+//   3) Plain text with no timestamps — stored as one big segment
+// Returns [{ start, end, text }, …] suitable for synthesising a VTT.
+function parsePastedTranscript(text, videoDuration = 999_999) {
+  const t = String(text || '').replace(/\r/g, '').trim();
+  if (!t) return [];
+  const tsRe = /^(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,]\d+)?\s*(.*)$/;
+  const lines = t.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  const segs = [];
+  let pendingTs = null;
+  for (const line of lines) {
+    const m = line.match(tsRe);
+    if (m) {
+      const start = (parseInt(m[1] || '0', 10)) * 3600
+                  + parseInt(m[2], 10) * 60
+                  + parseInt(m[3], 10);
+      const inline = (m[4] || '').trim();
+      if (inline) {
+        segs.push({ start, end: 0, text: inline });
+        pendingTs = null;
+      } else {
+        pendingTs = start;
+      }
+    } else if (pendingTs !== null) {
+      segs.push({ start: pendingTs, end: 0, text: line });
+      pendingTs = null;
+    } else if (segs.length === 0) {
+      // No timestamps anywhere — treat the whole paste as one segment.
+      segs.push({ start: 0, end: videoDuration, text: t.replace(/\s+/g, ' ') });
+      return segs;
+    } else {
+      // Continuation of the previous timestamped segment.
+      segs[segs.length - 1].text += ' ' + line;
+    }
+  }
+  if (segs.length === 0) {
+    segs.push({ start: 0, end: videoDuration, text: t });
+  }
+  for (let i = 0; i < segs.length; i++) {
+    segs[i].end = i + 1 < segs.length ? segs[i + 1].start : videoDuration;
+  }
+  return segs;
+}
+
+function formatVttTime(secs) {
+  const v = Math.max(0, Number(secs) || 0);
+  const h = Math.floor(v / 3600);
+  const m = Math.floor((v % 3600) / 60);
+  const s = Math.floor(v % 60);
+  const ms = Math.floor((v - Math.floor(v)) * 1000);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+}
+
+function segmentsToVtt(segments) {
+  const lines = ['WEBVTT', ''];
+  for (const s of segments) {
+    lines.push(`${formatVttTime(s.start)} --> ${formatVttTime(s.end)}`);
+    lines.push(String(s.text || '').replace(/\s+/g, ' ').trim());
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
 module.exports = {
   pascalCaseChannelName,
   slugifyTitle,
@@ -88,4 +154,7 @@ module.exports = {
   formatHeaderDate,
   localISODate,
   wordCount,
+  parsePastedTranscript,
+  segmentsToVtt,
+  formatVttTime,
 };

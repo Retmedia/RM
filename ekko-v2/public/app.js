@@ -691,8 +691,14 @@ function renderVideoTable() {
   const tb = h('tbody', {});
   for (const v of filtered) {
     const status = v.transcript_status === 'ok'
-      ? h('span', { class: 'tag ok' }, `${v.transcript_segments} segs`)
-      : h('span', { class: 'tag warn' }, v.transcript_reason ? truncate(v.transcript_reason, 36) : '—');
+      ? h('span', { class: 'tag ok', title: v.transcript_source === 'manual' ? 'Manually pasted' : '' },
+          `${v.transcript_segments} segs${v.transcript_source === 'manual' ? ' ✎' : ''}`)
+      : h('span', {
+          class: 'tag warn',
+          // Title shows the full reason on hover — the tag itself can only fit
+          // about 60 chars before the table layout breaks.
+          title: v.transcript_reason || '',
+        }, v.transcript_reason ? truncate(v.transcript_reason, 60) : '—');
     const row = h('tr', {
       onclick: () => openTranscriptViewer(v, filtered),
     },
@@ -732,6 +738,7 @@ async function showTranscript(index) {
   if (v.transcript_status !== 'ok') {
     const reason = v.transcript_reason || 'YouTube did not return captions for this video.';
     const looksLikeRateLimit = /429|too\s+many\s+requests|rate[- ]?limit/i.test(reason);
+    const langs = Array.isArray(v.available_languages) ? v.available_languages : [];
     body = h('div', { class: 'empty-state' },
       h('h3', {}, 'No transcript available'),
       h('p', {}, reason),
@@ -739,12 +746,23 @@ async function showTranscript(index) {
         ? h('p', { class: 'dim', style: { fontSize: '0.8rem', marginTop: '0.4rem' } },
             'This was a YouTube rate limit, not a missing caption. Retrying usually pulls it.')
         : null,
-      h('button', {
-        class: 'primary',
-        id: `btn-retry-${v.id}`,
-        onclick: (e) => retryVideoPull(v, e.currentTarget),
-        style: { marginTop: '1rem' },
-      }, '↻ Retry pull for this video'),
+      langs.length
+        ? h('p', { class: 'dim', style: { fontSize: '0.8rem', marginTop: '0.4rem' } },
+            `YouTube has captions in: ${langs.slice(0, 12).join(', ')}${langs.length > 12 ? '…' : ''}`)
+        : null,
+      h('div', { style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1.2rem' } },
+        h('button', {
+          class: 'primary',
+          id: `btn-retry-${v.id}`,
+          onclick: (e) => retryVideoPull(v, e.currentTarget),
+        }, '↻ Retry pull'),
+        h('a', { class: 'btn', href: v.url, target: '_blank', rel: 'noopener' }, '↗ Open on YouTube'),
+        h('button', {
+          onclick: () => openManualTranscriptDialog(v),
+        }, '✎ Paste transcript manually'),
+      ),
+      h('p', { class: 'dim', style: { fontSize: '0.78rem', marginTop: '1rem', maxWidth: '32rem', marginLeft: 'auto', marginRight: 'auto' } },
+        'Tip: open the video on YouTube, click "…" under the video → "Show transcript", click "Toggle timestamps" if you want segment timing, then copy and paste here.'),
     );
   } else {
     body = h('div', {}, h('div', { class: 'transcript-meta' }, h('span', {}, h('span', { class: 'spinner' }), ' Loading transcript…')));
@@ -830,6 +848,68 @@ async function retryVideoPull(v, btn) {
       btn.disabled = false;
       btn.textContent = '↻ Retry pull for this video';
     }
+  }
+}
+
+// ---- Manual transcript paste ----
+function openManualTranscriptDialog(v) {
+  const ch = state.currentChannel;
+  if (!ch) return;
+  const body = h('div', {},
+    h('p', { class: 'helper' },
+      'Paste the transcript text from YouTube\'s "Show transcript" panel. ',
+      'Timestamps are optional — if present, segments will be preserved.'),
+    h('label', {}, 'Transcript text',
+      h('textarea', {
+        id: 'manual-transcript-text',
+        rows: 14,
+        placeholder: '0:00 hello and welcome\n0:03 today we\'re going to talk about…',
+        autofocus: true,
+      })),
+    h('p', { class: 'dim', style: { fontSize: '0.78rem' } },
+      'On YouTube: "…" under the video → Show transcript → Toggle timestamps → select all → copy.'),
+  );
+  const footer = h('div', {},
+    h('span', { class: 'dim' }, ''),
+    h('div', { class: 'nav-arrows' },
+      h('button', { class: 'ghost', onclick: () => $('#modal-root').innerHTML = '' }, 'Cancel'),
+      h('button', { class: 'primary', id: 'btn-save-manual', onclick: () => saveManualTranscript(v) }, 'Save transcript'),
+    ),
+  );
+  openModal({ title: `Paste transcript: ${v.title || v.id}`, body, footer });
+}
+
+async function saveManualTranscript(v) {
+  const text = $('#manual-transcript-text')?.value || '';
+  if (!text.trim()) {
+    return toastError(new Error('Paste some text first.'));
+  }
+  const ch = state.currentChannel;
+  const btn = $('#btn-save-manual');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    const updated = await api(
+      `/api/channels/${encodeURIComponent(ch.key)}/videos/${encodeURIComponent(v.id)}/manual-transcript`,
+      { method: 'POST', body: { text } },
+    );
+    // Patch caches and refresh views.
+    const idx = state.currentVideos.findIndex((x) => x.id === v.id);
+    if (idx >= 0) state.currentVideos[idx] = updated;
+    if (state.transcriptCursor) {
+      const lidx = state.transcriptCursor.list.findIndex((x) => x.id === v.id);
+      if (lidx >= 0) state.transcriptCursor.list[lidx] = updated;
+    }
+    refreshChannels();
+    refreshStats();
+    if (state.view === 'channel') renderVideoTable();
+    toast('✓ Transcript saved manually', { type: 'success' });
+    $('#modal-root').innerHTML = '';
+    if (state.transcriptCursor) showTranscript(state.transcriptCursor.index);
+  } catch (err) {
+    toastError(err);
+    btn.disabled = false;
+    btn.textContent = 'Save transcript';
   }
 }
 
@@ -961,9 +1041,38 @@ function renderSettings() {
   ));
 
   main.appendChild(h('div', { class: 'card' },
+    h('h2', {}, 'yt-dlp'),
+    h('p', { class: 'dim' }, 'YouTube changes their internals every few weeks. If you\'re seeing captions fail to pull on channels that used to work, update yt-dlp to the latest release.'),
+    h('div', { style: { marginTop: '0.7rem' } },
+      h('button', { id: 'btn-update-ytdlp', onclick: updateYtDlp }, '⤓ Update yt-dlp to latest'),
+    ),
+    h('p', { class: 'dim', id: 'ytdlp-update-status', style: { marginTop: '0.5rem', fontSize: '0.78rem' } }, ''),
+  ));
+
+  main.appendChild(h('div', { class: 'card' },
     h('h2', {}, 'About'),
     h('p', { class: 'dim' }, 'Ekko archives YouTube channel transcripts to a local vault you own. Everything runs on your machine — yt-dlp pulls captions, files stay on disk.'),
   ));
+}
+
+async function updateYtDlp() {
+  const btn = $('#btn-update-ytdlp');
+  const status = $('#ytdlp-update-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Downloading…';
+  status.textContent = 'This usually takes 10–30 seconds depending on your connection.';
+  try {
+    const res = await api('/api/update-ytdlp', { method: 'POST' });
+    toast('✓ yt-dlp updated', { type: 'success' });
+    status.textContent = (res.output || '').split('\n').filter(Boolean).pop() || 'Updated.';
+    btn.textContent = '⤓ Update again';
+    btn.disabled = false;
+  } catch (err) {
+    toastError(err);
+    status.textContent = 'Update failed: ' + err.message;
+    btn.textContent = '⤓ Update yt-dlp to latest';
+    btn.disabled = false;
+  }
 }
 
 function shortcutRow(keys, label) {

@@ -41,8 +41,11 @@ async function runYtDlp(videoId, workDir, language) {
     '--skip-download',
     '--write-auto-subs',
     '--write-subs',
-    '--sub-langs', `${language}.*,${language}`,
-    '--sub-format', 'vtt',
+    // Match more variants. YouTube returns auto-captions as `<lang>-orig`,
+    // manual subs as `<lang>` or `<lang>-XX`, and auto-translated as `a.<lang>`.
+    // We catch all of them so `en` doesn't miss `en-orig` / `en-US` / `a.en`.
+    '--sub-langs', `${language}-orig,${language}.*,${language},a.${language}`,
+    '--sub-format', 'vtt/best',
     '--no-warnings',
     '-o', outTemplate,
     `https://www.youtube.com/watch?v=${videoId}`,
@@ -52,6 +55,35 @@ async function runYtDlp(videoId, workDir, language) {
     timeout: 3 * 60 * 1000,
     maxBuffer: 16 * 1024 * 1024,
   });
+}
+
+// Probe what subtitle/auto-caption tracks YouTube actually has for a video,
+// without downloading anything. Returns an array of language codes (deduped,
+// sorted) or null if the probe itself failed. Used as a diagnostic fallback
+// when our regular pull came back empty — so we can tell the operator
+// "captions exist in es, fr — but you asked for en" instead of just
+// "no transcript available".
+async function probeAvailableLanguages(videoId) {
+  if (!isVideoId(videoId)) return null;
+  try {
+    const { stdout } = await execFileP(YT_DLP, [
+      '--dump-json',
+      '--skip-download',
+      '--no-warnings',
+      `https://www.youtube.com/watch?v=${videoId}`,
+    ], { encoding: 'utf8', timeout: 60_000, maxBuffer: 16 * 1024 * 1024 });
+    const meta = JSON.parse(stdout);
+    const langs = new Set();
+    for (const k of Object.keys(meta.subtitles || {})) langs.add(k);
+    for (const k of Object.keys(meta.automatic_captions || {})) langs.add(k);
+    // Drop the noise that's not a real human language code.
+    const cleaned = [...langs]
+      .filter((l) => /^[a-z]{2,3}(?:[-.][A-Za-z0-9]+)?$/.test(l))
+      .sort();
+    return cleaned;
+  } catch {
+    return null;
+  }
 }
 
 async function pullTranscript(videoId, workDir, language = 'en') {
@@ -71,7 +103,10 @@ async function pullTranscript(videoId, workDir, language = 'en') {
       const stderr = (e.stderr || e.message || '').toString();
       lastErr = stderr.slice(0, 500);
       if (isPermanent(stderr)) {
-        return { ok: false, reason: lastErr, permanent: true };
+        // Even on permanent failures, probe languages so the UI can suggest
+        // a workaround (e.g. paste manually, or re-pull with a different lang).
+        const available_languages = await probeAvailableLanguages(videoId);
+        return { ok: false, reason: lastErr, permanent: true, available_languages };
       }
       const isRL = isRateLimited(stderr);
       rateLimited = isRL;
@@ -86,7 +121,15 @@ async function pullTranscript(videoId, workDir, language = 'en') {
 
   const entries = await fs.readdir(workDir);
   const vttFile = entries.find((f) => f.startsWith(videoId) && f.endsWith('.vtt'));
-  if (!vttFile) return { ok: false, reason: 'no transcript available', permanent: true };
+  if (!vttFile) {
+    // yt-dlp returned 0 but didn't write a VTT — almost always means the
+    // requested language wasn't available (foreign-language video).
+    const available_languages = await probeAvailableLanguages(videoId);
+    const reason = available_languages && available_languages.length
+      ? `No captions in ${language}. YouTube has: ${available_languages.slice(0, 8).join(', ')}${available_languages.length > 8 ? '…' : ''}`
+      : 'No captions on YouTube for this video';
+    return { ok: false, reason, permanent: true, available_languages };
+  }
 
   const fullPath = path.join(workDir, vttFile);
   const raw = await fs.readFile(fullPath, 'utf8');
@@ -132,4 +175,4 @@ function collapseRepeats(s) {
   return s.replace(/\b(\w+)( \1\b)+/gi, '$1');
 }
 
-module.exports = { pullTranscript, parseVTT, isPermanent, isRateLimited };
+module.exports = { pullTranscript, parseVTT, probeAvailableLanguages, isPermanent, isRateLimited };

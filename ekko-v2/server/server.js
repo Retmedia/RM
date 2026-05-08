@@ -9,7 +9,7 @@ const {
 const { isSafeChannelUrl } = require('./utils');
 const { buildVaultZip } = require('./export');
 const { renderDeliveryEmail } = require('./email');
-const { formatWordCount, wordCount } = require('./format');
+const { formatWordCount, wordCount, parsePastedTranscript, segmentsToVtt } = require('./format');
 const { parseVTT, pullTranscript } = require('./transcripts');
 
 const app = express();
@@ -92,6 +92,8 @@ app.post('/api/channels/:key/videos/:videoId/retry', async (req, res, next) => {
       transcript_reason: result.ok ? null : result.reason,
       transcript_segments: result.ok ? result.segments.length : (existing.transcript_segments || 0),
       transcript_file: result.ok ? result.file : existing.transcript_file,
+      transcript_source: result.ok ? 'yt-dlp' : (existing.transcript_source || null),
+      available_languages: result.available_languages || existing.available_languages || null,
       word_count: result.ok ? wordCount(segText) : (existing.word_count || 0),
       archived_at: new Date().toISOString(),
     };
@@ -99,6 +101,64 @@ app.post('/api/channels/:key/videos/:videoId/retry', async (req, res, next) => {
     await storage.recomputeChannelTotals(req.params.key);
     res.json({ ...updated, rate_limited: !!result.rateLimited });
   } catch (e) { next(e); }
+});
+
+// Manual transcript paste — operator pastes text from YouTube's "Show
+// transcript" panel for videos where yt-dlp can't pull the captions.
+// Synthesises a VTT and saves it like any other transcript so the export
+// pipeline picks it up unchanged.
+app.post('/api/channels/:key/videos/:videoId/manual-transcript', async (req, res, next) => {
+  try {
+    const channel = await storage.getChannel(req.params.key);
+    if (!channel) return res.status(404).json({ error: 'Channel not found' });
+    const existing = await storage.getVideo(req.params.key, req.params.videoId);
+    if (!existing) return res.status(404).json({ error: 'Video not found' });
+
+    const text = req.body && typeof req.body.text === 'string' ? req.body.text : '';
+    if (!text.trim()) return res.status(400).json({ error: 'Empty transcript' });
+
+    const segments = parsePastedTranscript(text, existing.duration || 999_999);
+    if (!segments.length) return res.status(400).json({ error: 'Could not parse anything from that paste' });
+
+    const vtt = segmentsToVtt(segments);
+    const tDir = storage.transcriptDir(req.params.key);
+    await require('node:fs/promises').mkdir(tDir, { recursive: true });
+    const filename = `${req.params.videoId}.manual.vtt`;
+    await require('node:fs/promises').writeFile(require('node:path').join(tDir, filename), vtt);
+
+    const segText = segments.map((s) => s.text).join(' ');
+    const updated = {
+      ...existing,
+      transcript_status: 'ok',
+      transcript_reason: null,
+      transcript_segments: segments.length,
+      transcript_file: filename,
+      transcript_source: 'manual',
+      word_count: wordCount(segText),
+      archived_at: new Date().toISOString(),
+    };
+    await storage.saveVideo(req.params.key, updated);
+    await storage.recomputeChannelTotals(req.params.key);
+    res.json(updated);
+  } catch (e) { next(e); }
+});
+
+// Re-download the yt-dlp binary in place. YouTube changes their internals
+// every few weeks; an old yt-dlp can stop pulling captions even when they
+// exist. Operators should run this if they see a sudden uptick in
+// "no captions" failures across normally-OK channels.
+app.post('/api/update-ytdlp', (_req, res) => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'install-yt-dlp.mjs');
+  const child = spawn(process.execPath, [scriptPath], { stdio: ['ignore', 'pipe', 'pipe'] });
+  let out = '';
+  let err = '';
+  child.stdout.on('data', (d) => { out += d.toString(); });
+  child.stderr.on('data', (d) => { err += d.toString(); });
+  child.on('error', (e) => res.status(500).json({ error: e.message }));
+  child.on('close', (code) => {
+    if (code === 0) res.json({ ok: true, output: out.trim() });
+    else res.status(500).json({ error: (err || out || `exit ${code}`).trim() });
+  });
 });
 
 app.get('/api/channels/:key/videos/:videoId/transcript', async (req, res, next) => {

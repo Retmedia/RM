@@ -5,7 +5,10 @@ const {
   slugifyTitle,
   formatWordCount,
   localISODate,
+  parsePastedTranscript,
+  segmentsToVtt,
 } = require('../server/format');
+const { parseVTT } = require('../server/transcripts');
 
 test('pascalCaseChannelName — typical names', () => {
   assert.equal(pascalCaseChannelName('Jack Neel'), 'JackNeel');
@@ -114,4 +117,71 @@ test('localISODate — uses local timezone components, not UTC', () => {
   // Pass a Date and assert YYYY-MM-DD format. Don't lock to a specific TZ.
   const d = new Date(2024, 0, 15, 12, 0, 0); // Jan 15 2024 noon local
   assert.equal(localISODate(d), '2024-01-15');
+});
+
+test('parsePastedTranscript — YouTube standalone-timestamp format', () => {
+  const text = `0:00\nhello and welcome\n0:03\ntoday we will talk about beekeeping\n0:09\nbasics for beginners`;
+  const segs = parsePastedTranscript(text, 600);
+  assert.equal(segs.length, 3);
+  assert.equal(segs[0].start, 0); assert.equal(segs[0].text, 'hello and welcome');
+  assert.equal(segs[1].start, 3); assert.equal(segs[1].text, 'today we will talk about beekeeping');
+  assert.equal(segs[2].start, 9); assert.equal(segs[2].text, 'basics for beginners');
+  // Last segment ends at video duration.
+  assert.equal(segs[2].end, 600);
+  // Earlier segments end where the next begins.
+  assert.equal(segs[0].end, 3);
+  assert.equal(segs[1].end, 9);
+});
+
+test('parsePastedTranscript — inline-timestamp format', () => {
+  const text = `0:00 hello and welcome\n0:03 today we will talk about beekeeping`;
+  const segs = parsePastedTranscript(text, 60);
+  assert.equal(segs.length, 2);
+  assert.equal(segs[0].text, 'hello and welcome');
+  assert.equal(segs[1].text, 'today we will talk about beekeeping');
+});
+
+test('parsePastedTranscript — plain text without timestamps becomes one segment', () => {
+  const text = 'hello and welcome today we will talk about beekeeping basics for beginners';
+  const segs = parsePastedTranscript(text, 600);
+  assert.equal(segs.length, 1);
+  assert.equal(segs[0].start, 0);
+  assert.equal(segs[0].end, 600);
+  assert.match(segs[0].text, /hello and welcome/);
+});
+
+test('parsePastedTranscript — empty input', () => {
+  assert.deepEqual(parsePastedTranscript('', 600), []);
+  assert.deepEqual(parsePastedTranscript('   \n  \n', 600), []);
+});
+
+test('parsePastedTranscript — H:MM:SS timestamps for long videos', () => {
+  const text = `1:02:03\nhello\n1:02:10\nworld`;
+  const segs = parsePastedTranscript(text, 4000);
+  assert.equal(segs.length, 2);
+  assert.equal(segs[0].start, 1 * 3600 + 2 * 60 + 3);
+  assert.equal(segs[1].start, 1 * 3600 + 2 * 60 + 10);
+});
+
+test('segmentsToVtt — produces a parseable VTT round-trip', () => {
+  const original = [
+    { start: 0, end: 3, text: 'hello and welcome' },
+    { start: 3, end: 9, text: 'today we will talk about beekeeping' },
+  ];
+  const vtt = segmentsToVtt(original);
+  assert.match(vtt, /^WEBVTT/);
+  const reparsed = parseVTT(vtt);
+  assert.equal(reparsed.length, 2);
+  assert.equal(reparsed[0].text, 'hello and welcome');
+  assert.equal(reparsed[1].start, 3);
+});
+
+test('segmentsToVtt + parseVTT round-trip via parsePastedTranscript', () => {
+  const text = `0:00\nfirst line\n0:05\nsecond line\n0:12\nthird line`;
+  const segs = parsePastedTranscript(text, 60);
+  const vtt = segmentsToVtt(segs);
+  const reparsed = parseVTT(vtt);
+  assert.equal(reparsed.length, 3);
+  assert.equal(reparsed[0].text, 'first line');
+  assert.equal(reparsed[2].start, 12);
 });

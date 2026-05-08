@@ -176,6 +176,8 @@ async function run(state) {
       transcript_reason: result.ok ? null : result.reason,
       transcript_segments: result.ok ? result.segments.length : 0,
       transcript_file: result.ok ? result.file : null,
+      transcript_source: result.ok ? 'yt-dlp' : null,
+      available_languages: result.available_languages || null,
       word_count: result.ok ? wordCount(segText) : 0,
       archived_at: new Date().toISOString(),
     };
