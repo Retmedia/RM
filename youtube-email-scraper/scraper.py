@@ -170,7 +170,12 @@ def pick_best_email(emails: List[str], page_source_lower: str) -> Optional[str]:
 
 def extract_channel_metadata(driver) -> Dict[str, str]:
     """Pull channel name, subscriber count, and canonical URL from meta tags."""
-    meta = {"channel_name": "", "subscribers": "", "url": ""}
+    meta = {
+        "Channel Name": "",
+        "YouTube URL": "",
+        "Subscribers": "",
+        "Subscriber Count": "",
+    }
 
     def attr(xpath: str, attr_name: str) -> str:
         try:
@@ -178,36 +183,55 @@ def extract_channel_metadata(driver) -> Dict[str, str]:
         except Exception:
             return ""
 
-    meta["channel_name"] = (
+    meta["Channel Name"] = (
         attr("//meta[@itemprop='name']", "content")
         or attr("//meta[@property='og:title']", "content")
     )
-    meta["url"] = (
+    meta["YouTube URL"] = (
         attr("//link[@rel='canonical']", "href")
         or attr("//meta[@property='og:url']", "content")
         or driver.current_url
     )
-    # Subscribers: shown as "1.2M subscribers" in the channel header
     try:
         text = driver.find_element(
             By.XPATH, "//yt-content-metadata-view-model//span[contains(., 'subscriber')]"
         ).text
-        meta["subscribers"] = text.replace(" subscribers", "").replace(" subscriber", "").strip()
+        readable = text.replace(" subscribers", "").replace(" subscriber", "").strip()
+        meta["Subscribers"] = readable
+        count = parse_subscriber_count(readable)
+        meta["Subscriber Count"] = str(count) if count is not None else ""
     except Exception:
         pass
     return meta
+
+
+def parse_subscriber_count(text: str) -> Optional[int]:
+    """'1.2M' -> 1200000, '450K' -> 450000, '1,234' -> 1234. None on no match."""
+    if not text:
+        return None
+    s = text.strip().lower().replace(",", "")
+    m = re.match(r"^([\d.]+)\s*([kmb])?$", s)
+    if not m:
+        return None
+    try:
+        num = float(m.group(1))
+    except ValueError:
+        return None
+    mult = {"k": 1_000, "m": 1_000_000, "b": 1_000_000_000}.get(m.group(2) or "", 1)
+    return int(num * mult)
 
 
 def scrape_channel(driver, channel_input: str) -> Dict[str, str]:
     """Try the modal flow first, fall back to /about, then regex sweep.
     Returns a row dict ready for CSV write."""
     row = {
-        "channel": channel_input,
-        "channel_name": "",
-        "subscribers": "",
-        "url": "",
-        "email": "NOT_FOUND",
-        "status": "No Email",
+        "Channel Name": "",
+        "YouTube Handle": channel_input,
+        "YouTube URL": "",
+        "Subscribers": "",
+        "Subscriber Count": "",
+        "Email": "NOT_FOUND",
+        "Status": "No Email",
     }
 
     url = normalize_url(channel_input)
@@ -238,8 +262,8 @@ def scrape_channel(driver, channel_input: str) -> Dict[str, str]:
 
     best = pick_best_email(emails, driver.page_source.lower())
     print(f"   [OK] {best}  ({len(emails)} candidate(s))")
-    row["email"] = best or "NOT_FOUND"
-    row["status"] = "Email Verified" if best else "No Email"
+    row["Email"] = best or "NOT_FOUND"
+    row["Status"] = "Email Verified" if best else "No Email"
     return row
 
 
@@ -248,7 +272,15 @@ def load_channels(path: Path) -> List[str]:
     return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
 
 
-CSV_FIELDS = ["channel", "channel_name", "subscribers", "url", "email", "status"]
+CSV_FIELDS = [
+    "Channel Name",
+    "YouTube Handle",
+    "YouTube URL",
+    "Subscribers",
+    "Subscriber Count",
+    "Email",
+    "Status",
+]
 
 
 def load_existing_rows(path: Path) -> Dict[str, Dict[str, str]]:
@@ -257,7 +289,7 @@ def load_existing_rows(path: Path) -> Dict[str, Dict[str, str]]:
     rows: Dict[str, Dict[str, str]] = {}
     with path.open("r", newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            key = row.get("channel", "").strip()
+            key = row.get("YouTube Handle", "").strip()
             if key:
                 rows[key] = row
     return rows
@@ -273,10 +305,10 @@ def batch(channels: List[str], output_csv: Path, profile_dir: Optional[str],
         prior = existing.get(ch)
         if prior is None:
             queue.append(ch)
-        elif retry_misses and prior.get("email", "NOT_FOUND") == "NOT_FOUND":
+        elif retry_misses and prior.get("Email", "NOT_FOUND") == "NOT_FOUND":
             queue.append(ch)
         else:
-            print(f"[skip] {ch} (already in CSV: {prior.get('email')})")
+            print(f"[skip] {ch} (already in CSV: {prior.get('Email')})")
 
     if not queue:
         print("Nothing to do -- all channels already processed.")
@@ -286,7 +318,6 @@ def batch(channels: List[str], output_csv: Path, profile_dir: Optional[str],
     found = 0
     written = 0
 
-    # Open CSV in append mode; write header only if file is new
     f = output_csv.open("a", newline="", encoding="utf-8")
     writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
     if fresh:
@@ -300,14 +331,14 @@ def batch(channels: List[str], output_csv: Path, profile_dir: Optional[str],
                 row = scrape_channel(driver, ch)
             except Exception as exc:
                 print(f"   [ERROR] {exc}")
-                row = {
-                    "channel": ch, "channel_name": "", "subscribers": "",
-                    "url": "", "email": "NOT_FOUND", "status": "No Email",
-                }
+                row = {field: "" for field in CSV_FIELDS}
+                row["YouTube Handle"] = ch
+                row["Email"] = "NOT_FOUND"
+                row["Status"] = "No Email"
             writer.writerow(row)
             f.flush()
             written += 1
-            if row["email"] != "NOT_FOUND":
+            if row["Email"] != "NOT_FOUND":
                 found += 1
             time.sleep(delay)
     finally:
