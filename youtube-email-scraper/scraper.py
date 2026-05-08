@@ -56,6 +56,30 @@ CONTACT_KEYWORDS = (
 )
 
 
+def is_fresh_profile(profile_dir: Optional[str]) -> bool:
+    """A profile dir is fresh if it doesn't have Chrome's Default folder yet."""
+    if not profile_dir:
+        return False
+    return not (Path(profile_dir).expanduser().resolve() / "Default").exists()
+
+
+def prompt_signin(driver) -> None:
+    print("\n" + "=" * 64)
+    print("  FIRST-RUN SIGN-IN")
+    print("=" * 64)
+    print("  A Chrome window has opened on youtube.com.")
+    print("  1. Sign in to YouTube (any Google account works)")
+    print("  2. Open ONE channel manually, click About, then click")
+    print("     'View email address' and solve the CAPTCHA")
+    print("  3. Come back here and press Enter to start the batch")
+    print("=" * 64)
+    try:
+        driver.get("https://www.youtube.com")
+    except Exception:
+        pass
+    input("\nPress Enter when signed in and ready... ")
+
+
 def get_driver(profile_dir: Optional[str], headless: bool) -> webdriver.Chrome:
     options = Options()
     if headless:
@@ -296,9 +320,9 @@ def load_existing_rows(path: Path) -> Dict[str, Dict[str, str]]:
 
 
 def batch(channels: List[str], output_csv: Path, profile_dir: Optional[str],
-          headless: bool, delay: float, retry_misses: bool) -> None:
+          headless: bool, delay: float, retry_misses: bool, signin: bool) -> None:
     existing = load_existing_rows(output_csv)
-    fresh = not existing
+    fresh_csv = not existing
 
     queue: List[str] = []
     for ch in channels:
@@ -314,13 +338,22 @@ def batch(channels: List[str], output_csv: Path, profile_dir: Optional[str],
         print("Nothing to do -- all channels already processed.")
         return
 
+    needs_signin = signin or is_fresh_profile(profile_dir)
+    if needs_signin and headless:
+        print("First-run sign-in needed but --headless was passed.")
+        print("Re-run without --headless once to sign in, then headless works.")
+        sys.exit(1)
+
     driver = get_driver(profile_dir, headless)
+    if needs_signin:
+        prompt_signin(driver)
+
     found = 0
     written = 0
 
     f = output_csv.open("a", newline="", encoding="utf-8")
     writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
-    if fresh:
+    if fresh_csv:
         writer.writeheader()
         f.flush()
 
@@ -364,6 +397,8 @@ def main() -> None:
                         help="Seconds between channels")
     parser.add_argument("--retry-misses", action="store_true",
                         help="Re-run channels in the existing CSV that have NOT_FOUND")
+    parser.add_argument("--signin", action="store_true",
+                        help="Force the sign-in pause even on an existing profile")
     args = parser.parse_args()
 
     if args.channels:
@@ -380,7 +415,7 @@ def main() -> None:
         sys.exit(1)
 
     batch(channels, Path(args.output), args.profile_dir, args.headless,
-          args.delay, args.retry_misses)
+          args.delay, args.retry_misses, args.signin)
 
 
 if __name__ == "__main__":
