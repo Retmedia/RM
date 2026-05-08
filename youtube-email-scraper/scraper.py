@@ -5,6 +5,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
+from urllib.parse import quote_plus
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
@@ -381,6 +382,132 @@ def batch(channels: List[str], output_csv: Path, profile_dir: Optional[str],
     print(f"\n{found}/{written} new emails found -> {output_csv}")
 
 
+# ----- Discovery -----------------------------------------------------------
+
+def discover_channels(driver, query: str, max_results: int) -> List[str]:
+    """Search YouTube for channels matching `query`, return up to max_results @handles."""
+    # sp=EgIQAg%3D%3D filters search to "Channel" results
+    url = (f"https://www.youtube.com/results?search_query={quote_plus(query)}"
+           "&sp=EgIQAg%253D%253D")
+    print(f"-> Discovering channels for: {query!r}")
+    print(f"   {url}")
+    driver.get(url)
+    time.sleep(4)
+
+    handles: List[str] = []
+    seen = set()
+    for _ in range(8):
+        for el in driver.find_elements(By.XPATH, "//a[starts-with(@href, '/@')]"):
+            href = el.get_attribute("href") or ""
+            m = re.search(r"youtube\.com/(@[A-Za-z0-9._-]+)", href)
+            if not m:
+                continue
+            handle = m.group(1)
+            if handle not in seen:
+                seen.add(handle)
+                handles.append(handle)
+        if len(handles) >= max_results:
+            break
+        driver.execute_script(
+            "window.scrollBy(0, document.documentElement.scrollHeight);"
+        )
+        time.sleep(2)
+
+    handles = handles[:max_results]
+    print(f"   discovered {len(handles)} channel handle(s)")
+    return handles
+
+
+def append_handles(input_path: Path, handles: List[str], query: str) -> int:
+    """Append new handles to the channel list file, skipping ones already there."""
+    existing: set = set()
+    if input_path.exists():
+        for line in input_path.read_text(encoding="utf-8").splitlines():
+            ln = line.strip()
+            if ln and not ln.startswith("#"):
+                existing.add(ln.lstrip("@").lower())
+
+    new = [h for h in handles if h.lstrip("@").lower() not in existing]
+    if not new:
+        print("   no new handles to add (all already in input file)")
+        return 0
+
+    with input_path.open("a", encoding="utf-8") as f:
+        f.write(f"\n# discovered for query: {query}\n")
+        for h in new:
+            f.write(h + "\n")
+    print(f"   appended {len(new)} new handles to {input_path}")
+    return len(new)
+
+
+# ----- Draft generation ----------------------------------------------------
+
+DEFAULT_SUBJECT = "Your YouTube videos transcribed and ready"
+
+DEFAULT_BODY = """Hey
+
+Just wrapped up transcribing all your videos from your channel through my service Ekko (we archive YouTube channels into searchable text). Master transcript, individual files per video, subtitle files, and a searchable index spreadsheet. Everything's ready to go in my folder.
+
+Figured you'd want it and build something from it. Your library has years of valuable knowledge in it, and having it all searchable as text means you can repurpose it for written posts, new course content, books, email newsletters, whatever you'd like to build next.
+
+Grab it here: https://buy.stripe.com/3cI7sMftidQbdtp6azdIA05
+$197 one-time. I'll send the full archive over within the hour of purchase.
+
+If it's not for you, no worries. Just wanted to put it in front of you since the work's already done, and a lot of creators find it useful.
+
+Best, Garrett
+Ekko
+ekkoarchive.com
+"""
+
+
+def gen_drafts(csv_path: Path, output_path: Path, batch_size: int,
+               from_address: str) -> None:
+    if not csv_path.exists():
+        print(f"No CSV at {csv_path}. Run the scraper first.")
+        sys.exit(1)
+
+    rows: List[Dict[str, str]] = []
+    with csv_path.open("r", newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            email = (row.get("Email") or "").strip()
+            if email and email != "NOT_FOUND" and "@" in email:
+                rows.append(row)
+
+    if not rows:
+        print("No verified emails in the CSV yet -- run the scraper first.")
+        sys.exit(1)
+
+    batches = [rows[i:i + batch_size] for i in range(0, len(rows), batch_size)]
+    lines: List[str] = []
+    lines.append(f"# {len(rows)} verified emails across {len(batches)} BCC drafts")
+    lines.append(f"# Capped at {batch_size} BCC per draft (Gmail deliverability)")
+    lines.append("# Open Gmail, paste each draft, hit send. Spread across days.")
+    lines.append("")
+
+    for i, batch in enumerate(batches, 1):
+        bcc_list = ", ".join(r["Email"] for r in batch)
+        lines.append("=" * 72)
+        lines.append(f"DRAFT {i} of {len(batches)}  --  {len(batch)} BCC")
+        lines.append("=" * 72)
+        lines.append(f"From:    {from_address}")
+        lines.append(f"To:      {from_address}")
+        lines.append(f"Bcc:     {bcc_list}")
+        lines.append(f"Subject: {DEFAULT_SUBJECT}")
+        lines.append("")
+        lines.append(DEFAULT_BODY.strip())
+        lines.append("")
+        lines.append("--- recipients in this draft ---")
+        for r in batch:
+            name = r.get("Channel Name") or "?"
+            subs = r.get("Subscribers") or "?"
+            lines.append(f"  {name} ({subs} subs) -> {r['Email']}")
+        lines.append("")
+
+    output_path.write_text("\n".join(lines), encoding="utf-8")
+    print(f"Wrote {len(batches)} draft(s) covering {len(rows)} email(s) -> {output_path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="YouTube channel email scraper")
     parser.add_argument("channels", nargs="*",
@@ -399,13 +526,54 @@ def main() -> None:
                         help="Re-run channels in the existing CSV that have NOT_FOUND")
     parser.add_argument("--signin", action="store_true",
                         help="Force the sign-in pause even on an existing profile")
+    parser.add_argument("--discover", metavar="QUERY",
+                        help="Search YouTube for channels matching QUERY and append handles to --input")
+    parser.add_argument("--max", type=int, default=50,
+                        help="Max channels to discover per --discover query (default 50)")
+    parser.add_argument("--gen-drafts", action="store_true",
+                        help="After scraping (or alone), write drafts.txt from the CSV")
+    parser.add_argument("--drafts-out", default="drafts.txt",
+                        help="Path for the generated drafts file")
+    parser.add_argument("--batch-size", type=int, default=25,
+                        help="BCC recipients per draft (default 25, Gmail-safe)")
+    parser.add_argument("--from-address", default="abdullagarrett@gmail.com",
+                        help="From/To address used in drafts.txt")
     args = parser.parse_args()
 
+    # --gen-drafts alone: just read CSV and write drafts.txt, no browser needed
+    if args.gen_drafts and not args.discover and not args.channels and not (
+        args.input != "channels.txt" and Path(args.input).exists()
+    ) and Path(args.output).exists():
+        gen_drafts(Path(args.output), Path(args.drafts_out),
+                   args.batch_size, args.from_address)
+        return
+
+    # Discovery: append new handles to channels.txt before scraping
+    if args.discover:
+        if is_fresh_profile(args.profile_dir) and args.headless:
+            print("First-run sign-in needed but --headless was passed.")
+            print("Re-run without --headless once to sign in.")
+            sys.exit(1)
+        driver = get_driver(args.profile_dir, args.headless)
+        try:
+            if is_fresh_profile(args.profile_dir) or args.signin:
+                prompt_signin(driver)
+            handles = discover_channels(driver, args.discover, args.max)
+        finally:
+            driver.quit()
+        Path(args.input).touch(exist_ok=True)
+        append_handles(Path(args.input), handles, args.discover)
+
+    # Resolve the channel list to scrape
     if args.channels:
         channels = args.channels
     else:
         path = Path(args.input)
         if not path.exists():
+            if args.gen_drafts:
+                gen_drafts(Path(args.output), Path(args.drafts_out),
+                           args.batch_size, args.from_address)
+                return
             print(f"No channels passed and {path} not found.", file=sys.stderr)
             sys.exit(1)
         channels = load_channels(path)
@@ -416,6 +584,10 @@ def main() -> None:
 
     batch(channels, Path(args.output), args.profile_dir, args.headless,
           args.delay, args.retry_misses, args.signin)
+
+    if args.gen_drafts:
+        gen_drafts(Path(args.output), Path(args.drafts_out),
+                   args.batch_size, args.from_address)
 
 
 if __name__ == "__main__":
