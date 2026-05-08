@@ -168,21 +168,60 @@ def pick_best_email(emails: List[str], page_source_lower: str) -> Optional[str]:
     return best
 
 
-def scrape_channel_email(driver, channel_input: str) -> Optional[str]:
-    """Try the modal flow first, fall back to /about page, then regex sweep."""
+def extract_channel_metadata(driver) -> Dict[str, str]:
+    """Pull channel name, subscriber count, and canonical URL from meta tags."""
+    meta = {"channel_name": "", "subscribers": "", "url": ""}
+
+    def attr(xpath: str, attr_name: str) -> str:
+        try:
+            return driver.find_element(By.XPATH, xpath).get_attribute(attr_name) or ""
+        except Exception:
+            return ""
+
+    meta["channel_name"] = (
+        attr("//meta[@itemprop='name']", "content")
+        or attr("//meta[@property='og:title']", "content")
+    )
+    meta["url"] = (
+        attr("//link[@rel='canonical']", "href")
+        or attr("//meta[@property='og:url']", "content")
+        or driver.current_url
+    )
+    # Subscribers: shown as "1.2M subscribers" in the channel header
+    try:
+        text = driver.find_element(
+            By.XPATH, "//yt-content-metadata-view-model//span[contains(., 'subscriber')]"
+        ).text
+        meta["subscribers"] = text.replace(" subscribers", "").replace(" subscriber", "").strip()
+    except Exception:
+        pass
+    return meta
+
+
+def scrape_channel(driver, channel_input: str) -> Dict[str, str]:
+    """Try the modal flow first, fall back to /about, then regex sweep.
+    Returns a row dict ready for CSV write."""
+    row = {
+        "channel": channel_input,
+        "channel_name": "",
+        "subscribers": "",
+        "url": "",
+        "email": "NOT_FOUND",
+        "status": "No Email",
+    }
+
     url = normalize_url(channel_input)
     print(f"   -> {url}")
     driver.get(url)
     time.sleep(3)
 
-    # New flow: open About modal on the channel home page
-    opened = open_about_modal(driver)
-    if opened:
+    row.update(extract_channel_metadata(driver))
+
+    if open_about_modal(driver):
         reveal_email(driver)
 
     emails = extract_emails(driver)
 
-    # Fallback: /about URL (still works as a deep-link to the modal on many channels)
     if not emails:
         about_url = normalize_url(channel_input, force_about=True)
         if about_url != driver.current_url.rstrip("/"):
@@ -195,11 +234,13 @@ def scrape_channel_email(driver, channel_input: str) -> Optional[str]:
 
     if not emails:
         print("   [MISS] no email found")
-        return None
+        return row
 
     best = pick_best_email(emails, driver.page_source.lower())
     print(f"   [OK] {best}  ({len(emails)} candidate(s))")
-    return best
+    row["email"] = best or "NOT_FOUND"
+    row["status"] = "Email Verified" if best else "No Email"
+    return row
 
 
 def load_channels(path: Path) -> List[str]:
@@ -207,34 +248,73 @@ def load_channels(path: Path) -> List[str]:
     return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
 
 
+CSV_FIELDS = ["channel", "channel_name", "subscribers", "url", "email", "status"]
+
+
+def load_existing_rows(path: Path) -> Dict[str, Dict[str, str]]:
+    if not path.exists():
+        return {}
+    rows: Dict[str, Dict[str, str]] = {}
+    with path.open("r", newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            key = row.get("channel", "").strip()
+            if key:
+                rows[key] = row
+    return rows
+
+
 def batch(channels: List[str], output_csv: Path, profile_dir: Optional[str],
-          headless: bool, delay: float) -> None:
+          headless: bool, delay: float, retry_misses: bool) -> None:
+    existing = load_existing_rows(output_csv)
+    fresh = not existing
+
+    queue: List[str] = []
+    for ch in channels:
+        prior = existing.get(ch)
+        if prior is None:
+            queue.append(ch)
+        elif retry_misses and prior.get("email", "NOT_FOUND") == "NOT_FOUND":
+            queue.append(ch)
+        else:
+            print(f"[skip] {ch} (already in CSV: {prior.get('email')})")
+
+    if not queue:
+        print("Nothing to do -- all channels already processed.")
+        return
+
     driver = get_driver(profile_dir, headless)
-    results: List[Dict] = []
+    found = 0
+    written = 0
+
+    # Open CSV in append mode; write header only if file is new
+    f = output_csv.open("a", newline="", encoding="utf-8")
+    writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+    if fresh:
+        writer.writeheader()
+        f.flush()
+
     try:
-        for i, ch in enumerate(channels, 1):
-            print(f"\n[{i}/{len(channels)}] {ch}")
+        for i, ch in enumerate(queue, 1):
+            print(f"\n[{i}/{len(queue)}] {ch}")
             try:
-                email = scrape_channel_email(driver, ch)
+                row = scrape_channel(driver, ch)
             except Exception as exc:
                 print(f"   [ERROR] {exc}")
-                email = None
-            results.append({
-                "channel": ch,
-                "email": email or "NOT_FOUND",
-                "status": "Email Verified" if email else "No Email",
-            })
+                row = {
+                    "channel": ch, "channel_name": "", "subscribers": "",
+                    "url": "", "email": "NOT_FOUND", "status": "No Email",
+                }
+            writer.writerow(row)
+            f.flush()
+            written += 1
+            if row["email"] != "NOT_FOUND":
+                found += 1
             time.sleep(delay)
     finally:
+        f.close()
         driver.quit()
 
-    with output_csv.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["channel", "email", "status"])
-        writer.writeheader()
-        writer.writerows(results)
-
-    found = sum(1 for r in results if r["email"] != "NOT_FOUND")
-    print(f"\n{found}/{len(results)} emails found -> {output_csv}")
+    print(f"\n{found}/{written} new emails found -> {output_csv}")
 
 
 def main() -> None:
@@ -251,6 +331,8 @@ def main() -> None:
                         help="Run Chrome headless (default: visible window for reliability)")
     parser.add_argument("--delay", type=float, default=3.0,
                         help="Seconds between channels")
+    parser.add_argument("--retry-misses", action="store_true",
+                        help="Re-run channels in the existing CSV that have NOT_FOUND")
     args = parser.parse_args()
 
     if args.channels:
@@ -266,7 +348,8 @@ def main() -> None:
         print("No channels to process.", file=sys.stderr)
         sys.exit(1)
 
-    batch(channels, Path(args.output), args.profile_dir, args.headless, args.delay)
+    batch(channels, Path(args.output), args.profile_dir, args.headless,
+          args.delay, args.retry_misses)
 
 
 if __name__ == "__main__":
