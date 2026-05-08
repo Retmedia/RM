@@ -387,7 +387,7 @@ def main() -> None:
                         help="Channel handles or URLs (skips --input if given)")
     parser.add_argument("-i", "--input", default="channels.txt",
                         help="File with one @handle or URL per line (default: channels.txt)")
-    parser.add_argument("-o", "--output", default="ekko_leads_emails.csv",
+    parser.add_argument("-o", "--output", default="youtube_leads.csv",
                         help="Output CSV path")
     parser.add_argument("--profile-dir", default="./chrome-profile",
                         help="Persistent Chrome user-data-dir; sign in once and reuse")
