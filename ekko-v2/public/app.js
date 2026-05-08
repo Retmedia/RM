@@ -245,6 +245,7 @@ function maybeRefreshChannelVideos(jobs) {
         state.currentVideos = videos;
         renderVideoTable();
         updateRetryFailedButton(state.currentChannel);
+        updateRefreshMetadataButton(state.currentChannel);
       }
     })
     .catch((err) => console.warn('Channel auto-refresh failed:', err.message))
@@ -557,6 +558,7 @@ async function renderChannelView(key) {
   // Live-track the failed-count on the channel header. Re-evaluated after
   // every SSE-driven channel refresh too (see maybeRefreshChannelVideos).
   updateRetryFailedButton(ch);
+  updateRefreshMetadataButton(ch);
 
   if (!videos.length) {
     card.appendChild(emptyState({
@@ -960,6 +962,48 @@ function updateRetryFailedButton(ch) {
   btn.onclick = () => confirmRetryAll(ch, failed);
 }
 
+// Channels archived before --write-info-json was wired in have blank
+// upload_date / view_count fields — the CSV columns come out empty and
+// chronological sort is unreliable. Show a "Refresh metadata" button when
+// >0 videos are missing upload_date so the operator can backfill in one
+// click. Hidden once everything has dates.
+function updateRefreshMetadataButton(ch) {
+  const actionsBar = $('.view-header .actions');
+  if (!actionsBar) return;
+  const stale = state.currentVideos.filter((v) => !v.upload_date).length;
+  let btn = actionsBar.querySelector('[data-refresh-meta]');
+  if (stale === 0) {
+    if (btn) btn.remove();
+    return;
+  }
+  if (!btn) {
+    btn = h('button', {
+      dataset: { refreshMeta: '1' },
+      title: 'Backfill upload date / view count for videos missing this metadata',
+    });
+    // Insert right after Retry-failed (or after Pull-new-videos if Retry isn't there).
+    const retryBtn = actionsBar.querySelector('[data-retry-failed]');
+    const pullBtn = Array.from(actionsBar.querySelectorAll('button'))
+      .find((b) => /Pull new videos/.test(b.textContent));
+    const ref = retryBtn || pullBtn;
+    if (ref) ref.insertAdjacentElement('afterend', btn);
+    else actionsBar.appendChild(btn);
+  }
+  btn.textContent = `↺ Refresh metadata (${stale})`;
+  btn.onclick = () => startRefreshMetadata(ch, stale);
+}
+
+async function startRefreshMetadata(ch, stale) {
+  if (!confirm(`Backfill metadata for ${stale} video${stale === 1 ? '' : 's'}? This runs in the background — no captions are re-pulled, just upload dates and view counts.`)) return;
+  try {
+    await api(`/api/channels/${encodeURIComponent(ch.key)}/refresh-metadata`, { method: 'POST' });
+    toast('Metadata refresh started — see Jobs for progress.', { type: 'success' });
+    navigate('jobs');
+  } catch (err) {
+    toastError(err);
+  }
+}
+
 function confirmRetryAll(ch, count) {
   // Rough estimate: best case ~2s per video (cached metadata + immediate caption
   // hit). Pessimistic case much longer if YouTube rate-limits; the permanent-
@@ -1072,10 +1116,9 @@ async function saveManualTranscript(v) {
 // ---- Export dialog ----
 function openExportDialog(ch) {
   const body = h('div', {},
-    h('p', { class: 'helper' }, 'Build a clean, shareable ZIP of every transcript in this channel.'),
+    h('p', { class: 'helper' }, 'Build a clean, shareable ZIP of every transcript in this channel. The deliverable is HTML — customers double-click and read in their browser.'),
     h('div', { class: 'checkbox-group' },
-      h('label', { class: 'row' }, h('input', { type: 'checkbox', id: 'opt-individual', checked: true }), h('span', {}, 'Include individual transcript files')),
-      h('label', { class: 'row' }, h('input', { type: 'checkbox', id: 'opt-srt' }), h('span', {}, 'Include SRT subtitle files')),
+      h('label', { class: 'row' }, h('input', { type: 'checkbox', id: 'opt-individual', checked: true }), h('span', {}, 'Include one HTML file per video')),
     ),
     h('label', {}, 'Customer name (used in delivery email)',
       h('input', { type: 'text', id: 'opt-customer', value: ch.customer_name || '', placeholder: 'e.g. Jamie' })),
@@ -1094,7 +1137,6 @@ function openExportDialog(ch) {
 
 async function buildZip(ch) {
   const includeIndividual = $('#opt-individual').checked;
-  const includeSrt = $('#opt-srt').checked;
   const customer = ($('#opt-customer')?.value || '').trim();
   const btn = $('#btn-build-zip');
   btn.disabled = true;
@@ -1115,8 +1157,7 @@ async function buildZip(ch) {
 
   try {
     const url = `/api/channels/${encodeURIComponent(ch.key)}/export`
-      + `?individual=${includeIndividual ? 1 : 0}`
-      + `&srt=${includeSrt ? 1 : 0}`;
+      + `?individual=${includeIndividual ? 1 : 0}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
     const cd = res.headers.get('content-disposition') || '';

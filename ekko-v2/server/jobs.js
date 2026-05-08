@@ -2,7 +2,7 @@ const path = require('node:path');
 const fs = require('node:fs/promises');
 const { EventEmitter } = require('node:events');
 const { listChannelVideos, getChannelMetadata } = require('./youtube');
-const { pullTranscript } = require('./transcripts');
+const { pullTranscript, fetchVideoMetadata } = require('./transcripts');
 const storage = require('./storage');
 const { sleep, writeJSONAtomic, readJSONIfExists } = require('./utils');
 const { wordCount } = require('./format');
@@ -125,6 +125,41 @@ async function startArchiveJob({ channelUrl, includeShorts = false, language = '
   return id;
 }
 
+// Backfill upload_date / view_count / description for every video on a
+// channel by running yt-dlp --skip-download --write-info-json against each
+// one. Cheap (no captions cross the wire) and idempotent — used by operators
+// who archived a channel before --write-info-json was wired in and now have
+// blank columns in INDEX.csv.
+async function startRefreshMetadataJob({ channelKey }) {
+  const id = newJobId();
+  const state = {
+    id,
+    type: 'refresh-metadata',
+    channelUrl: null,
+    channelKey,
+    status: 'starting',
+    started_at: new Date().toISOString(),
+    finished_at: null,
+    progress: { total: 0, done: 0, skipped: 0, failed: 0, current: null, currentTitle: null },
+    error: null,
+    options: {},
+    controller: { abort: false, currentChild: null },
+  };
+  jobs.set(id, state);
+  await persist(state);
+  emit();
+
+  runRefreshMetadata(state).catch((err) => {
+    state.status = 'error';
+    state.error = err.message;
+    state.finished_at = new Date().toISOString();
+    persist(state);
+    emit();
+  });
+
+  return id;
+}
+
 // Bulk-retry every video on a channel whose transcript_status isn't 'ok'.
 // Reuses the same pullTranscript pipeline (rate-limit-aware backoff,
 // permanent-error short-circuit, SIGTERM-on-cancel, SSE progress) but skips
@@ -213,15 +248,19 @@ async function run(state) {
     // "unavailable" record for the killed video.
     if (state.controller.abort) break;
     const segText = result.ok ? result.segments.map((s) => s.text).join(' ') : '';
+    // Prefer full metadata from --write-info-json (upload_date / view_count
+    // are missing from --flat-playlist results); fall back to the listing
+    // values when the info JSON wasn't available.
+    const info = result.info || {};
     const record = {
       id: v.id,
-      title: v.title || existing?.title || null,
+      title: info.title || v.title || existing?.title || null,
       url: v.url || `https://www.youtube.com/watch?v=${v.id}`,
-      duration: v.duration ?? null,
-      upload_date: v.upload_date ?? null,
-      view_count: v.view_count ?? null,
-      thumbnail: v.thumbnail ?? null,
-      description: v.description ?? null,
+      duration: info.duration ?? v.duration ?? null,
+      upload_date: info.upload_date ?? v.upload_date ?? null,
+      view_count: info.view_count ?? v.view_count ?? null,
+      thumbnail: info.thumbnail ?? v.thumbnail ?? null,
+      description: info.description ?? v.description ?? null,
       transcript_status: result.ok ? 'ok' : 'unavailable',
       transcript_reason: result.ok ? null : result.reason,
       transcript_segments: result.ok ? result.segments.length : 0,
@@ -265,6 +304,53 @@ function finalize(state, status) {
   emit();
 }
 
+async function runRefreshMetadata(state) {
+  const { channelKey } = state;
+  setStatus(state, 'listing-videos');
+  const all = await storage.listVideos(channelKey);
+  state.progress.total = all.length;
+  setStatus(state, 'archiving');
+
+  const tDir = storage.transcriptDir(channelKey);
+  await fs.mkdir(tDir, { recursive: true });
+
+  for (const v of all) {
+    if (state.controller.abort) break;
+    state.progress.current = v.id;
+    state.progress.currentTitle = v.title || null;
+    try {
+      const info = await fetchVideoMetadata(v.id, tDir, state.controller);
+      if (state.controller.abort) break;
+      if (info) {
+        const updated = {
+          ...v,
+          title: info.title || v.title,
+          duration: info.duration ?? v.duration ?? null,
+          upload_date: info.upload_date || v.upload_date || null,
+          view_count: info.view_count ?? v.view_count ?? null,
+          thumbnail: info.thumbnail || v.thumbnail || null,
+          description: info.description ?? v.description ?? null,
+        };
+        await storage.saveVideo(channelKey, updated);
+      } else {
+        state.progress.failed++;
+      }
+    } catch (err) {
+      if (state.controller.abort) break;
+      state.progress.failed++;
+      console.warn(`refresh-metadata: ${v.id} failed:`, err.message?.slice(0, 200));
+    }
+    state.progress.done++;
+    emit();
+    persist(state);
+    await sleep(750); // metadata-only is lighter than caption pull, can go faster
+  }
+
+  state.progress.current = null;
+  state.progress.currentTitle = null;
+  finalize(state, state.controller.abort ? 'cancelled' : 'done');
+}
+
 async function runRetryUnavailable(state) {
   const { language } = state.options;
   const { channelKey } = state;
@@ -287,8 +373,18 @@ async function runRetryUnavailable(state) {
     if (state.controller.abort) break;
 
     const segText = result.ok ? result.segments.map((s) => s.text).join(' ') : '';
+    const info = result.info || {};
     const updated = {
       ...v,
+      // Backfill metadata fields that the original --flat-playlist listing
+      // didn't capture. Existing values win only when the info JSON didn't
+      // come back this time.
+      title: info.title || v.title,
+      duration: info.duration ?? v.duration ?? null,
+      upload_date: info.upload_date || v.upload_date || null,
+      view_count: info.view_count ?? v.view_count ?? null,
+      thumbnail: info.thumbnail || v.thumbnail || null,
+      description: info.description ?? v.description ?? null,
       transcript_status: result.ok ? 'ok' : 'unavailable',
       transcript_reason: result.ok ? null : result.reason,
       transcript_segments: result.ok ? result.segments.length : (v.transcript_segments || 0),
@@ -355,6 +451,7 @@ function subscribe(handler) {
 module.exports = {
   startArchiveJob,
   startRetryUnavailableJob,
+  startRefreshMetadataJob,
   getJob,
   listJobs,
   cancelJob,

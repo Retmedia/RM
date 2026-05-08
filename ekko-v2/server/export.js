@@ -294,7 +294,9 @@ li { margin: 0.25rem 0; }
 details.toc { margin: 1.5rem 0 0; padding: 0.7rem 1rem; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; }
 details.toc summary { cursor: pointer; font-weight: 500; color: var(--fg-dim); }
 details.toc[open] summary { margin-bottom: 0.5rem; }
-details.toc ol { margin: 0; font-size: 0.9rem; max-height: 360px; overflow-y: auto; }
+details.toc ol { margin: 0; padding-left: 0; list-style: none; font-size: 0.9rem; max-height: 360px; overflow-y: auto; }
+details.toc li { margin: 0.18rem 0; display: grid; grid-template-columns: 3.2rem 1fr; gap: 0.25rem; }
+details.toc .toc-num { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; padding-right: 0.4rem; }
 .footer { text-align: center; color: var(--muted); font-style: italic; margin: 3rem 0 0; }
 @media print {
   body { background: white; color: black; }
@@ -326,8 +328,11 @@ function buildCombinedMasterHtml(channel, items) {
   const channelTitle = channel.title || channel.key;
   const title = `${channelTitle} — Complete Transcript Vault`;
 
+  // Number 1..N matching the newest-first order so the customer can see a
+  // video's position in the channel at a glance ("3 of 165" etc).
   const toc = okItems.map((x, i) => {
-    return `<li><a href="#v${i}">${escHtml(x.video.title || x.video.id)}</a></li>`;
+    const n = i + 1;
+    return `<li><span class="toc-num">${n}.</span> <a href="#v${i}">${escHtml(x.video.title || x.video.id)}</a></li>`;
   }).join('\n');
 
   const sections = okItems.map((x, i) => {
@@ -415,18 +420,16 @@ function buildReadmeHtml(channel, items, generated) {
     <h2>Files</h2>
     <ul>
       <li><strong>COMBINED_MASTER.html</strong> — start here. Every transcript in one searchable, browser-readable file.</li>
-      <li><strong>COMBINED_MASTER.md</strong> — the same content as Markdown, ready to paste into AI tools.</li>
-      <li><strong>individual_transcripts/</strong> — one file per video. Both <code>.html</code> (read in browser) and <code>.md</code> (paste into AI) are provided.</li>
+      <li><strong>individual_transcripts/</strong> — one HTML file per video, listed in chronological order (newest first).</li>
       <li><strong>INDEX.csv</strong> — titles, URLs, dates, view counts, word counts. Opens in Excel, Numbers, or Google Sheets.</li>
-      <li><strong>srt_files/</strong> — subtitle files for video editing. <em>(only present if exported)</em></li>
     </ul>
   </section>
 
   <section>
     <h2>How to use it</h2>
     <ul>
-      <li><strong>Read & search:</strong> open <code>COMBINED_MASTER.html</code> in your browser, hit <kbd>Ctrl</kbd>+<kbd>F</kbd> (or <kbd>Cmd</kbd>+<kbd>F</kbd> on Mac).</li>
-      <li><strong>Feed an AI:</strong> paste sections — or the whole <code>.md</code> master — into Claude, ChatGPT, or any LLM to draft threads, scripts, newsletters, or chapters.</li>
+      <li><strong>Read & search:</strong> double-click <code>COMBINED_MASTER.html</code>. Opens in your browser. Hit <kbd>Ctrl</kbd>+<kbd>F</kbd> (or <kbd>Cmd</kbd>+<kbd>F</kbd> on Mac) to find any phrase.</li>
+      <li><strong>Feed an AI:</strong> open any HTML file in your browser, select all, copy, and paste into Claude, ChatGPT, or any LLM to draft threads, scripts, newsletters, or chapters.</li>
       <li><strong>Repurpose:</strong> mine old interviews for Shorts, posts, or course material.</li>
       <li><strong>Archive:</strong> keep a copy somewhere safe. This is your IP.</li>
     </ul>
@@ -441,14 +444,12 @@ function buildReadmeHtml(channel, items, generated) {
 
 async function buildVaultZip(channelKey, opts = {}) {
   const includeIndividual = opts.individual !== false;
-  const includeSrt = !!opts.srt;
   const channel = await storage.getChannel(channelKey);
   if (!channel) throw new Error('Channel not found');
 
   const items = await loadVideosForExport(channelKey);
   // Refuse to ship a half-empty deliverable. If 0 videos pulled OK there is
-  // literally nothing to package — better to surface the problem than email
-  // a customer a ZIP with an empty COMBINED_MASTER and no individual files.
+  // literally nothing to package.
   const okCount = items.filter((x) => x.text).length;
   if (okCount === 0) {
     throw new Error('Nothing to export — this channel has no successfully-pulled transcripts yet.');
@@ -462,38 +463,23 @@ async function buildVaultZip(channelKey, opts = {}) {
   const root = `${zipBaseName}/`;
   zip.addDir(root);
 
-  zip.addFile(`${root}README.md`, buildReadme(channel, items, generated));
+  // HTML-only deliverable. Markdown duplicates were dropped because customers
+  // double-clicking a .md file on a stock Mac/Windows get raw markdown source
+  // (TextEdit / Notepad) — readable but ugly. HTML opens beautifully in any
+  // browser. Subtitle (.srt) files were also dropped — operators weren't
+  // shipping them and the option cluttered the export dialog.
   zip.addFile(`${root}README.html`, buildReadmeHtml(channel, items, generated));
-  zip.addFile(`${root}COMBINED_MASTER.md`, buildCombinedMaster(channel, items));
   zip.addFile(`${root}COMBINED_MASTER.html`, buildCombinedMasterHtml(channel, items));
   zip.addFile(`${root}INDEX.csv`, buildIndexCsv(items));
 
   if (includeIndividual) {
     zip.addDir(`${root}individual_transcripts/`);
-    const seenMd = new Set();
-    const seenHtml = new Set();
+    const seen = new Set();
     for (const x of items) {
       if (!x.text) continue;
       const slug = slugifyTitle(x.video.title || x.video.id);
-      const mdName = uniqueFilename(seenMd, `${x.video.id}_${slug}`, x.video.id, '.md');
-      const htmlName = uniqueFilename(seenHtml, `${x.video.id}_${slug}`, x.video.id, '.html');
-      zip.addFile(`${root}individual_transcripts/${mdName}`, buildIndividualMd(channel, x));
+      const htmlName = uniqueFilename(seen, `${x.video.id}_${slug}`, x.video.id, '.html');
       zip.addFile(`${root}individual_transcripts/${htmlName}`, buildIndividualHtml(channel, x));
-    }
-  }
-
-  if (includeSrt) {
-    let added = 0;
-    const seen = new Set();
-    for (const x of items) {
-      if (!x.vtt) continue;
-      const srt = vttToSrt(x.vtt);
-      if (!srt) continue;
-      if (added === 0) zip.addDir(`${root}srt_files/`);
-      added++;
-      const slug = slugifyTitle(x.video.title || x.video.id);
-      const filename = uniqueFilename(seen, `${x.video.id}_${slug}`, x.video.id, '.srt');
-      zip.addFile(`${root}srt_files/${filename}`, srt);
     }
   }
 

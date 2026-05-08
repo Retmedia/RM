@@ -36,7 +36,10 @@ function isRateLimited(stderr) {
 }
 
 // Run yt-dlp, optionally registering the spawned child on a controller so
-// cancelJob() can SIGTERM it and skip the (up-to-3-minute) timeout.
+// cancelJob() can SIGTERM it and skip the (up-to-3-minute) timeout. Also
+// requests --write-info-json so we capture upload_date / view_count /
+// description / etc. — fields that --flat-playlist (used during channel
+// listing) doesn't include, so the CSV would otherwise have blank columns.
 function runYtDlp(videoId, workDir, language, controller) {
   const outTemplate = path.join(workDir, '%(id)s.%(ext)s');
   const args = [
@@ -48,6 +51,7 @@ function runYtDlp(videoId, workDir, language, controller) {
     // We catch all of them so `en` doesn't miss `en-orig` / `en-US` / `a.en`.
     '--sub-langs', `${language}-orig,${language}.*,${language},a.${language}`,
     '--sub-format', 'vtt/best',
+    '--write-info-json',
     '--no-warnings',
     '-o', outTemplate,
     `https://www.youtube.com/watch?v=${videoId}`,
@@ -69,6 +73,29 @@ function runYtDlp(videoId, workDir, language, controller) {
     });
     if (controller) controller.currentChild = child;
   });
+}
+
+// Read the .info.json yt-dlp wrote during the pull (best-effort) and pluck
+// out the fields we care about. yt-dlp writes the info file early in its
+// pipeline, so we usually have it even when subtitle download fails.
+async function readVideoInfo(workDir, videoId) {
+  const infoPath = path.join(workDir, `${videoId}.info.json`);
+  try {
+    const raw = await fs.readFile(infoPath, 'utf8');
+    const info = JSON.parse(raw);
+    return {
+      title: info.title ?? null,
+      description: info.description ?? null,
+      duration: typeof info.duration === 'number' ? info.duration : null,
+      upload_date: info.upload_date ?? null,           // "20240105"
+      view_count: typeof info.view_count === 'number' ? info.view_count : null,
+      thumbnail: info.thumbnail ?? null,
+      channel: info.channel ?? null,
+      channel_id: info.channel_id ?? null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // Probe what subtitle/auto-caption tracks YouTube actually has for a video,
@@ -125,22 +152,25 @@ async function pullTranscript(videoId, workDir, language = 'en', controller = nu
       const stderr = (e.stderr || e.message || '').toString();
       lastErr = stderr.slice(0, 500);
       if (isPermanent(stderr)) {
-        // Even on permanent failures, probe languages so the UI can suggest
-        // a workaround (e.g. paste manually, or re-pull with a different lang).
+        // Even on permanent failures yt-dlp may have written the info JSON
+        // before bailing — pick it up so the CSV gets dates / view counts.
+        const info = await readVideoInfo(workDir, videoId);
         const available_languages = await probeAvailableLanguages(videoId);
-        return { ok: false, reason: lastErr, permanent: true, available_languages };
+        return { ok: false, reason: lastErr, permanent: true, available_languages, info };
       }
       const isRL = isRateLimited(stderr);
       rateLimited = isRL;
       const isLastAttempt = attempt >= MAX_ATTEMPTS - 1;
       if (isLastAttempt) {
-        return { ok: false, reason: lastErr, rateLimited };
+        const info = await readVideoInfo(workDir, videoId);
+        return { ok: false, reason: lastErr, rateLimited, info };
       }
       const delays = isRL ? RATE_LIMIT_DELAYS_MS : RETRY_DELAYS_MS;
       await sleep(delays[attempt] ?? delays[delays.length - 1]);
     }
   }
 
+  const info = await readVideoInfo(workDir, videoId);
   const entries = await fs.readdir(workDir);
   const vttFile = entries.find((f) => f.startsWith(videoId) && f.endsWith('.vtt'));
   if (!vttFile) {
@@ -150,13 +180,49 @@ async function pullTranscript(videoId, workDir, language = 'en', controller = nu
     const reason = available_languages && available_languages.length
       ? `No captions in ${language}. YouTube has: ${available_languages.slice(0, 8).join(', ')}${available_languages.length > 8 ? '…' : ''}`
       : 'No captions on YouTube for this video';
-    return { ok: false, reason, permanent: true, available_languages };
+    return { ok: false, reason, permanent: true, available_languages, info };
   }
 
   const fullPath = path.join(workDir, vttFile);
   const raw = await fs.readFile(fullPath, 'utf8');
   const segments = parseVTT(raw);
-  return { ok: true, segments, raw, file: vttFile, path: fullPath };
+  return { ok: true, segments, raw, file: vttFile, path: fullPath, info };
+}
+
+// Lightweight metadata-only fetch — used by the "Refresh metadata" job to
+// backfill upload_date / view_count on existing channels without re-pulling
+// captions. Much faster than pullTranscript because no subtitles cross the
+// wire; just the video metadata page.
+async function fetchVideoMetadata(videoId, workDir, controller = null) {
+  if (!isVideoId(videoId)) throw new Error('Invalid video id');
+  await fs.mkdir(workDir, { recursive: true });
+  const outTemplate = path.join(workDir, '%(id)s.%(ext)s');
+  const args = [
+    '--skip-download',
+    '--write-info-json',
+    '--no-warnings',
+    '-o', outTemplate,
+    `https://www.youtube.com/watch?v=${videoId}`,
+  ];
+  return new Promise((resolve, reject) => {
+    const child = execFile(YT_DLP, args, {
+      encoding: 'utf8',
+      timeout: 60 * 1000,
+      maxBuffer: 16 * 1024 * 1024,
+    }, async (err) => {
+      if (controller && controller.currentChild === child) controller.currentChild = null;
+      if (err && !(controller && controller.abort)) {
+        // Even on error yt-dlp often writes info.json. Try to read it before
+        // giving up so callers still get whatever metadata is available.
+        const info = await readVideoInfo(workDir, videoId);
+        if (info) return resolve(info);
+        return reject(err);
+      }
+      const info = await readVideoInfo(workDir, videoId);
+      resolve(info);
+    });
+    if (controller) controller.currentChild = child;
+  });
 }
 
 function parseVTT(vtt) {
@@ -197,4 +263,4 @@ function collapseRepeats(s) {
   return s.replace(/\b(\w+)( \1\b)+/gi, '$1');
 }
 
-module.exports = { pullTranscript, parseVTT, probeAvailableLanguages, isPermanent, isRateLimited };
+module.exports = { pullTranscript, parseVTT, probeAvailableLanguages, fetchVideoMetadata, readVideoInfo, isPermanent, isRateLimited };

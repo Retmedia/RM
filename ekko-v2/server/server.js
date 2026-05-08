@@ -4,7 +4,7 @@ const { spawn } = require('node:child_process');
 const express = require('express');
 const storage = require('./storage');
 const {
-  startArchiveJob, startRetryUnavailableJob,
+  startArchiveJob, startRetryUnavailableJob, startRefreshMetadataJob,
   getJob, listJobs, cancelJob,
   loadPersistedJobs, subscribe,
 } = require('./jobs');
@@ -72,6 +72,25 @@ app.get('/api/channels/:key/videos', async (req, res, next) => {
   try { res.json(await storage.listVideos(req.params.key)); } catch (e) { next(e); }
 });
 
+// Backfill upload_date / view_count / description for every video on the
+// channel. Cheap (no captions cross the wire) and safe to run on channels
+// that already have transcripts pulled.
+app.post('/api/channels/:key/refresh-metadata', async (req, res, next) => {
+  try {
+    const channel = await storage.getChannel(req.params.key);
+    if (!channel) return res.status(404).json({ error: 'Channel not found' });
+
+    const ACTIVE = ['starting', 'fetching-channel', 'listing-videos', 'archiving', 'cancelling'];
+    const dup = listJobs().find((j) => j.channelKey === req.params.key && ACTIVE.includes(j.status));
+    if (dup) {
+      return res.status(409).json({ error: 'A pull is already running for this channel — see Jobs.' });
+    }
+
+    const id = await startRefreshMetadataJob({ channelKey: req.params.key });
+    res.json({ jobId: id });
+  } catch (e) { next(e); }
+});
+
 // Bulk re-pull every transcript that came back unavailable on the original
 // archive. Saves the operator from clicking Retry on each failed video one by
 // one — common after a rate-limit-heavy pull. Returns a jobId; progress is
@@ -117,8 +136,16 @@ app.post('/api/channels/:key/videos/:videoId/retry', async (req, res, next) => {
 
     const result = await pullTranscript(req.params.videoId, tDir, language);
     const segText = result.ok ? result.segments.map((s) => s.text).join(' ') : '';
+    const info = result.info || {};
     const updated = {
       ...existing,
+      // Backfill metadata fields if --write-info-json gave us fresh values.
+      title: info.title || existing.title,
+      duration: info.duration ?? existing.duration ?? null,
+      upload_date: info.upload_date || existing.upload_date || null,
+      view_count: info.view_count ?? existing.view_count ?? null,
+      thumbnail: info.thumbnail || existing.thumbnail || null,
+      description: info.description ?? existing.description ?? null,
       transcript_status: result.ok ? 'ok' : 'unavailable',
       transcript_reason: result.ok ? null : result.reason,
       transcript_segments: result.ok ? result.segments.length : (existing.transcript_segments || 0),

@@ -148,11 +148,11 @@ async function writeFixtureVault() {
   return { root, channelKey };
 }
 
-test('buildVaultZip — produces correct structure for a 3-video fixture', async () => {
+test('buildVaultZip — produces HTML-only structure for a 3-video fixture', async () => {
   const { root } = await writeFixtureVault();
   try {
     const { buildVaultZip } = require('../server/export');
-    const { buffer, filename } = await buildVaultZip('jack-neel-abcd1234', { individual: true, srt: true });
+    const { buffer, filename } = await buildVaultZip('jack-neel-abcd1234', { individual: true });
 
     // Filename: PascalCase channel + ISO date + .zip
     assert.match(filename, /^JackNeel_EkkoVault_\d{4}-\d{2}-\d{2}\.zip$/);
@@ -163,97 +163,97 @@ test('buildVaultZip — produces correct structure for a 3-video fixture', async
     const baseRe = /^JackNeel_EkkoVault_\d{4}-\d{2}-\d{2}\//;
     const base = names.find((n) => baseRe.test(n)).match(baseRe)[0];
 
-    // Required files at root — both .md and .html companions for README and COMBINED_MASTER.
-    assert.ok(names.includes(`${base}README.md`), 'README.md missing');
+    // Required files at root — HTML only.
     assert.ok(names.includes(`${base}README.html`), 'README.html missing');
-    assert.ok(names.includes(`${base}COMBINED_MASTER.md`), 'COMBINED_MASTER.md missing');
     assert.ok(names.includes(`${base}COMBINED_MASTER.html`), 'COMBINED_MASTER.html missing');
     assert.ok(names.includes(`${base}INDEX.csv`), 'INDEX missing');
 
-    // Individual files, slugified per spec — one .md and one .html per video.
-    const indivMd = names.filter((n) => n.startsWith(`${base}individual_transcripts/`) && n.endsWith('.md'));
+    // No more .md files anywhere.
+    assert.ok(!names.some((n) => n.endsWith('.md')), `expected no .md files, got: ${names.filter((n) => n.endsWith('.md')).join(', ')}`);
+    // No more SRT files / folder anywhere.
+    assert.ok(!names.some((n) => n.startsWith(`${base}srt_files/`)), 'srt_files/ should not exist');
+    assert.ok(!names.some((n) => n.endsWith('.srt')), 'no .srt anywhere');
+
+    // Individual files, slugified per spec — HTML only, one per pulled video.
     const indivHtml = names.filter((n) => n.startsWith(`${base}individual_transcripts/`) && n.endsWith('.html'));
-    assert.equal(indivMd.length, 2, 'expected 2 individual .md transcripts (one is unavailable)');
-    assert.equal(indivHtml.length, 2, 'expected 2 individual .html transcripts');
-    assert.ok(indivMd.some((n) => /aaaaaaaaaaa__1_divorce_lawyer_reacts/.test(n)), 'leading # preserved as _ (md)');
-    assert.ok(indivHtml.some((n) => /aaaaaaaaaaa__1_divorce_lawyer_reacts/.test(n)), 'leading # preserved as _ (html)');
-    assert.ok(indivMd.some((n) => /bbbbbbbbbbb_how_to_cook_pasta_like_a_pro/.test(n)), 'normal title slug (md)');
+    assert.equal(indivHtml.length, 2, 'expected 2 individual .html transcripts (one video is unavailable)');
+    assert.ok(indivHtml.some((n) => /aaaaaaaaaaa__1_divorce_lawyer_reacts/.test(n)), 'leading # preserved as _');
+    assert.ok(indivHtml.some((n) => /bbbbbbbbbbb_how_to_cook_pasta_like_a_pro/.test(n)), 'normal title slug');
 
-    // SRT files only when opted in.
-    const srt = names.filter((n) => n.startsWith(`${base}srt_files/`) && n.endsWith('.srt'));
-    assert.equal(srt.length, 2, 'expected 2 SRT files');
-
-    // COMBINED_MASTER (md) must start with the required header.
-    const masterEntry = entries.find((e) => e.name === `${base}COMBINED_MASTER.md`);
-    const master = masterEntry.data.toString('utf8');
-    assert.match(master, /^# Jack Neel — Complete Transcript Vault/m);
-    assert.match(master, /\*\*Generated:\*\* \w+ \d+, \d{4}/);
-    assert.match(master, /\*\*Total Videos:\*\* 2/);
-    assert.match(master, /\*\*Total Words:\*\*/);
-    assert.match(master, /Search with Ctrl\+F \/ Cmd\+F/);
-
-    // COMBINED_MASTER.html must be a valid-looking standalone document.
+    // COMBINED_MASTER.html must be a valid-looking standalone document with a
+    // numbered TOC and newest-first ordering.
     const masterHtmlEntry = entries.find((e) => e.name === `${base}COMBINED_MASTER.html`);
     const masterHtml = masterHtmlEntry.data.toString('utf8');
     assert.match(masterHtml, /^<!doctype html>/i);
-    assert.match(masterHtml, /<style>[\s\S]+<\/style>/);  // embedded CSS, no external deps
+    assert.match(masterHtml, /<style>[\s\S]+<\/style>/);
     assert.match(masterHtml, /Jack Neel.*Complete Transcript Vault/);
     assert.match(masterHtml, /Total Videos<\/dt><dd>2<\/dd>/);
-    assert.match(masterHtml, /<details class="toc">/);     // TOC for jumping to videos
-    assert.match(masterHtml, /How To Cook Pasta/);          // newer video first
-    assert.match(masterHtml, /Divorce Lawyer/);             // older video also present
-    // Newest-first ordering also holds in HTML.
+    assert.match(masterHtml, /<details class="toc">/);
+    assert.match(masterHtml, /<span class="toc-num">1\.<\/span>/);
+    assert.match(masterHtml, /<span class="toc-num">2\.<\/span>/);
+
+    // Newest-first ordering: bbbb (Jan 20) before aaaa (Jan 5).
     const hIdxA = masterHtml.indexOf('How To Cook Pasta');
     const hIdxB = masterHtml.indexOf('Divorce Lawyer');
     assert.ok(hIdxA > -1 && hIdxB > -1 && hIdxA < hIdxB, 'newer video should come first in HTML');
+    // The numbered TOC reflects that — #1 is the newest title.
+    const tocStart = masterHtml.indexOf('<details class="toc">');
+    const tocEnd = masterHtml.indexOf('</details>', tocStart);
+    const tocBlock = masterHtml.slice(tocStart, tocEnd);
+    const num1Idx = tocBlock.indexOf('1.</span>');
+    const newerInToc = tocBlock.indexOf('How To Cook Pasta', num1Idx);
+    const olderInToc = tocBlock.indexOf('Divorce Lawyer', num1Idx);
+    assert.ok(num1Idx > -1 && newerInToc > -1 && olderInToc > -1 && newerInToc < olderInToc,
+      'TOC: newest video should appear next to "1."');
 
-    // README.html must be a valid standalone document with the same forbidden-claim guarantees.
+    // README.html — operator-honest copy. No .md mentions, no forbidden claims.
     const readmeHtmlEntry = entries.find((e) => e.name === `${base}README.html`);
     const readmeHtml = readmeHtmlEntry.data.toString('utf8');
     assert.match(readmeHtml, /^<!doctype html>/i);
     assert.match(readmeHtml, /Ekko Vault/);
-    assert.match(readmeHtml, /COMBINED_MASTER\.html/);  // points the user at the html landing
+    assert.match(readmeHtml, /COMBINED_MASTER\.html/);
+    assert.doesNotMatch(readmeHtml, /\.md\b/i, 'README should not reference .md files anymore');
     assert.doesNotMatch(readmeHtml, /Professionally cleaned/i);
     assert.doesNotMatch(readmeHtml, /90.day.+re.archive/i);
     assert.doesNotMatch(readmeHtml, /reply to this delivery email/i);
 
-    // README.md must NOT include the forbidden marketing claims.
-    const readmeEntry = entries.find((e) => e.name === `${base}README.md`);
-    const readme = readmeEntry.data.toString('utf8');
-    assert.doesNotMatch(readme, /Professionally cleaned/i);
-    assert.doesNotMatch(readme, /90.day.+re.archive/i);
-    assert.doesNotMatch(readme, /reply to this delivery email/i);
-    assert.match(readme, /Your content\. Your words\. Owned\./);
-
-    // Sample one individual HTML and confirm it has the video metadata.
+    // Per-video HTML carries the metadata.
     const oneIndivHtmlEntry = entries.find((e) => /aaaaaaaaaaa__1_divorce_lawyer.*\.html$/.test(e.name));
     const oneIndivHtml = oneIndivHtmlEntry.data.toString('utf8');
     assert.match(oneIndivHtml, /^<!doctype html>/i);
     assert.match(oneIndivHtml, /1 Divorce Lawyer/);
     assert.match(oneIndivHtml, /<dt>Channel<\/dt><dd>Jack Neel<\/dd>/);
 
-    // INDEX.csv has the header row + 3 data rows.
+    // INDEX.csv has the header row + 3 data rows, newest-first.
     const indexEntry = entries.find((e) => e.name === `${base}INDEX.csv`);
     const csv = indexEntry.data.toString('utf8');
     const csvLines = csv.split(/\r?\n/).filter(Boolean);
     assert.equal(csvLines.length, 4);
     assert.match(csvLines[0], /^"Title","Video URL"/);
+    // Cooking video (newer, 20240120) appears before Divorce Lawyer (older, 20240105).
+    const csvBody = csvLines.slice(1).join('\n');
+    const csvNewer = csvBody.indexOf('How To Cook Pasta');
+    const csvOlder = csvBody.indexOf('Divorce Lawyer');
+    assert.ok(csvNewer > -1 && csvOlder > -1 && csvNewer < csvOlder, 'CSV newest-first');
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
 });
 
-test('buildVaultZip — opting out of individual + srt gives only the 5 root files', async () => {
+test('buildVaultZip — opting out of individual gives only the 3 root files', async () => {
   const { root } = await writeFixtureVault();
   try {
     const { buildVaultZip } = require('../server/export');
-    const { buffer } = await buildVaultZip('jack-neel-abcd1234', { individual: false, srt: false });
+    const { buffer } = await buildVaultZip('jack-neel-abcd1234', { individual: false });
     const { entries } = parseZip(buffer);
     const files = entries.filter((e) => !e.name.endsWith('/')).map((e) => e.name);
-    // README.md, README.html, COMBINED_MASTER.md, COMBINED_MASTER.html, INDEX.csv
-    assert.equal(files.length, 5, files.join('\n'));
+    // README.html, COMBINED_MASTER.html, INDEX.csv
+    assert.equal(files.length, 3, files.join('\n'));
     assert.ok(files.some((f) => /README\.html$/.test(f)));
     assert.ok(files.some((f) => /COMBINED_MASTER\.html$/.test(f)));
+    assert.ok(files.some((f) => /INDEX\.csv$/.test(f)));
+    assert.ok(!files.some((f) => f.endsWith('.md')), 'no .md anywhere');
+    assert.ok(!files.some((f) => f.endsWith('.srt')), 'no .srt anywhere');
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
