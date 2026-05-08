@@ -99,6 +99,7 @@ async function startArchiveJob({ channelUrl, includeShorts = false, language = '
   const id = newJobId();
   const state = {
     id,
+    type: 'archive',
     channelUrl,
     status: 'starting',
     started_at: new Date().toISOString(),
@@ -114,6 +115,40 @@ async function startArchiveJob({ channelUrl, includeShorts = false, language = '
   emit();
 
   run(state).catch((err) => {
+    state.status = 'error';
+    state.error = err.message;
+    state.finished_at = new Date().toISOString();
+    persist(state);
+    emit();
+  });
+
+  return id;
+}
+
+// Bulk-retry every video on a channel whose transcript_status isn't 'ok'.
+// Reuses the same pullTranscript pipeline (rate-limit-aware backoff,
+// permanent-error short-circuit, SIGTERM-on-cancel, SSE progress) but skips
+// the channel-listing step because we already have the video list on disk.
+async function startRetryUnavailableJob({ channelKey, language = 'en' }) {
+  const id = newJobId();
+  const state = {
+    id,
+    type: 'retry-unavailable',
+    channelUrl: null,
+    channelKey,
+    status: 'starting',
+    started_at: new Date().toISOString(),
+    finished_at: null,
+    progress: { total: 0, done: 0, skipped: 0, failed: 0, current: null, currentTitle: null },
+    error: null,
+    options: { language },
+    controller: { abort: false, currentChild: null },
+  };
+  jobs.set(id, state);
+  await persist(state);
+  emit();
+
+  runRetryUnavailable(state).catch((err) => {
     state.status = 'error';
     state.error = err.message;
     state.finished_at = new Date().toISOString();
@@ -230,6 +265,61 @@ function finalize(state, status) {
   emit();
 }
 
+async function runRetryUnavailable(state) {
+  const { language } = state.options;
+  const { channelKey } = state;
+
+  setStatus(state, 'listing-videos');
+  const all = await storage.listVideos(channelKey);
+  const targets = all.filter((v) => v.transcript_status !== 'ok');
+  state.progress.total = targets.length;
+  setStatus(state, 'archiving');
+
+  const tDir = storage.transcriptDir(channelKey);
+  await fs.mkdir(tDir, { recursive: true });
+
+  for (const v of targets) {
+    if (state.controller.abort) break;
+    state.progress.current = v.id;
+    state.progress.currentTitle = v.title || null;
+
+    const result = await pullTranscript(v.id, tDir, language, state.controller);
+    if (state.controller.abort) break;
+
+    const segText = result.ok ? result.segments.map((s) => s.text).join(' ') : '';
+    const updated = {
+      ...v,
+      transcript_status: result.ok ? 'ok' : 'unavailable',
+      transcript_reason: result.ok ? null : result.reason,
+      transcript_segments: result.ok ? result.segments.length : (v.transcript_segments || 0),
+      transcript_file: result.ok ? result.file : v.transcript_file,
+      transcript_source: result.ok ? 'yt-dlp' : (v.transcript_source || null),
+      available_languages: result.available_languages || v.available_languages || null,
+      word_count: result.ok ? wordCount(segText) : (v.word_count || 0),
+      archived_at: new Date().toISOString(),
+    };
+    await storage.saveVideo(channelKey, updated);
+
+    if (!result.ok) state.progress.failed++;
+    state.progress.done++;
+    emit();
+    persist(state);
+
+    await sleep(1500);
+  }
+
+  state.progress.current = null;
+  state.progress.currentTitle = null;
+
+  try {
+    await storage.recomputeChannelTotals(channelKey);
+  } catch (err) {
+    console.error('Failed to recompute channel totals:', err.message);
+  }
+
+  finalize(state, state.controller.abort ? 'cancelled' : 'done');
+}
+
 async function loadPersistedJobs() {
   try {
     await fs.mkdir(JOBS_DIR, { recursive: true });
@@ -264,6 +354,7 @@ function subscribe(handler) {
 
 module.exports = {
   startArchiveJob,
+  startRetryUnavailableJob,
   getJob,
   listJobs,
   cancelJob,

@@ -346,6 +346,20 @@ test('storage.getVaultStats — sums rolled-up totals across channels', async ()
   }
 });
 
+test('storage.listVideos — distinguishes ok from unavailable for retry-all targeting', async () => {
+  const { root, channelKey } = await writeFixtureVault();
+  try {
+    const storage = require('../server/storage');
+    const all = await storage.listVideos(channelKey);
+    assert.equal(all.length, 3);
+    const failing = all.filter((v) => v.transcript_status !== 'ok');
+    assert.equal(failing.length, 1, 'fixture has exactly 1 unavailable video');
+    assert.equal(failing[0].id, 'ccccccccccc');
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
 test('buildVaultZip — refuses to export a channel with no successful transcripts', async () => {
   const { root, channelKey } = await writeFixtureVault();
   try {

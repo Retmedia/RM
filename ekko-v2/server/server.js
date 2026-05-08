@@ -4,7 +4,8 @@ const { spawn } = require('node:child_process');
 const express = require('express');
 const storage = require('./storage');
 const {
-  startArchiveJob, getJob, listJobs, cancelJob,
+  startArchiveJob, startRetryUnavailableJob,
+  getJob, listJobs, cancelJob,
   loadPersistedJobs, subscribe,
 } = require('./jobs');
 const { isSafeChannelUrl } = require('./utils');
@@ -69,6 +70,35 @@ app.delete('/api/channels/:key', async (req, res, next) => {
 
 app.get('/api/channels/:key/videos', async (req, res, next) => {
   try { res.json(await storage.listVideos(req.params.key)); } catch (e) { next(e); }
+});
+
+// Bulk re-pull every transcript that came back unavailable on the original
+// archive. Saves the operator from clicking Retry on each failed video one by
+// one — common after a rate-limit-heavy pull. Returns a jobId; progress is
+// surfaced via the standard /api/jobs/stream SSE feed.
+app.post('/api/channels/:key/retry-unavailable', async (req, res, next) => {
+  try {
+    const channel = await storage.getChannel(req.params.key);
+    if (!channel) return res.status(404).json({ error: 'Channel not found' });
+
+    const videos = await storage.listVideos(req.params.key);
+    const count = videos.filter((v) => v.transcript_status !== 'ok').length;
+    if (count === 0) {
+      return res.status(400).json({ error: 'Nothing to retry — every video already has a transcript.' });
+    }
+
+    // Refuse if a pull is already in flight for this channel — two concurrent
+    // jobs would race each other's writes to the same videos/<id>.json files.
+    const ACTIVE = ['starting', 'fetching-channel', 'listing-videos', 'archiving', 'cancelling'];
+    const dup = listJobs().find((j) => j.channelKey === req.params.key && ACTIVE.includes(j.status));
+    if (dup) {
+      return res.status(409).json({ error: 'A pull is already running for this channel — see Jobs.' });
+    }
+
+    const language = (req.body && typeof req.body.language === 'string' && req.body.language.trim()) || 'en';
+    const id = await startRetryUnavailableJob({ channelKey: req.params.key, language });
+    res.json({ jobId: id, count });
+  } catch (e) { next(e); }
 });
 
 // Manually re-pull the transcript for one video — used by the "Retry" button

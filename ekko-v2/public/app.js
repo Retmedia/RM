@@ -244,6 +244,7 @@ function maybeRefreshChannelVideos(jobs) {
       if (state.currentChannel?.key === key) {
         state.currentVideos = videos;
         renderVideoTable();
+        updateRetryFailedButton(state.currentChannel);
       }
     })
     .catch((err) => console.warn('Channel auto-refresh failed:', err.message))
@@ -552,6 +553,10 @@ async function renderChannelView(key) {
   }
   state.currentVideos = videos;
   card.innerHTML = '';
+
+  // Live-track the failed-count on the channel header. Re-evaluated after
+  // every SSE-driven channel refresh too (see maybeRefreshChannelVideos).
+  updateRetryFailedButton(ch);
 
   if (!videos.length) {
     card.appendChild(emptyState({
@@ -921,6 +926,83 @@ async function retryVideoPull(v, btn) {
     if (btn) {
       btn.disabled = false;
       btn.textContent = '↻ Retry pull for this video';
+    }
+  }
+}
+
+// ---- Bulk retry of all unavailable videos on a channel ----
+
+// Add / update / remove the "Retry N failed" button on the channel header
+// based on the current failure count. Idempotent so it can run on initial
+// render and again after every SSE-driven refresh — keeps the count live as
+// the bulk retry walks through and turns failures into successes.
+function updateRetryFailedButton(ch) {
+  const actionsBar = $('.view-header .actions');
+  if (!actionsBar) return;
+  const failed = state.currentVideos.filter((v) => v.transcript_status !== 'ok').length;
+  let btn = actionsBar.querySelector('[data-retry-failed]');
+  if (failed === 0) {
+    if (btn) btn.remove();
+    return;
+  }
+  if (!btn) {
+    btn = h('button', {
+      dataset: { retryFailed: '1' },
+      title: 'Re-pull every video that came back unavailable',
+    });
+    // Insert just after "Pull new videos" so the recovery actions cluster.
+    const refBtn = Array.from(actionsBar.querySelectorAll('button'))
+      .find((b) => /Pull new videos/.test(b.textContent));
+    if (refBtn) refBtn.insertAdjacentElement('afterend', btn);
+    else actionsBar.appendChild(btn);
+  }
+  btn.textContent = `↻ Retry ${failed} failed`;
+  btn.onclick = () => confirmRetryAll(ch, failed);
+}
+
+function confirmRetryAll(ch, count) {
+  // Rough estimate: best case ~2s per video (cached metadata + immediate caption
+  // hit). Pessimistic case much longer if YouTube rate-limits; the permanent-
+  // error short-circuit catches genuinely-missing-caption videos in seconds so
+  // they don't drag the wall-clock.
+  const optimisticMin = Math.ceil((count * 2) / 60);
+  const body = h('div', {},
+    h('p', {},
+      h('strong', {}, `${count}`),
+      ` video${count === 1 ? '' : 's'} on this channel came back without a transcript — usually because of YouTube rate limits during the original pull.`),
+    h('p', { class: 'dim' },
+      `Estimated time: a couple of minutes if YouTube co-operates, longer if rate limits kick in (the retry walks 10s/30s/90s back-offs internally).`),
+    h('p', { class: 'dim', style: { fontSize: '0.78rem' } },
+      'Runs in the background — you can leave this page, start another pull, or close the modal. Cancel from the Jobs view at any time.'),
+    h('p', { class: 'dim', style: { fontSize: '0.78rem' } },
+      `~${optimisticMin || 1} min minimum, possibly more.`),
+  );
+  const footer = h('div', {},
+    h('span', { class: 'dim' }, ''),
+    h('div', { class: 'nav-arrows' },
+      h('button', { class: 'ghost', onclick: () => $('#modal-root').innerHTML = '' }, 'Cancel'),
+      h('button', { class: 'primary', id: 'btn-retry-all', onclick: () => startRetryAll(ch) }, `↻ Retry ${count} videos`),
+    ),
+  );
+  openModal({ title: 'Retry all failed videos', body, footer, size: 'small' });
+}
+
+async function startRetryAll(ch) {
+  const btn = $('#btn-retry-all');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Starting…'; }
+  try {
+    await api(`/api/channels/${encodeURIComponent(ch.key)}/retry-unavailable`, {
+      method: 'POST',
+      body: { language: 'en' },
+    });
+    toast('Retry started — see Jobs for live progress.', { type: 'success' });
+    $('#modal-root').innerHTML = '';
+    navigate('jobs');
+  } catch (err) {
+    toastError(err);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Retry videos';
     }
   }
 }
