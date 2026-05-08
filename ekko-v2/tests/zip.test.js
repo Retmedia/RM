@@ -162,22 +162,27 @@ test('buildVaultZip — produces correct structure for a 3-video fixture', async
     const baseRe = /^JackNeel_EkkoVault_\d{4}-\d{2}-\d{2}\//;
     const base = names.find((n) => baseRe.test(n)).match(baseRe)[0];
 
-    // Required files at root.
-    assert.ok(names.includes(`${base}README.md`), 'README missing');
-    assert.ok(names.includes(`${base}COMBINED_MASTER.md`), 'COMBINED_MASTER missing');
+    // Required files at root — both .md and .html companions for README and COMBINED_MASTER.
+    assert.ok(names.includes(`${base}README.md`), 'README.md missing');
+    assert.ok(names.includes(`${base}README.html`), 'README.html missing');
+    assert.ok(names.includes(`${base}COMBINED_MASTER.md`), 'COMBINED_MASTER.md missing');
+    assert.ok(names.includes(`${base}COMBINED_MASTER.html`), 'COMBINED_MASTER.html missing');
     assert.ok(names.includes(`${base}INDEX.csv`), 'INDEX missing');
 
-    // Individual files, slugified per spec.
-    const indiv = names.filter((n) => n.startsWith(`${base}individual_transcripts/`) && n.endsWith('.md'));
-    assert.equal(indiv.length, 2, 'expected 2 individual transcripts (one is unavailable)');
-    assert.ok(indiv.some((n) => /aaaaaaaaaaa__1_divorce_lawyer_reacts/.test(n)), 'leading # preserved as _');
-    assert.ok(indiv.some((n) => /bbbbbbbbbbb_how_to_cook_pasta_like_a_pro/.test(n)), 'normal title slug');
+    // Individual files, slugified per spec — one .md and one .html per video.
+    const indivMd = names.filter((n) => n.startsWith(`${base}individual_transcripts/`) && n.endsWith('.md'));
+    const indivHtml = names.filter((n) => n.startsWith(`${base}individual_transcripts/`) && n.endsWith('.html'));
+    assert.equal(indivMd.length, 2, 'expected 2 individual .md transcripts (one is unavailable)');
+    assert.equal(indivHtml.length, 2, 'expected 2 individual .html transcripts');
+    assert.ok(indivMd.some((n) => /aaaaaaaaaaa__1_divorce_lawyer_reacts/.test(n)), 'leading # preserved as _ (md)');
+    assert.ok(indivHtml.some((n) => /aaaaaaaaaaa__1_divorce_lawyer_reacts/.test(n)), 'leading # preserved as _ (html)');
+    assert.ok(indivMd.some((n) => /bbbbbbbbbbb_how_to_cook_pasta_like_a_pro/.test(n)), 'normal title slug (md)');
 
     // SRT files only when opted in.
     const srt = names.filter((n) => n.startsWith(`${base}srt_files/`) && n.endsWith('.srt'));
     assert.equal(srt.length, 2, 'expected 2 SRT files');
 
-    // COMBINED_MASTER must start with the required header.
+    // COMBINED_MASTER (md) must start with the required header.
     const masterEntry = entries.find((e) => e.name === `${base}COMBINED_MASTER.md`);
     const master = masterEntry.data.toString('utf8');
     assert.match(master, /^# Jack Neel — Complete Transcript Vault/m);
@@ -186,19 +191,45 @@ test('buildVaultZip — produces correct structure for a 3-video fixture', async
     assert.match(master, /\*\*Total Words:\*\*/);
     assert.match(master, /Search with Ctrl\+F \/ Cmd\+F/);
 
-    // Chronological newest-first: bbbb (Jan 20) appears before aaaa (Jan 5).
-    const idxA = master.indexOf('How To Cook Pasta');
-    const idxB = master.indexOf('Divorce Lawyer');
-    assert.ok(idxA > -1 && idxB > -1, 'both titles present');
-    assert.ok(idxA < idxB, 'newer video should appear before older');
+    // COMBINED_MASTER.html must be a valid-looking standalone document.
+    const masterHtmlEntry = entries.find((e) => e.name === `${base}COMBINED_MASTER.html`);
+    const masterHtml = masterHtmlEntry.data.toString('utf8');
+    assert.match(masterHtml, /^<!doctype html>/i);
+    assert.match(masterHtml, /<style>[\s\S]+<\/style>/);  // embedded CSS, no external deps
+    assert.match(masterHtml, /Jack Neel.*Complete Transcript Vault/);
+    assert.match(masterHtml, /Total Videos<\/dt><dd>2<\/dd>/);
+    assert.match(masterHtml, /<details class="toc">/);     // TOC for jumping to videos
+    assert.match(masterHtml, /How To Cook Pasta/);          // newer video first
+    assert.match(masterHtml, /Divorce Lawyer/);             // older video also present
+    // Newest-first ordering also holds in HTML.
+    const hIdxA = masterHtml.indexOf('How To Cook Pasta');
+    const hIdxB = masterHtml.indexOf('Divorce Lawyer');
+    assert.ok(hIdxA > -1 && hIdxB > -1 && hIdxA < hIdxB, 'newer video should come first in HTML');
 
-    // README must NOT include the forbidden marketing claims.
+    // README.html must be a valid standalone document with the same forbidden-claim guarantees.
+    const readmeHtmlEntry = entries.find((e) => e.name === `${base}README.html`);
+    const readmeHtml = readmeHtmlEntry.data.toString('utf8');
+    assert.match(readmeHtml, /^<!doctype html>/i);
+    assert.match(readmeHtml, /Ekko Vault/);
+    assert.match(readmeHtml, /COMBINED_MASTER\.html/);  // points the user at the html landing
+    assert.doesNotMatch(readmeHtml, /Professionally cleaned/i);
+    assert.doesNotMatch(readmeHtml, /90.day.+re.archive/i);
+    assert.doesNotMatch(readmeHtml, /reply to this delivery email/i);
+
+    // README.md must NOT include the forbidden marketing claims.
     const readmeEntry = entries.find((e) => e.name === `${base}README.md`);
     const readme = readmeEntry.data.toString('utf8');
     assert.doesNotMatch(readme, /Professionally cleaned/i);
     assert.doesNotMatch(readme, /90.day.+re.archive/i);
     assert.doesNotMatch(readme, /reply to this delivery email/i);
     assert.match(readme, /Your content\. Your words\. Owned\./);
+
+    // Sample one individual HTML and confirm it has the video metadata.
+    const oneIndivHtmlEntry = entries.find((e) => /aaaaaaaaaaa__1_divorce_lawyer.*\.html$/.test(e.name));
+    const oneIndivHtml = oneIndivHtmlEntry.data.toString('utf8');
+    assert.match(oneIndivHtml, /^<!doctype html>/i);
+    assert.match(oneIndivHtml, /1 Divorce Lawyer/);
+    assert.match(oneIndivHtml, /<dt>Channel<\/dt><dd>Jack Neel<\/dd>/);
 
     // INDEX.csv has the header row + 3 data rows.
     const indexEntry = entries.find((e) => e.name === `${base}INDEX.csv`);
@@ -211,15 +242,17 @@ test('buildVaultZip — produces correct structure for a 3-video fixture', async
   }
 });
 
-test('buildVaultZip — opting out of individual + srt gives only the 3 root files', async () => {
+test('buildVaultZip — opting out of individual + srt gives only the 5 root files', async () => {
   const { root } = await writeFixtureVault();
   try {
     const { buildVaultZip } = require('../server/export');
     const { buffer } = await buildVaultZip('jack-neel-abcd1234', { individual: false, srt: false });
     const { entries } = parseZip(buffer);
     const files = entries.filter((e) => !e.name.endsWith('/')).map((e) => e.name);
-    // 1 directory entry (root) + 3 files = README, COMBINED_MASTER, INDEX
-    assert.equal(files.length, 3);
+    // README.md, README.html, COMBINED_MASTER.md, COMBINED_MASTER.html, INDEX.csv
+    assert.equal(files.length, 5, files.join('\n'));
+    assert.ok(files.some((f) => /README\.html$/.test(f)));
+    assert.ok(files.some((f) => /COMBINED_MASTER\.html$/.test(f)));
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }

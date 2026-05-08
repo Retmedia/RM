@@ -185,3 +185,30 @@ test('segmentsToVtt + parseVTT round-trip via parsePastedTranscript', () => {
   assert.equal(reparsed[0].text, 'first line');
   assert.equal(reparsed[2].start, 12);
 });
+
+const { paragraphsFromText } = require('../server/export');
+
+test('paragraphsFromText — chunks long text at sentence boundaries', () => {
+  // 5 sentences x 30 words each = 150 words. Default target is 100, so we
+  // should get 2 paragraphs (one of ~3 sentences, one of ~2).
+  const sentence = 'One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty-one twenty-two twenty-three twenty-four twenty-five twenty-six twenty-seven twenty-eight twenty-nine thirty.';
+  const text = Array(5).fill(sentence).join(' ');
+  const paras = paragraphsFromText(text);
+  assert.ok(paras.length >= 2, `expected at least 2 paragraphs, got ${paras.length}`);
+  // Every paragraph ends with a sentence terminator.
+  for (const p of paras) {
+    assert.match(p, /[.!?]\s*$/);
+  }
+});
+
+test('paragraphsFromText — short text stays as one paragraph', () => {
+  const text = 'Just a few words. Not a lot.';
+  const paras = paragraphsFromText(text);
+  assert.equal(paras.length, 1);
+  assert.equal(paras[0], text);
+});
+
+test('paragraphsFromText — empty input', () => {
+  assert.deepEqual(paragraphsFromText(''), []);
+  assert.deepEqual(paragraphsFromText(null), []);
+});
