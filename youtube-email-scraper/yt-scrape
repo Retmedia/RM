@@ -4,7 +4,9 @@
 #
 # Usage:
 #   ./yt-scrape --setup           # one-time: enable Chrome scripting + sign in
+#   ./yt-scrape --auto 200        # find 200 channels across niches, scrape, build drafts
 #   ./yt-scrape                   # scrape every handle in channels.txt -> youtube_leads.csv
+#   ./yt-scrape --discover "Q" N  # find N channels matching query, append to channels.txt
 #   ./yt-scrape --drafts          # build drafts.txt from youtube_leads.csv
 #   ./yt-scrape @GrahamStephan    # scrape one handle ad-hoc
 
@@ -24,7 +26,10 @@ NOISE='@youtube\.com|googleusercontent\.com|@google\.com|noreply@|no-reply@'
 # ---------------------------------------------------------------------------
 chrome_js() {
     # Run a JavaScript snippet in Chrome's active tab, return its value.
+    # Escapes the JS for AppleScript: \ -> \\, " -> \"
     local js="$1"
+    js="${js//\\/\\\\}"
+    js="${js//\"/\\\"}"
     osascript <<APPLESCRIPT 2>/dev/null
 tell application "Google Chrome"
     if (count of windows) = 0 then return ""
@@ -152,6 +157,127 @@ do_batch() {
 }
 
 # ---------------------------------------------------------------------------
+# Discovery: find channels via YouTube search and append to channels.txt
+# ---------------------------------------------------------------------------
+url_encode() {
+    # Best effort: prefer python3 if it actually runs, otherwise use sed.
+    if python3 -c "print(1)" >/dev/null 2>&1; then
+        python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$1"
+    else
+        printf '%s' "$1" | sed 's/ /+/g; s/&/%26/g; s/#/%23/g'
+    fi
+}
+
+do_discover() {
+    local query="$1"
+    local max_n="${2:-30}"
+    local encoded
+    encoded=$(url_encode "$query")
+
+    echo "Discovering: \"$query\" (up to $max_n)"
+    chrome_open "https://www.youtube.com/results?search_query=${encoded}&sp=EgIQAg%253D%253D"
+    sleep 4
+
+    # Scroll several times to load more channel results
+    for _ in 1 2 3 4 5 6; do
+        chrome_js "window.scrollBy(0, document.documentElement.scrollHeight); 'ok';" >/dev/null
+        sleep 2
+    done
+
+    # Extract @handles from anchors that link to channel pages.
+    # JS uses only single quotes and avoids backslash regex escapes.
+    local js
+    js="(function(){var as=document.getElementsByTagName('a');var seen={};var out=[];for(var i=0;i<as.length && out.length<${max_n};i++){var h=as[i].getAttribute('href')||'';if(h.indexOf('/@')!==0)continue;var m=h.match(/^[/](@[a-zA-Z0-9_.-]+)/);if(m && !seen[m[1]]){seen[m[1]]=1;out.push(m[1]);}}return out.join(',');})();"
+    local handles
+    handles=$(chrome_js "$js")
+
+    if [ -z "$handles" ]; then
+        echo "  no handles extracted (search page may not have loaded)"
+        return
+    fi
+
+    [ -f "$INPUT" ] || touch "$INPUT"
+    local existing
+    existing=$(grep -E '^@' "$INPUT" 2>/dev/null | sort -u || true)
+
+    local count=0
+    {
+        echo ""
+        echo "# discovered for: $query"
+    } >> "$INPUT"
+
+    local IFSorig="$IFS"
+    IFS=','
+    set -f
+    for h in $handles; do
+        h="${h//[[:space:]]/}"
+        [ -z "$h" ] && continue
+        if ! printf '%s\n' "$existing" | grep -qx "$h"; then
+            echo "$h" >> "$INPUT"
+            count=$((count + 1))
+        fi
+    done
+    set +f
+    IFS="$IFSorig"
+    echo "  added $count new handles"
+}
+
+# ---------------------------------------------------------------------------
+# Auto mode: discover across niches, scrape, draft -- one command
+# ---------------------------------------------------------------------------
+do_auto() {
+    local target="${1:-200}"
+    local queries=(
+        "personal finance youtube"
+        "finance creator"
+        "investing youtube channel"
+        "fitness coach youtube"
+        "strength training coach"
+        "online business coach"
+        "entrepreneur youtube"
+        "long form podcast"
+        "podcast youtube"
+        "productivity youtube"
+        "self improvement youtube"
+        "educational youtube creator"
+        "explainer channel"
+        "business coach youtube"
+        "real estate youtube"
+        "marketing youtube"
+    )
+
+    [ -f "$INPUT" ] || touch "$INPUT"
+
+    for q in "${queries[@]}"; do
+        local current
+        current=$(grep -cE '^@' "$INPUT" 2>/dev/null || echo 0)
+        if [ "$current" -ge "$target" ]; then
+            echo ""
+            echo "Reached target of $target handles. Stopping discovery."
+            break
+        fi
+        local need=$(( target - current ))
+        [ "$need" -gt 30 ] && need=30
+        do_discover "$q" "$need"
+        sleep 2
+    done
+
+    echo ""
+    echo "==============================================="
+    echo "  Discovery complete. Starting scrape..."
+    echo "==============================================="
+    echo ""
+    do_batch
+
+    echo ""
+    echo "==============================================="
+    echo "  Scrape complete. Building drafts..."
+    echo "==============================================="
+    echo ""
+    do_drafts
+}
+
+# ---------------------------------------------------------------------------
 # Generate Gmail-paste drafts from CSV
 # ---------------------------------------------------------------------------
 do_drafts() {
@@ -214,9 +340,21 @@ do_drafts() {
 # Entry point
 # ---------------------------------------------------------------------------
 case "${1:-}" in
-    --setup)   do_setup ;;
-    --drafts)  do_drafts ;;
-    "")        do_batch ;;
+    --setup)
+        do_setup
+        ;;
+    --drafts)
+        do_drafts
+        ;;
+    --discover)
+        do_discover "${2:-}" "${3:-30}"
+        ;;
+    --auto)
+        do_auto "${2:-200}"
+        ;;
+    "")
+        do_batch
+        ;;
     *)
         if [ ! -f "$OUTPUT" ]; then
             echo "channel,email,status" > "$OUTPUT"
