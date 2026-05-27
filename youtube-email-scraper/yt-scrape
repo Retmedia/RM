@@ -1,0 +1,364 @@
+#!/bin/bash
+# yt-scrape - YouTube channel email scraper, macOS terminal-only.
+# Zero install: uses bash + osascript + your Chrome. No Python, no extensions.
+#
+# Usage:
+#   ./yt-scrape --setup           # one-time: enable Chrome scripting + sign in
+#   ./yt-scrape --auto 200        # find 200 channels across niches, scrape, build drafts
+#   ./yt-scrape                   # scrape every handle in channels.txt -> youtube_leads.csv
+#   ./yt-scrape --discover "Q" N  # find N channels matching query, append to channels.txt
+#   ./yt-scrape --drafts          # build drafts.txt from youtube_leads.csv
+#   ./yt-scrape @GrahamStephan    # scrape one handle ad-hoc
+
+set -u
+
+INPUT="channels.txt"
+OUTPUT="youtube_leads.csv"
+DRAFTS_OUT="drafts.txt"
+FROM_ADDR="abdullagarrett@gmail.com"
+BATCH_SIZE=25
+
+EMAIL_REGEX='[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+NOISE='@youtube\.com|googleusercontent\.com|@google\.com|noreply@|no-reply@'
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+chrome_js() {
+    # Run a JavaScript snippet in Chrome's active tab, return its value.
+    # Escapes the JS for AppleScript: \ -> \\, " -> \"
+    local js="$1"
+    js="${js//\\/\\\\}"
+    js="${js//\"/\\\"}"
+    osascript <<APPLESCRIPT 2>/dev/null
+tell application "Google Chrome"
+    if (count of windows) = 0 then return ""
+    return (execute active tab of front window javascript "$js")
+end tell
+APPLESCRIPT
+}
+
+chrome_open() {
+    local url="$1"
+    osascript <<APPLESCRIPT >/dev/null 2>&1
+tell application "Google Chrome"
+    activate
+    if (count of windows) = 0 then make new window
+    set URL of active tab of front window to "$url"
+end tell
+APPLESCRIPT
+}
+
+# ---------------------------------------------------------------------------
+# One-time setup
+# ---------------------------------------------------------------------------
+do_setup() {
+    echo "==============================================="
+    echo "  yt-scrape one-time setup"
+    echo "==============================================="
+    echo ""
+    echo "1) Enabling 'Allow JavaScript from Apple Events' in Chrome..."
+    defaults write com.google.Chrome AllowJavaScriptFromAppleEvents -bool true
+    echo "   done."
+    echo ""
+    echo "2) Quitting Chrome so the setting takes effect..."
+    osascript -e 'tell application "Google Chrome" to quit' 2>/dev/null || true
+    sleep 2
+    echo "   done."
+    echo ""
+    echo "3) Reopening Chrome on YouTube..."
+    open -a "Google Chrome" "https://www.youtube.com"
+    sleep 4
+    echo "   done."
+    echo ""
+    echo "4) IN CHROME: sign in to YouTube (any Google account). Then click"
+    echo "   on ANY one channel, click About, click 'View email address',"
+    echo "   and solve the CAPTCHA once. This unlocks email reveal for the"
+    echo "   rest of this Chrome session."
+    echo ""
+    echo "   You may also see 'Terminal would like to control Google Chrome.'"
+    echo "   Click OK / Allow."
+    echo ""
+    read -r -p "Press Enter once you're signed in and CAPTCHA-solved... "
+    echo ""
+    echo "Setup done. Now run:   ./yt-scrape"
+}
+
+# ---------------------------------------------------------------------------
+# Scrape one handle
+# ---------------------------------------------------------------------------
+scrape_one() {
+    local raw="$1"
+    local handle="${raw#@}"
+    handle="${handle%%[[:space:]]*}"
+    [ -z "$handle" ] && return
+
+    echo -n "  @$handle ... "
+    chrome_open "https://www.youtube.com/@$handle"
+    sleep 4
+
+    # Click the About modal trigger (multiple fallback selectors)
+    chrome_js "(function(){var s=['yt-description-preview-view-model button','button[aria-label*=\"About\"]','button[aria-label*=\"about\"]'];for(var i=0;i<s.length;i++){var e=document.querySelector(s[i]);if(e){e.click();return 'ok';}}return '';})();" >/dev/null
+    sleep 2
+
+    # Click "View email address"
+    chrome_js "(function(){var b=document.querySelectorAll('button');for(var i=0;i<b.length;i++){if(/view email/i.test(b[i].innerText||'')){b[i].click();return 'ok';}}return '';})();" >/dev/null
+    sleep 3
+
+    # Pull body text and extract email
+    local body
+    body=$(chrome_js "document.body.innerText || ''" || echo "")
+    local email
+    email=$(printf '%s' "$body" | grep -Eo "$EMAIL_REGEX" | grep -Ev "$NOISE" | head -n 1)
+
+    if [ -n "$email" ]; then
+        echo "$email"
+        echo "@$handle,$email,Email Verified" >> "$OUTPUT"
+    else
+        echo "NOT_FOUND"
+        echo "@$handle,NOT_FOUND,No Email" >> "$OUTPUT"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Batch scrape
+# ---------------------------------------------------------------------------
+do_batch() {
+    if [ ! -f "$INPUT" ]; then
+        echo "No $INPUT in this folder. Make one with @handles, one per line."
+        exit 1
+    fi
+    if [ ! -f "$OUTPUT" ]; then
+        echo "channel,email,status" > "$OUTPUT"
+    fi
+    local done_set
+    done_set=$(awk -F, 'NR>1 {print $1}' "$OUTPUT" | sort -u)
+
+    local count=0
+    while IFS= read -r line; do
+        line="${line%%#*}"
+        line="${line//[[:space:]]/}"
+        [ -z "$line" ] && continue
+        local key="${line#@}"
+        if printf '%s\n' "$done_set" | grep -qx "@$key"; then
+            echo "  [skip] @$key"
+            continue
+        fi
+        count=$((count + 1))
+        echo "[$count] processing"
+        scrape_one "$line"
+        sleep 2
+    done < "$INPUT"
+
+    local found
+    found=$(awk -F, 'NR>1 && $2 != "NOT_FOUND" && $2 != ""' "$OUTPUT" | wc -l | tr -d ' ')
+    echo ""
+    echo "Done. $found verified email(s) total in $OUTPUT"
+}
+
+# ---------------------------------------------------------------------------
+# Discovery: find channels via YouTube search and append to channels.txt
+# ---------------------------------------------------------------------------
+url_encode() {
+    # Best effort: prefer python3 if it actually runs, otherwise use sed.
+    if python3 -c "print(1)" >/dev/null 2>&1; then
+        python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$1"
+    else
+        printf '%s' "$1" | sed 's/ /+/g; s/&/%26/g; s/#/%23/g'
+    fi
+}
+
+do_discover() {
+    local query="$1"
+    local max_n="${2:-30}"
+    local encoded
+    encoded=$(url_encode "$query")
+
+    echo "Discovering: \"$query\" (up to $max_n)"
+    chrome_open "https://www.youtube.com/results?search_query=${encoded}&sp=EgIQAg%253D%253D"
+    sleep 4
+
+    # Scroll several times to load more channel results
+    for _ in 1 2 3 4 5 6; do
+        chrome_js "window.scrollBy(0, document.documentElement.scrollHeight); 'ok';" >/dev/null
+        sleep 2
+    done
+
+    # Extract @handles from anchors that link to channel pages.
+    # JS uses only single quotes and avoids backslash regex escapes.
+    local js
+    js="(function(){var as=document.getElementsByTagName('a');var seen={};var out=[];for(var i=0;i<as.length && out.length<${max_n};i++){var h=as[i].getAttribute('href')||'';if(h.indexOf('/@')!==0)continue;var m=h.match(/^[/](@[a-zA-Z0-9_.-]+)/);if(m && !seen[m[1]]){seen[m[1]]=1;out.push(m[1]);}}return out.join(',');})();"
+    local handles
+    handles=$(chrome_js "$js")
+
+    if [ -z "$handles" ]; then
+        echo "  no handles extracted (search page may not have loaded)"
+        return
+    fi
+
+    [ -f "$INPUT" ] || touch "$INPUT"
+    local existing
+    existing=$(grep -E '^@' "$INPUT" 2>/dev/null | sort -u || true)
+
+    local count=0
+    {
+        echo ""
+        echo "# discovered for: $query"
+    } >> "$INPUT"
+
+    local IFSorig="$IFS"
+    IFS=','
+    set -f
+    for h in $handles; do
+        h="${h//[[:space:]]/}"
+        [ -z "$h" ] && continue
+        if ! printf '%s\n' "$existing" | grep -qx "$h"; then
+            echo "$h" >> "$INPUT"
+            count=$((count + 1))
+        fi
+    done
+    set +f
+    IFS="$IFSorig"
+    echo "  added $count new handles"
+}
+
+# ---------------------------------------------------------------------------
+# Auto mode: discover across niches, scrape, draft -- one command
+# ---------------------------------------------------------------------------
+do_auto() {
+    local target="${1:-200}"
+    local queries=(
+        "personal finance youtube"
+        "finance creator"
+        "investing youtube channel"
+        "fitness coach youtube"
+        "strength training coach"
+        "online business coach"
+        "entrepreneur youtube"
+        "long form podcast"
+        "podcast youtube"
+        "productivity youtube"
+        "self improvement youtube"
+        "educational youtube creator"
+        "explainer channel"
+        "business coach youtube"
+        "real estate youtube"
+        "marketing youtube"
+    )
+
+    [ -f "$INPUT" ] || touch "$INPUT"
+
+    for q in "${queries[@]}"; do
+        local current
+        current=$(grep -cE '^@' "$INPUT" 2>/dev/null || echo 0)
+        if [ "$current" -ge "$target" ]; then
+            echo ""
+            echo "Reached target of $target handles. Stopping discovery."
+            break
+        fi
+        local need=$(( target - current ))
+        [ "$need" -gt 30 ] && need=30
+        do_discover "$q" "$need"
+        sleep 2
+    done
+
+    echo ""
+    echo "==============================================="
+    echo "  Discovery complete. Starting scrape..."
+    echo "==============================================="
+    echo ""
+    do_batch
+
+    echo ""
+    echo "==============================================="
+    echo "  Scrape complete. Building drafts..."
+    echo "==============================================="
+    echo ""
+    do_drafts
+}
+
+# ---------------------------------------------------------------------------
+# Generate Gmail-paste drafts from CSV
+# ---------------------------------------------------------------------------
+do_drafts() {
+    if [ ! -f "$OUTPUT" ]; then
+        echo "No $OUTPUT yet. Run scraping first."
+        exit 1
+    fi
+    local emails
+    emails=$(awk -F, 'NR>1 && $2 != "NOT_FOUND" && $2 != "" {print $2}' "$OUTPUT")
+    if [ -z "$emails" ]; then
+        echo "No verified emails in $OUTPUT yet."
+        exit 1
+    fi
+    local total
+    total=$(printf '%s\n' "$emails" | wc -l | tr -d ' ')
+    local batches=$(( (total + BATCH_SIZE - 1) / BATCH_SIZE ))
+
+    {
+        echo "# $total verified emails across $batches BCC drafts"
+        echo "# Capped at $BATCH_SIZE BCC per draft (Gmail deliverability)"
+        echo ""
+        local i=1
+        local n=$batches
+        while [ "$i" -le "$n" ]; do
+            local start=$(( (i - 1) * BATCH_SIZE + 1 ))
+            local end=$(( i * BATCH_SIZE ))
+            local bcc
+            bcc=$(printf '%s\n' "$emails" | sed -n "${start},${end}p" | paste -sd, -)
+            echo "========================================================================"
+            echo "DRAFT $i of $n"
+            echo "========================================================================"
+            echo "From:    $FROM_ADDR"
+            echo "To:      $FROM_ADDR"
+            echo "Bcc:     $bcc"
+            echo "Subject: Your YouTube videos transcribed and ready"
+            echo ""
+            echo "Hey"
+            echo ""
+            echo "Just wrapped up transcribing all your videos from your channel through my service Ekko (we archive YouTube channels into searchable text). Master transcript, individual files per video, subtitle files, and a searchable index spreadsheet. Everything's ready to go in my folder."
+            echo ""
+            echo "Figured you'd want it and build something from it. Your library has years of valuable knowledge in it, and having it all searchable as text means you can repurpose it for written posts, new course content, books, email newsletters, whatever you'd like to build next."
+            echo ""
+            echo "Grab it here: https://buy.stripe.com/3cI7sMftidQbdtp6azdIA05"
+            echo "\$197 one-time. I'll send the full archive over within the hour of purchase."
+            echo ""
+            echo "If it's not for you, no worries. Just wanted to put it in front of you since the work's already done, and a lot of creators find it useful."
+            echo ""
+            echo "Best, Garrett"
+            echo "Ekko"
+            echo "ekkoarchive.com"
+            echo ""
+            i=$((i + 1))
+        done
+    } > "$DRAFTS_OUT"
+
+    echo "Wrote $batches draft(s) covering $total email(s) -> $DRAFTS_OUT"
+}
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+case "${1:-}" in
+    --setup)
+        do_setup
+        ;;
+    --drafts)
+        do_drafts
+        ;;
+    --discover)
+        do_discover "${2:-}" "${3:-30}"
+        ;;
+    --auto)
+        do_auto "${2:-200}"
+        ;;
+    "")
+        do_batch
+        ;;
+    *)
+        if [ ! -f "$OUTPUT" ]; then
+            echo "channel,email,status" > "$OUTPUT"
+        fi
+        scrape_one "$1"
+        ;;
+esac
