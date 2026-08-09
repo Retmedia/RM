@@ -46,7 +46,7 @@ async function refresh() {
       return `
         <li>
           <div><strong>${escapeHtml(j.status)}</strong> · ${escapeHtml(j.channelUrl)}</div>
-          <div class="muted">${p.done || 0}/${p.total || 0} · failed: ${p.failed || 0} · skipped: ${p.skipped || 0}</div>
+          <div class="muted">${p.done || 0}/${p.total || 0} · in flight: ${p.in_flight || 0} · failed: ${p.failed || 0} · skipped: ${p.skipped || 0}</div>
           <progress value="${pct}" max="100"></progress>
           ${j.error ? `<div class="error">${escapeHtml(j.error)}</div>` : ''}
           ${(j.status === 'archiving' || j.status === 'starting' || j.status === 'fetching-channel' || j.status === 'listing-videos')
@@ -76,18 +76,24 @@ document.body.addEventListener('click', async (e) => {
   if (key) {
     e.preventDefault();
     const videos = await api(`/api/channels/${encodeURIComponent(key)}/videos`);
+    const okCount = videos.filter((v) => v.transcript_status === 'ok').length;
     $('#videos').innerHTML = `
-      <h3>${escapeHtml(key)} — ${videos.length} videos</h3>
+      <h3>${escapeHtml(key)} — ${videos.length} videos · ${okCount} transcripts</h3>
       <table>
         <thead><tr><th>Date</th><th>Title</th><th>Duration</th><th>Transcript</th></tr></thead>
         <tbody>
-          ${videos.map((v) => `
+          ${videos.map((v) => {
+            const transcriptCell = v.transcript_status === 'ok'
+              ? `<a href="/api/channels/${encodeURIComponent(key)}/videos/${encodeURIComponent(v.id)}/transcript" target="_blank" rel="noopener">${v.transcript_segments} segs</a>`
+              : escapeHtml(v.transcript_reason || '—');
+            return `
             <tr>
               <td>${escapeHtml(v.upload_date || '')}</td>
               <td><a href="${escapeHtml(v.url)}" target="_blank" rel="noopener">${escapeHtml(v.title || v.id)}</a></td>
               <td>${v.duration ? Math.round(v.duration / 60) + 'm' : ''}</td>
-              <td>${v.transcript_status === 'ok' ? `${v.transcript_segments} segs` : escapeHtml(v.transcript_reason || '—')}</td>
-            </tr>`).join('')}
+              <td>${transcriptCell}</td>
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>`;
   }

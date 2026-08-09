@@ -7,8 +7,9 @@ const { YT_DLP } = require('./youtube');
 
 const execFileP = promisify(execFile);
 
-async function pullTranscript(videoId, workDir, language = 'en') {
+async function pullTranscript(videoId, workDir, language = 'en', signal) {
   if (!isVideoId(videoId)) throw new Error('Invalid video id');
+  if (signal?.aborted) return { ok: false, reason: 'cancelled' };
   await fs.mkdir(workDir, { recursive: true });
 
   const outTemplate = path.join(workDir, '%(id)s.%(ext)s');
@@ -28,8 +29,10 @@ async function pullTranscript(videoId, workDir, language = 'en') {
       encoding: 'utf8',
       timeout: 3 * 60 * 1000,
       maxBuffer: 16 * 1024 * 1024,
+      signal,
     });
   } catch (e) {
+    if (e.name === 'AbortError' || signal?.aborted) return { ok: false, reason: 'cancelled' };
     return { ok: false, reason: (e.stderr || e.message || '').toString().slice(0, 500) };
   }
 
@@ -40,7 +43,14 @@ async function pullTranscript(videoId, workDir, language = 'en') {
   const fullPath = path.join(workDir, vttFile);
   const raw = await fs.readFile(fullPath, 'utf8');
   const segments = parseVTT(raw);
-  return { ok: true, segments, raw, file: vttFile, path: fullPath };
+
+  // Persist a clean, readable plaintext transcript next to the raw VTT so the
+  // vault is searchable/usable without re-parsing subtitle markup.
+  const text = segments.map((s) => s.text).join('\n');
+  const textFile = `${videoId}.txt`;
+  await fs.writeFile(path.join(workDir, textFile), text ? `${text}\n` : '');
+
+  return { ok: true, segments, raw, text, file: vttFile, textFile, path: fullPath };
 }
 
 function parseVTT(vtt) {

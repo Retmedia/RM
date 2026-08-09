@@ -2,7 +2,7 @@ const path = require('node:path');
 const express = require('express');
 const storage = require('./storage');
 const { startArchiveJob, getJob, listJobs, cancelJob } = require('./jobs');
-const { isSafeChannelUrl } = require('./utils');
+const { isSafeChannelUrl, isVideoId } = require('./utils');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -20,9 +20,18 @@ app.get('/api/channels/:key/videos', async (req, res, next) => {
   try { res.json(await storage.listVideos(req.params.key)); } catch (e) { next(e); }
 });
 
+app.get('/api/channels/:key/videos/:id/transcript', async (req, res, next) => {
+  try {
+    if (!isVideoId(req.params.id)) return res.status(400).json({ error: 'invalid video id' });
+    const text = await storage.getTranscriptText(req.params.key, req.params.id);
+    if (text == null) return res.status(404).json({ error: 'no transcript' });
+    res.type('text/plain; charset=utf-8').send(text);
+  } catch (e) { next(e); }
+});
+
 app.post('/api/jobs', async (req, res, next) => {
   try {
-    const { channelUrl, includeShorts, language } = req.body || {};
+    const { channelUrl, includeShorts, language, concurrency } = req.body || {};
     if (!isSafeChannelUrl(channelUrl)) {
       return res.status(400).json({ error: 'channelUrl must be a YouTube URL' });
     }
@@ -30,6 +39,7 @@ app.post('/api/jobs', async (req, res, next) => {
       channelUrl,
       includeShorts: !!includeShorts,
       language: typeof language === 'string' && language.trim() ? language.trim() : 'en',
+      concurrency,
     });
     res.json({ jobId: id });
   } catch (e) { next(e); }

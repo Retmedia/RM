@@ -41,6 +41,31 @@ async function readJSONIfExists(filepath, fallback = null) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Random delay in [base, base+spread) ms — spreads out requests to avoid
+// hammering YouTube in lockstep when running with concurrency.
+const jitter = (base = 250, spread = 500) =>
+  sleep(base + Math.floor(Math.random() * spread));
+
+// Run `worker(item, index)` over `items` with at most `concurrency` in flight.
+// Results are returned in input order. Stops launching new work once
+// `shouldStop()` returns true (already-running workers still settle).
+async function runWithConcurrency(items, worker, concurrency = 3, shouldStop = () => false) {
+  const limit = Math.max(1, Math.floor(concurrency) || 1);
+  const results = new Array(items.length);
+  let next = 0;
+
+  async function drain() {
+    while (next < items.length) {
+      if (shouldStop()) return;
+      const i = next++;
+      results[i] = await worker(items[i], i);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, drain));
+  return results;
+}
+
 module.exports = {
   isSafeChannelUrl,
   isVideoId,
@@ -48,4 +73,6 @@ module.exports = {
   writeJSONAtomic,
   readJSONIfExists,
   sleep,
+  jitter,
+  runWithConcurrency,
 };

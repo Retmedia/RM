@@ -27,13 +27,14 @@ function makeChannelKey(meta) {
 async function listChannels() {
   await ensureVault();
   const entries = await fs.readdir(VAULT_ROOT, { withFileTypes: true });
-  const channels = [];
-  for (const e of entries) {
-    if (!e.isDirectory()) continue;
-    const meta = await readJSONIfExists(path.join(VAULT_ROOT, e.name, 'channel.json'));
-    if (meta) channels.push({ key: e.name, ...meta });
-  }
-  return channels;
+  const dirs = entries.filter((e) => e.isDirectory());
+  const metas = await Promise.all(
+    dirs.map((e) =>
+      readJSONIfExists(path.join(VAULT_ROOT, e.name, 'channel.json'))
+        .then((meta) => (meta ? { key: e.name, ...meta } : null))
+    )
+  );
+  return metas.filter(Boolean);
 }
 
 async function saveChannelMeta(channelKey, meta) {
@@ -55,16 +56,24 @@ async function listVideos(channelKey) {
   const dir = path.join(channelDir(channelKey), 'videos');
   try {
     const entries = await fs.readdir(dir);
-    const videos = [];
-    for (const file of entries) {
-      if (!file.endsWith('.json')) continue;
-      const v = await readJSONIfExists(path.join(dir, file));
-      if (v) videos.push(v);
-    }
+    const files = entries.filter((f) => f.endsWith('.json'));
+    const loaded = await Promise.all(files.map((f) => readJSONIfExists(path.join(dir, f))));
+    const videos = loaded.filter(Boolean);
     videos.sort((a, b) => String(b.upload_date || '').localeCompare(String(a.upload_date || '')));
     return videos;
   } catch (e) {
     if (e.code === 'ENOENT') return [];
+    throw e;
+  }
+}
+
+// Return the saved plaintext transcript for a video, or null if none exists.
+async function getTranscriptText(channelKey, videoId) {
+  const filePath = path.join(transcriptDir(channelKey), `${videoId}.txt`);
+  try {
+    return await fs.readFile(filePath, 'utf8');
+  } catch (e) {
+    if (e.code === 'ENOENT') return null;
     throw e;
   }
 }
@@ -80,4 +89,5 @@ module.exports = {
   saveVideo,
   getVideo,
   listVideos,
+  getTranscriptText,
 };

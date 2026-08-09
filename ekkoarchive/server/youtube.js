@@ -10,7 +10,7 @@ const YT_DLP = path.resolve(
   process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp'
 );
 
-async function listChannelVideos(channelUrl) {
+async function listChannelVideos(channelUrl, signal) {
   if (!isSafeChannelUrl(channelUrl)) {
     throw new Error('Refusing to run yt-dlp on a non-YouTube URL');
   }
@@ -25,6 +25,7 @@ async function listChannelVideos(channelUrl) {
     encoding: 'utf8',
     maxBuffer: 256 * 1024 * 1024,
     timeout: 5 * 60 * 1000,
+    signal,
   });
 
   const videos = [];
@@ -39,7 +40,7 @@ async function listChannelVideos(channelUrl) {
   return videos;
 }
 
-async function getChannelMetadata(channelUrl) {
+async function getChannelMetadata(channelUrl, signal) {
   if (!isSafeChannelUrl(channelUrl)) {
     throw new Error('Refusing to run yt-dlp on a non-YouTube URL');
   }
@@ -53,6 +54,7 @@ async function getChannelMetadata(channelUrl) {
     encoding: 'utf8',
     maxBuffer: 16 * 1024 * 1024,
     timeout: 60 * 1000,
+    signal,
   });
   return JSON.parse(stdout);
 }
