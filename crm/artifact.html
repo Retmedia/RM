@@ -9,6 +9,7 @@
     --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
   html,body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;
     background:
       radial-gradient(1100px 520px at 78% -8%, #16405a 0%, transparent 58%),
@@ -181,10 +182,24 @@
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
   .btn.sm{padding:5px 11px;font-size:12px}
   .btn.danger{background:transparent;border:1px solid #6a2a2a;color:var(--coral)}
-  .gtoggle{background:none;border:none;color:var(--dim);font-size:11.5px;font-weight:700;padding:5px 13px;cursor:pointer}
+  .gtoggle{background:none;border:none;color:var(--dim);font-size:11.5px;font-weight:700;padding:5px 12px;cursor:pointer;transition:background .15s,color .15s}
   .gtoggle.on{background:var(--aqua);color:#04231f}
   .delta{font-size:12px;font-weight:800;margin-top:3px}
   .delta.up{color:var(--green)} .delta.down{color:var(--coral)}
+  .growthhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .gtoggles{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+  .chartwrap{position:relative;max-width:560px}
+  .gtip{position:absolute;top:-6px;transform:translateX(-50%);background:#0b2030;border:1px solid var(--line2);border-radius:8px;
+    padding:4px 9px;font-size:11px;white-space:nowrap;opacity:0;transition:opacity .12s;pointer-events:none;z-index:3;color:var(--ink);box-shadow:var(--shadow)}
+  .gtip b{color:var(--aqua2)}
+  #gsvg_over,#gsvg_money{cursor:crosshair}
+
+  /* layout polish */
+  .kpi{transition:transform .15s ease,border-color .15s}
+  .kpi:hover{transform:translateY(-2px);border-color:var(--line2)}
+  .client,.mile,.goal{transition:transform .15s ease,border-color .15s}
+  .client:hover,.mile:hover{transform:translateY(-2px);border-color:var(--line2)}
+  .panel{transition:border-color .15s}
 
   /* modal */
   #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(5,12,20,.72);padding:18px;overflow:auto}
@@ -385,23 +400,22 @@ const SEED = {
     {t:"Work the 80-creator cold outreach", d:"Blast sent 8/11, reply to any bites", due:"2026-08-20"},
   ],
   invoices:[
-    {n:"0093", c:"Foreign Waters", d:"Aug 13", amt:1500, paid:false},
-    {n:"0092", c:"Shane Dorian",   d:"Aug 10", amt:2500, paid:false},
-    {n:"0091", c:"Paulo Prietto",  d:"Aug 8",  amt:900,  paid:false},
-    {n:"0090", c:"Blair Conklin",  d:"Aug 1",  amt:1370.32, paid:true},
-    {n:"0089", c:"Tara Bunker",    d:"Jul 30", amt:399,  paid:true},
-    {n:"0088", c:"Tara Bunker",    d:"Jul 8",  amt:900,  paid:true},
-    {n:"0087", c:"Paulo Prietto",  d:"Jul 8",  amt:900,  paid:true},
-    {n:"0086", c:"Blair Conklin",  d:"Jun 15", amt:2396.16, paid:true},
-    {n:"0085", c:"Shane Dorian",   d:"Jun 4",  amt:2500, paid:true},
-    {n:"0084", c:"Paulo Prietto",  d:"Jun 4",  amt:900,  paid:true},
-    {n:"0082", c:"Blair Conklin",  d:"May 14", amt:2705.32, paid:true},
-    {n:"0081", c:"Blair Conklin",  d:"Apr 24", amt:3887.93, paid:true},
-    {n:"0080", c:"Blair Conklin",  d:"Mar 16", amt:1867.30, paid:true},
-    {n:"0079", c:"Blair Conklin",  d:"Feb 18", amt:2696.46, paid:true},
-    {n:"0077", c:"Blair Conklin",  d:"Jan 11", amt:5060.94, paid:true},
+    {n:"0093", c:"Foreign Waters", iso:"2026-08-13", d:"Aug 13", amt:1500, paid:false},
+    {n:"0092", c:"Shane Dorian",   iso:"2026-08-10", d:"Aug 10", amt:2500, paid:false},
+    {n:"0091", c:"Paulo Prietto",  iso:"2026-08-08", d:"Aug 8",  amt:900,  paid:false},
+    {n:"0090", c:"Blair Conklin",  iso:"2026-08-01", d:"Aug 1",  amt:1370.32, paid:true},
+    {n:"0089", c:"Tara Bunker",    iso:"2026-07-30", d:"Jul 30", amt:399,  paid:true},
+    {n:"0088", c:"Tara Bunker",    iso:"2026-07-08", d:"Jul 8",  amt:900,  paid:true},
+    {n:"0087", c:"Paulo Prietto",  iso:"2026-07-08", d:"Jul 8",  amt:900,  paid:true},
+    {n:"0086", c:"Blair Conklin",  iso:"2026-06-15", d:"Jun 15", amt:2396.16, paid:true},
+    {n:"0085", c:"Shane Dorian",   iso:"2026-06-04", d:"Jun 4",  amt:2500, paid:true},
+    {n:"0084", c:"Paulo Prietto",  iso:"2026-06-04", d:"Jun 4",  amt:900,  paid:true},
+    {n:"0082", c:"Blair Conklin",  iso:"2026-05-14", d:"May 14", amt:2705.32, paid:true},
+    {n:"0081", c:"Blair Conklin",  iso:"2026-04-24", d:"Apr 24", amt:3887.93, paid:true},
+    {n:"0080", c:"Blair Conklin",  iso:"2026-03-16", d:"Mar 16", amt:1867.30, paid:true},
+    {n:"0079", c:"Blair Conklin",  iso:"2026-02-18", d:"Feb 18", amt:2696.46, paid:true},
+    {n:"0077", c:"Blair Conklin",  iso:"2026-01-11", d:"Jan 11", amt:5060.94, paid:true},
   ],
-  monthly:[["Jan",5061],["Feb",2696],["Mar",1867],["Apr",3888],["May",2705],["Jun",5796],["Jul",2199],["Aug",6270]],
   recurring:[
     {c:"Paulo Prietto", amt:900, when:"8th monthly"},
     {c:"Tara Bunker",   amt:900, when:"8th monthly, next 9/8"},
@@ -454,13 +468,13 @@ function seed(){return{
   clients:SEED.clients.map((c,i)=>({...c,id:"c"+i})),
   deals:SEED.deals.map((d,i)=>({...d,id:"d"+i})),
   sets:SEED.sets.map((s,i)=>({...s,id:"s"+i,done:false})),
-  tab:"overview", tabOrder:[...DEFAULT_TABORDER], growthMode:"month",
+  tab:"overview", tabOrder:[...DEFAULT_TABORDER], growthPeriod:"ytd",
 };}
 let S=load();
 let lostOpen=false, CAL={y:2026,m:7,sel:""};
 let LIVE={invoices:null, at:null, status:"snapshot"}, liveUnsub=null;
 function load(){try{const r=JSON.parse(localStorage.getItem(LS));
-  if(r&&r.deals&&r.clients&&r.sets){if(!r.tabOrder)r.tabOrder=[...DEFAULT_TABORDER];if(!r.growthMode)r.growthMode="month";return r;}}catch(e){}
+  if(r&&r.deals&&r.clients&&r.sets){if(!r.tabOrder)r.tabOrder=[...DEFAULT_TABORDER];if(!r.growthPeriod)r.growthPeriod="ytd";return r;}}catch(e){}
   return seed();}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
 function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();renderTabs();render();}}
@@ -489,7 +503,7 @@ function computeMonthly(list){
   for(let m=0;m<=maxM;m++)out.push([names[m],Math.round(sums[m]||0)]);
   return out;
 }
-function monthlyData(){return LIVE.invoices?computeMonthly(LIVE.invoices):SEED.monthly;}
+function monthlyData(){return computeMonthly(invoicesData());}
 function recurringTotal(){return SEED.recurring.reduce((a,r)=>a+(+r.amt||0),0);}
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function fuMeta(fu){if(!fu)return null;const t=todayISO();const cls=fu<t?"over":(fu===t?"due":"");
@@ -757,62 +771,93 @@ function render(){
   document.getElementById("miles").innerHTML=MILES.map(m=>{const on=m.on();
     return `<div class="mile ${on?"":"off"}"><div class="mi">${on?m.ic:"🔒"}</div><div class="mn">${esc(m.n)}</div><div class="md">${esc(m.d)}</div></div>`;}).join("");
 
-  const gh=renderGrowth();
-  document.getElementById("growthOver").innerHTML=gh;
-  document.getElementById("growthMoney").innerHTML=gh;
+  window.GCHART=buildGrowthGeom();
+  document.getElementById("growthOver").innerHTML=growthHTML("over");
+  document.getElementById("growthMoney").innerHTML=growthHTML("money");
 
   renderMoney();tickClock();
 }
 function emptyState(msg){return `<div class="faint" style="padding:14px;font-size:13px">${esc(msg)}</div>`;}
 
-/* ---------- income + growth chart ---------- */
-function setGrowth(m){S.growthMode=m;save();render();}
-function growthStats(){
-  const m=monthlyData(),vals=m.map(x=>x[1]),labs=m.map(x=>x[0]),n=vals.length;
-  const latest=vals[n-1]||0,prev=vals[n-2]||0,first=vals[0]||0,ytd=vals.reduce((a,b)=>a+b,0);
-  return {vals,labs,n,latest,prev,first,ytd,
-    mom:prev?(latest-prev)/prev*100:0, yoy:first?(latest-first)/first*100:0,
-    latestLabel:labs[n-1]||"", prevLabel:labs[n-2]||"last month", firstLabel:labs[0]||"Jan"};
+/* ---------- income & growth (interactive) ---------- */
+function setGrowthPeriod(p){S.growthPeriod=p;save();render();}
+function fmtMs(ms){return new Date(ms).toLocaleDateString("en-US",{month:"short",day:"numeric"});}
+function growthSeries(){
+  const period=S.growthPeriod||"ytd";
+  const invs=invoicesData().filter(i=>i.iso).map(i=>({t:new Date(i.iso+"T00:00:00").getTime(),amt:i.amt})).sort((a,b)=>a.t-b.t);
+  const today=new Date(todayISO()+"T00:00:00"),DAY=86400000,endMs=today.getTime();
+  let startMs;
+  if(period==="ytd")startMs=new Date(today.getFullYear(),0,1).getTime();
+  else startMs=endMs-((period==="30d"?29:89)*DAY);
+  const pts=[];let cum=0,j=0;
+  for(let d=startMs;d<=endMs;d+=DAY){
+    while(j<invs.length&&invs[j].t<=d){if(invs[j].t>=startMs)cum+=invs[j].amt;j++;}
+    pts.push({ms:d,cum});}
+  const total=cum;
+  let delta=null,deltaLab="";
+  if(period==="ytd"){const m=monthlyData();const f=m[0]?m[0][1]:0,l=m.length?m[m.length-1][1]:0;delta=f?(l-f)/f*100:null;deltaLab="since Jan";}
+  else{const days=period==="30d"?30:90,pStart=startMs-days*DAY,pEnd=startMs-1;let pv=0;
+    invs.forEach(i=>{if(i.t>=pStart&&i.t<=pEnd)pv+=i.amt;});delta=pv?(total-pv)/pv*100:null;deltaLab="vs prior "+days+" days";}
+  const headLab=period==="ytd"?"2026 income (YTD)":(period==="30d"?"Last 30 days":"Last 90 days");
+  return {period,pts,total,delta,deltaLab,headLab};
 }
-function svgLine(vals,labs){
-  const W=320,H=120,padL=38,padB=20,padT=10,padR=10,iw=W-padL-padR,ih=H-padT-padB;
-  const max=Math.max(1,...vals);
-  const X=i=>vals.length<=1?padL+iw/2:padL+iw*i/(vals.length-1);
-  const Y=val=>padT+ih*(1-val/max);
-  const pts=vals.map((v,i)=>[X(i),Y(v)]);
-  if(!pts.length)return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"></svg>`;
-  const line=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
-  const area=line+" L "+X(vals.length-1).toFixed(1)+" "+(padT+ih)+" L "+padL+" "+(padT+ih)+" Z";
-  const grid=[0,max/2,max].map(g=>{const yy=Y(g);
-    return `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`+
-      `<text x="${padL-5}" y="${(yy+3).toFixed(1)}" text-anchor="end" font-size="8.5" fill="var(--faint)">$${g>=1000?(g/1000).toFixed(0)+"k":Math.round(g)}</text>`;}).join("");
-  const idxs=vals.length<=4?vals.map((_,i)=>i):[0,Math.floor((vals.length-1)/2),vals.length-1];
-  const xl=idxs.map(i=>`<text x="${X(i).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="8.5" fill="var(--faint)">${esc(labs[i]||"")}</text>`).join("");
-  const last=pts[pts.length-1];
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
-    <defs><linearGradient id="garea" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="var(--aqua)" stop-opacity="0.32"/><stop offset="1" stop-color="var(--aqua)" stop-opacity="0"/></linearGradient></defs>
-    ${grid}<path d="${area}" fill="url(#garea)"/>
-    <path d="${line}" fill="none" stroke="var(--aqua)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.6" fill="var(--aqua2)" stroke="#04231f" stroke-width="1.5"/>
-    ${xl}</svg>`;
+function buildGrowthGeom(){
+  const s=growthSeries(),W=320,H=92,padL=36,padB=15,padT=8,padR=8,iw=W-padL-padR,ih=H-padT-padB;
+  const n=s.pts.length,max=Math.max(1,s.total);
+  const X=i=>n<=1?padL+iw/2:padL+iw*i/(n-1),Y=v=>padT+ih*(1-v/max);
+  const pts=s.pts.map((p,i)=>({x:X(i),y:Y(p.cum),ms:p.ms,cum:p.cum}));
+  return {s,W,H,padL,padT,padR,ih,n,max,pts};
 }
-function renderGrowth(){
-  const g=growthStats(),isM=(S.growthMode||"month")==="month";
-  const headNum=isM?fmt(g.latest):fmt(g.ytd);
-  const headLab=isM?(g.latestLabel+" income"):"2026 income so far";
-  const delta=isM?g.mom:g.yoy, up=delta>=0;
-  const deltaLab=isM?("vs "+g.prevLabel):("since "+g.firstLabel);
-  const vals=isM?g.vals.slice(-6):g.vals, labs=isM?g.labs.slice(-6):g.labs;
-  return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px">
-    <div><div class="faint" style="font-size:10.5px;text-transform:uppercase;letter-spacing:1px">${esc(headLab)}</div>
-      <div class="num" style="font-size:26px;font-weight:800;color:var(--sand)">${headNum}</div>
-      <div class="delta ${up?"up":"down"}">${up?"▲":"▼"} ${Math.abs(delta).toFixed(1)}% <span class="faint" style="font-weight:600">${esc(deltaLab)}</span></div></div>
-    <div style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
-      <button class="gtoggle ${isM?"on":""}" onclick="setGrowth('month')">Month</button>
-      <button class="gtoggle ${!isM?"on":""}" onclick="setGrowth('year')">Year</button></div>
-  </div>${svgLine(vals,labs)}`;
+function growthChartSVG(loc){
+  const g=window.GCHART;if(!g)return"";
+  const {W,H,padL,padT,padR,ih,pts,max}=g;
+  if(!pts.length)return `<div class="faint" style="font-size:12px;padding:8px 0">No income in this period.</div>`;
+  const line=pts.map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+" "+p.y.toFixed(1)).join(" ");
+  const area=line+" L "+pts[pts.length-1].x.toFixed(1)+" "+(padT+ih)+" L "+pts[0].x.toFixed(1)+" "+(padT+ih)+" Z";
+  const grid=[0,max/2,max].map(v=>{const yy=padT+ih*(1-v/max);
+    return `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--line)" stroke-width="0.8"/>`+
+      `<text x="${padL-4}" y="${(yy+3).toFixed(1)}" text-anchor="end" font-size="8" fill="var(--faint)">$${v>=1000?(v/1000).toFixed(0)+"k":Math.round(v)}</text>`;}).join("");
+  const li=[0,Math.floor((pts.length-1)/2),pts.length-1];
+  const xl=li.map(i=>`<text x="${pts[i].x.toFixed(1)}" y="${H-3}" text-anchor="middle" font-size="8" fill="var(--faint)">${fmtMs(pts[i].ms)}</text>`).join("");
+  return `<div class="chartwrap" id="gwrap_${loc}">
+    <div class="gtip" id="gtip_${loc}"></div>
+    <svg id="gsvg_${loc}" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block"
+      onmousemove="gMove(event,'${loc}')" onmouseleave="gLeave('${loc}')" ontouchstart="gMove(event,'${loc}')" ontouchmove="gMove(event,'${loc}')">
+      <defs><linearGradient id="garea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--aqua)" stop-opacity="0.3"/><stop offset="1" stop-color="var(--aqua)" stop-opacity="0"/></linearGradient></defs>
+      ${grid}<path d="${area}" fill="url(#garea)"/>
+      <path d="${line}" fill="none" stroke="var(--aqua)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <line id="gguide_${loc}" y1="${padT}" y2="${padT+ih}" stroke="var(--aqua2)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/>
+      <circle id="gdot_${loc}" r="3.3" fill="var(--aqua2)" stroke="#04231f" stroke-width="1.4" style="opacity:0"/>
+      ${xl}</svg></div>`;
 }
+function growthHTML(loc){
+  const g=window.GCHART;if(!g)return"";const s=g.s,up=(s.delta==null)||s.delta>=0;
+  const deltaHTML=s.delta==null?`<div class="faint" style="font-size:11px;margin-top:2px">${esc(s.deltaLab||"")}</div>`
+    :`<div class="delta ${up?"up":"down"}">${up?"▲":"▼"} ${Math.abs(s.delta).toFixed(1)}% <span class="faint" style="font-weight:600">${esc(s.deltaLab)}</span></div>`;
+  const per=S.growthPeriod||"ytd",btn=(p,l)=>`<button class="gtoggle ${per===p?"on":""}" onclick="setGrowthPeriod('${p}')">${l}</button>`;
+  return `<div class="growthhead">
+      <div><div class="faint" style="font-size:10px;text-transform:uppercase;letter-spacing:1px">${esc(s.headLab)}</div>
+        <div class="num" style="font-size:22px;font-weight:800;color:var(--sand)">${fmt(s.total)}</div>${deltaHTML}</div>
+      <div class="gtoggles">${btn("30d","30D")}${btn("90d","90D")}${btn("ytd","YTD")}</div>
+    </div>${growthChartSVG(loc)}`;
+}
+function gMove(e,loc){
+  const g=window.GCHART;if(!g||!g.pts.length)return;
+  const svg=document.getElementById("gsvg_"+loc);if(!svg)return;
+  const r=svg.getBoundingClientRect();
+  const cx=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+  const vbX=(cx-r.left)/r.width*g.W;
+  let bi=0,bd=Infinity;for(let i=0;i<g.pts.length;i++){const d=Math.abs(g.pts[i].x-vbX);if(d<bd){bd=d;bi=i;}}
+  const p=g.pts[bi];
+  const guide=document.getElementById("gguide_"+loc),dot=document.getElementById("gdot_"+loc),tip=document.getElementById("gtip_"+loc),wrap=document.getElementById("gwrap_"+loc);
+  if(guide){guide.setAttribute("x1",p.x);guide.setAttribute("x2",p.x);guide.style.opacity=1;}
+  if(dot){dot.setAttribute("cx",p.x);dot.setAttribute("cy",p.y);dot.style.opacity=1;}
+  if(tip&&wrap){const wr=wrap.getBoundingClientRect();
+    tip.innerHTML=`<b>${fmtMs(p.ms)}</b> · ${fmt(p.cum)}`;tip.style.opacity=1;
+    let px=(p.x/g.W)*r.width+(r.left-wr.left);px=Math.max(32,Math.min(wr.width-32,px));tip.style.left=px+"px";}
+}
+function gLeave(loc){["gguide_","gdot_","gtip_"].forEach(pre=>{const el=document.getElementById(pre+loc);if(el)el.style.opacity=0;});}
 
 function renderMoney(){
   const inv=invoicesData(), months=monthlyData();
