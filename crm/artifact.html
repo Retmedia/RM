@@ -98,6 +98,30 @@
   .whale .nm{color:var(--gold)}
   .lane.won .deal{background:#124038;border-color:#1f6656}
   .stag{font-size:9.5px;padding:1px 7px;border-radius:5px;border:1px solid var(--line2);color:var(--aqua2)}
+  .fu{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:6px;border:1px solid var(--line2);color:var(--dim)}
+  .fu.due{background:#3a2f16;color:var(--sand);border-color:#5e4c22}
+  .fu.over{background:#3a1a18;color:var(--coral);border-color:#5e2a26}
+
+  /* alert banner */
+  .alert{display:flex;align-items:center;gap:10px;background:#3a2f16;border:1px solid #5e4c22;color:var(--sand);
+    border-radius:12px;padding:11px 14px;margin-top:16px;font-size:13px;font-weight:650;cursor:pointer}
+  .alert:hover{filter:brightness(1.06)}
+  .alert .go{margin-left:auto;font-weight:800}
+
+  /* Lost / cold shelf */
+  .lostsec{margin-top:16px;background:var(--deck);border:1px solid var(--line);border-radius:14px;padding:12px 15px}
+  .lostsec .lhh{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+  .lostsec h3{margin:0;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--dim)}
+  .lostsec .cnt{background:#2a1820;border:1px solid #4a2732;border-radius:999px;padding:1px 9px;font-size:11px;color:#d99;font-weight:700}
+  .lostsec .chev{margin-left:auto;color:var(--faint);transition:.2s}
+  .lostsec.open .chev{transform:rotate(180deg)}
+  .lostlist{display:none;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}
+  .lostsec.open .lostlist{display:grid}
+  .lostcard{background:#1c151a;border:1px solid #3a2530;border-radius:11px;padding:10px 11px}
+  .lostcard .nm{font-weight:700;font-size:13px;color:#e0a0a0}
+  .lostcard .co{font-size:11px;color:var(--faint);margin-top:1px}
+  .lostcard .mt{font-size:11px;color:var(--faint);margin-top:5px;line-height:1.4}
+  .lostcard .ctl{display:flex;gap:5px;margin-top:9px}
 
   /* ---------- Clients ---------- */
   .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
@@ -192,6 +216,7 @@
 
   <!-- ========= OVERVIEW ========= -->
   <section class="view on" id="v-overview">
+    <div id="fuAlert"></div>
     <div class="kpis">
       <div class="kpi money"><div class="edge"></div><div class="k">Recurring / mo</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
       <div class="kpi win"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="ytd">$0</div><div class="s" id="ytdSub"></div></div>
@@ -217,8 +242,9 @@
   <section class="view" id="v-pipeline">
     <div class="head"><h2>The Pipeline</h2><span class="tag">drag between lanes · or use ◀ ▶ · tap ✎ to edit</span>
       <div class="rt"><button class="btn sm" onclick="editDeal()">＋ New lead</button></div></div>
-    <div class="hint">💡 <b>Drag a card</b> to any lane to move it, tap <b>◀ ▶</b> to nudge it a stage, or tap <b>✎</b> to edit / delete. Land one in <b>Won</b> and catch the wave 🤙</div>
+    <div class="hint">💡 <b>Drag a card</b> to any lane, tap <b>◀ ▶</b> to nudge a stage, or tap <b>✎</b> to edit, set a <b>follow-up date</b>, or mark it <b>Lost</b>. Land one in <b>Won</b> and catch the wave 🤙</div>
     <div class="boardscroll"><div class="board" id="board"></div></div>
+    <div id="lostWrap"></div>
   </section>
 
   <!-- ========= CLIENTS ========= -->
@@ -292,15 +318,15 @@ const SEED = {
     {name:"Tara Bunker",   em:"🔑", tier:"retainer", svc:"Instagram management + website", deal:"$900/mo · recurring", mrr:900},
   ],
   deals:[
-    {name:"Chosen Advisory", co:"", stage:"lineup",  value:5000, whale:true, note:"BIG WHALE — top priority"},
-    {name:"ADAS Globus",     co:"Smit Shah", stage:"dropin", value:2500, note:"Marketing + consulting arrangement · call Thu 8/14"},
-    {name:"Mario Kalpou",    co:"Man Eats Wild", stage:"paddle", value:1500, note:"Shane referral · TV host building brand · call 8/17"},
-    {name:"Kill Tony",       co:"", stage:"set", value:3000, note:"Podcast repurposing · agent to email"},
-    {name:"Steve Ruff",      co:"Mason Ho", stage:"paddle", value:1500, note:"Athlete social management"},
+    {name:"Chosen Advisory", co:"", stage:"lineup",  value:5000, whale:true, fu:"2026-08-15", note:"BIG WHALE — top priority"},
+    {name:"ADAS Globus",     co:"Smit Shah", stage:"dropin", value:2500, fu:"2026-08-14", note:"Marketing + consulting arrangement"},
+    {name:"Mario Kalpou",    co:"Man Eats Wild", stage:"paddle", value:1500, fu:"2026-08-17", note:"Shane referral · TV host building brand"},
+    {name:"Kill Tony",       co:"", stage:"lost", value:3000, note:"Went cold — agent never emailed back"},
+    {name:"Steve Ruff",      co:"Mason Ho", stage:"paddle", value:1500, fu:"2026-08-18", note:"Athlete social management"},
     {name:"Dylan Graves",    co:"", stage:"lineup", value:1200, note:"YT Shorts / TikTok repurposing"},
     {name:"Recall Masters",  co:"", stage:"lineup", value:1500, note:""},
-    {name:"Larry",           co:"", stage:"lineup", value:900,  note:"Tara Bunker referral — waiting on text"},
-    {name:"Tom",             co:"", stage:"set", value:1000, note:"Wants to talk soon"},
+    {name:"Larry",           co:"", stage:"lineup", value:900,  fu:"2026-08-15", note:"Tara Bunker referral — waiting on text"},
+    {name:"Tom",             co:"", stage:"set", value:1000, fu:"2026-08-19", note:"Wants to talk soon"},
     {name:"1Rod1ReelFishing",co:"", stage:"lineup", value:1000, note:""},
     {name:"Predictive History",co:"",stage:"lineup", value:1000, note:""},
   ],
@@ -358,7 +384,7 @@ const MILES=[
 ];
 
 /* ---------- state (editable) ---------- */
-const LS="retmedia_deck_v3";
+const LS="retmedia_deck_v4";
 function seed(){return{
   clients:SEED.clients.map((c,i)=>({...c,id:"c"+i})),
   deals:SEED.deals.map((d,i)=>({...d,id:"d"+i})),
@@ -366,14 +392,26 @@ function seed(){return{
   tab:"overview",
 };}
 let S=load();
+let lostOpen=false;
 function load(){try{const r=JSON.parse(localStorage.getItem(LS));if(r&&r.deals&&r.clients&&r.sets)return r;}catch(e){}return seed();}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
 function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();render();}}
 
 /* ---------- derived ---------- */
 function wonCount(){return S.deals.filter(d=>d.stage==="won").length;}
+function isActive(d){return d.stage!=="won"&&d.stage!=="lost";}
 function mrr(){return S.clients.reduce((a,c)=>a+(+c.mrr||0),0);}
-function pipeVal(){return S.deals.filter(d=>d.stage!=="won").reduce((a,d)=>a+(+d.value||0),0);}
+function pipeVal(){return S.deals.filter(isActive).reduce((a,d)=>a+(+d.value||0),0);}
+function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function fuMeta(fu){
+  if(!fu)return null;
+  const t=todayISO();
+  const cls=fu<t?"over":(fu===t?"due":"");
+  const [y,m,dd]=fu.split("-").map(Number);
+  const lab=new Date(y,m-1,dd).toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  return {cls,lab,word:cls==="over"?"overdue":(cls==="due"?"today":lab)};
+}
+function dueFollowups(){const t=todayISO();return S.deals.filter(d=>isActive(d)&&d.fu&&d.fu<=t);}
 function invoiced(){return SEED.invoices.reduce((a,i)=>a+i.amt,0);}
 function collected(){return SEED.invoices.filter(i=>i.paid).reduce((a,i)=>a+i.amt,0);}
 function outstanding(){return SEED.invoices.filter(i=>!i.paid).reduce((a,i)=>a+i.amt,0);}
@@ -411,12 +449,14 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
 /* ---------- DEALS: add / edit / delete / move ---------- */
 function editDeal(id){
-  const d=id?S.deals.find(x=>x.id===id):{name:"",co:"",value:"",stage:"lineup",note:""};
+  const d=id?S.deals.find(x=>x.id===id):{name:"",co:"",value:"",stage:"lineup",note:"",fu:""};
+  const opts=STAGES.concat([{id:"lost",label:"Lost",surf:"went cold"}]);
   openModal(`<h3>${id?"Edit deal":"New lead"}</h3>
     <label>Name</label><input id="x_n" value="${esc(d.name)}" placeholder="Person or business">
     <div class="row2"><div><label>Company</label><input id="x_c" value="${esc(d.co||"")}"></div>
     <div><label>Deal value ($)</label><input id="x_v" type="number" value="${d.value||""}" placeholder="1500"></div></div>
-    <label>Stage</label><select id="x_s">${STAGES.map(s=>`<option value="${s.id}" ${d.stage===s.id?"selected":""}>${s.label} · ${s.surf}</option>`).join("")}</select>
+    <div class="row2"><div><label>Stage</label><select id="x_s">${opts.map(s=>`<option value="${s.id}" ${d.stage===s.id?"selected":""}>${s.label} · ${s.surf}</option>`).join("")}</select></div>
+    <div><label>Follow-up date</label><input id="x_fu" type="date" value="${d.fu||""}"></div></div>
     <label>Note</label><input id="x_no" value="${esc(d.note||"")}" placeholder="context / next step">
     <div class="mact"><button class="btn" onclick="saveDeal('${id||""}')">${id?"Save":"Add to lineup"}</button>
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
@@ -425,13 +465,14 @@ function editDeal(id){
 }
 function saveDeal(id){
   const n=v("x_n");if(!n){toast("Name required");return;}
-  const data={name:n,co:v("x_c"),value:+v("x_v")||0,stage:v("x_s"),note:v("x_no")};
+  const data={name:n,co:v("x_c"),value:+v("x_v")||0,stage:v("x_s"),note:v("x_no"),fu:v("x_fu")};
   if(id){const d=S.deals.find(x=>x.id===id);const wasWon=d.stage==="won";Object.assign(d,data);closeModal();save();render();
-    if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast("Saved");}
+    if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.stage==="lost"?n+" moved to Lost":"Saved");}
   else{S.deals.unshift({id:"d"+Date.now(),whale:false,...data});closeModal();save();render();
     if(data.stage==="won")rideTheWave(n);else toast("Added "+n);}
 }
 function delDeal(id){S.deals=S.deals.filter(x=>x.id!==id);closeModal();save();render();toast("Deleted");}
+function reviveDeal(id){const d=S.deals.find(x=>x.id===id);if(!d)return;d.stage="lineup";save();render();toast(d.name+" back in the lineup");}
 function moveDeal(id,dir){
   const d=S.deals.find(x=>x.id===id);if(!d)return;
   const i=STAGES.findIndex(s=>s.id===d.stage)+dir;
@@ -500,11 +541,16 @@ function render(){
   document.getElementById("ar").textContent=fmt(outstanding());
   document.getElementById("arSub").textContent=SEED.invoices.filter(i=>!i.paid).length+" invoices open";
   document.getElementById("pipe").textContent=fmt(pipeVal());
-  document.getElementById("pipeSub").textContent=S.deals.filter(d=>d.stage!=="won").length+" open · "+wonCount()+" won";
+  document.getElementById("pipeSub").textContent=S.deals.filter(isActive).length+" open · "+wonCount()+" won";
   document.getElementById("cli").textContent=S.clients.length;
 
+  // follow-up alert (overview)
+  const due=dueFollowups();
+  document.getElementById("fuAlert").innerHTML=due.length
+    ?`<div class="alert" onclick="setTab('pipeline')">⏰ ${due.length} follow-up${due.length>1?"s":""} due: ${due.map(d=>esc(d.name)).join(", ")}<span class="go">Open pipeline →</span></div>`:"";
+
   // tab badges
-  document.getElementById("tabPipe").textContent=S.deals.filter(d=>d.stage!=="won").length;
+  document.getElementById("tabPipe").textContent=S.deals.filter(isActive).length;
   document.getElementById("tabCli").textContent=S.clients.length;
   document.getElementById("tabTask").textContent=S.sets.filter(s=>!s.done).length;
 
@@ -520,28 +566,48 @@ function render(){
   document.getElementById("setsMini").innerHTML=sorted.filter(s=>!s.done).slice(0,4).map(setHTML).join("")||emptyState("All caught up 🤙");
   document.getElementById("taskSub").textContent=S.sets.filter(s=>s.done).length+" / "+S.sets.length+" done";
 
-  // board
+  // board — cards sorted so soonest / overdue follow-ups float to the top
+  const byFu=(a,b)=>{if(!!a.fu!==!!b.fu)return a.fu?-1:1;if(a.fu&&b.fu)return a.fu<b.fu?-1:1;return 0;};
   document.getElementById("board").innerHTML=STAGES.map(st=>{
-    const items=S.deals.filter(d=>d.stage===st.id);const i=STAGES.indexOf(st);
+    const items=S.deals.filter(d=>d.stage===st.id).sort(byFu);const i=STAGES.indexOf(st);
     return `<div class="lane ${st.id==="won"?"won":""}" data-stage="${st.id}"
         ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')"
         ondrop="this.classList.remove('drop');dropDeal(event.dataTransfer.getData('id'),'${st.id}')">
       <div class="lh"><div><b>${st.label}</b> <span class="surf">· ${st.surf}</span></div><span class="cnt">${items.length}</span></div>
-      ${items.map(d=>`
+      ${items.map(d=>{const f=fuMeta(d.fu);return `
         <div class="deal ${d.whale?"whale":""}" draggable="true" ondragstart="event.dataTransfer.setData('id','${d.id}');this.classList.add('drag')" ondragend="this.classList.remove('drag')">
           <div class="nm">${d.whale?"🐋 ":""}${esc(d.name)}</div>
           ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
           ${d.value?`<div class="mt"><span class="val">${fmt(d.value)}</span>${st.id==="won"?" · signed":"/mo est"}</div>`:""}
+          ${f&&st.id!=="won"?`<div class="fu ${f.cls}">⏰ ${f.cls==="over"?"Overdue · "+f.lab:(f.cls==="due"?"Follow up today":"Follow up "+f.lab)}</div>`:""}
           ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
           <div class="ctl">
             <button class="ic" title="Back a stage" ${i===0?"disabled style=opacity:.3":""} onclick="moveDeal('${d.id}',-1)">◀</button>
-            <button class="ic" title="Edit / delete" onclick="editDeal('${d.id}')">✎</button>
+            <button class="ic" title="Edit / follow-up / lost" onclick="editDeal('${d.id}')">✎</button>
             <span class="sp"></span>
             ${st.id==="won"?'<span class="stag">🤙 landed</span>':`<button class="ic" title="Forward a stage" onclick="moveDeal('${d.id}',1)">▶</button>`}
           </div>
-        </div>`).join("")||`<div class="faint" style="font-size:11px;padding:6px 2px">—</div>`}
+        </div>`;}).join("")||`<div class="faint" style="font-size:11px;padding:6px 2px">—</div>`}
     </div>`;
   }).join("");
+
+  // Lost / cold shelf (kept off the board)
+  const lost=S.deals.filter(d=>d.stage==="lost");
+  const lw=document.getElementById("lostWrap");
+  if(lw){
+    lw.innerHTML=lost.length?`
+      <div class="lostsec ${lostOpen?"open":""}">
+        <div class="lhh" onclick="lostOpen=!lostOpen;render()"><h3>Lost / Cold</h3><span class="cnt">${lost.length}</span><span class="chev">▾</span></div>
+        <div class="lostlist">${lost.map(d=>`
+          <div class="lostcard"><div class="nm">${esc(d.name)}</div>
+            ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
+            ${d.value?`<div class="mt">${fmt(d.value)} · lost</div>`:""}
+            ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
+            <div class="ctl"><button class="ic" title="Revive" onclick="reviveDeal('${d.id}')">↩</button>
+              <button class="ic" title="Edit" onclick="editDeal('${d.id}')">✎</button>
+              <button class="ic" title="Delete" onclick="delDeal('${d.id}')">🗑</button></div></div>`).join("")}</div>
+      </div>`:"";
+  }
 
   // pipeline snapshot
   document.getElementById("pipeSnap").innerHTML=STAGES.map(st=>{
