@@ -1,7 +1,7 @@
 <title>RET Media Command Deck</title>
 <style>
   :root{
-    --bg:#0a1624; --bg2:#0c1a2b; --deck:#102639; --deck2:#143049; --line:#204058;
+    --bg:#0a1624; --deck:#102639; --deck2:#143049; --line:#204058; --line2:#2b567a;
     --ink:#eaf3fb; --dim:#93b0cb; --faint:#5f7f9c;
     --aqua:#37d6c8; --aqua2:#66ebde; --sand:#f2c078; --gold:#ffd27a;
     --coral:#ff7a6b; --green:#5fdd9d; --sky:#5ec2ff;
@@ -9,131 +9,154 @@
     --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--sans);
-    -webkit-font-smoothing:antialiased;
+  html,body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;
     background:
       radial-gradient(1100px 520px at 78% -8%, #16405a 0%, transparent 58%),
       radial-gradient(900px 480px at 0% 0%, #0f2f3a 0%, transparent 52%),
       linear-gradient(180deg,#0b1a2b,var(--bg) 60%);}
   a{color:var(--sky);text-decoration:none}
   .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
-  .muted{color:var(--dim)} .faint{color:var(--faint)}
-  .wrap{max-width:1320px;margin:0 auto;padding:20px 20px 70px}
+  .faint{color:var(--faint)} .dim{color:var(--dim)}
+  button{font-family:inherit}
+  :focus-visible{outline:2px solid var(--aqua);outline-offset:2px;border-radius:6px}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 20px 70px}
 
-  /* ---------- Deck header ---------- */
-  .deck{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;
-    background:linear-gradient(120deg,#123049,#0e2135 62%);box-shadow:var(--shadow);
-    padding:18px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-  .deck::after{content:"";position:absolute;right:-40px;bottom:-60px;width:320px;height:320px;
-    background:radial-gradient(circle at 50% 50%, rgba(55,214,200,.18), transparent 62%);pointer-events:none}
-  .brand{display:flex;align-items:center;gap:14px;min-width:230px}
-  .logo{width:52px;height:52px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:26px;
-    background:linear-gradient(135deg,var(--aqua),#1f9fd6);box-shadow:0 0 26px rgba(55,214,200,.45)}
-  .brand h1{margin:0;font-size:19px;letter-spacing:.4px;line-height:1.05}
-  .brand .sub{font-size:11.5px;color:var(--dim);letter-spacing:2.4px;text-transform:uppercase;margin-top:3px}
-  .deckdate{margin-left:auto;text-align:right;font-size:12px;color:var(--dim);z-index:1}
-  .deckdate b{color:var(--sand);font-size:13px}
+  /* ---------- sticky header + tabs ---------- */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:blur(10px);
+    background:linear-gradient(180deg,rgba(10,22,36,.95),rgba(10,22,36,.82));
+    border-bottom:1px solid var(--line);margin:0 -20px;padding:0 20px}
+  .hbar{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 0 0;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;
+    background:linear-gradient(135deg,var(--aqua),#1f9fd6);box-shadow:0 0 22px rgba(55,214,200,.4)}
+  .brand h1{margin:0;font-size:17px;letter-spacing:.4px;line-height:1}
+  .brand .sub{font-size:10.5px;color:var(--dim);letter-spacing:2.2px;text-transform:uppercase;margin-top:3px}
+  .clock{margin-left:auto;text-align:right;font-size:12px;color:var(--dim)}
+  .clock b{color:var(--sand)}
+  .tabs{display:flex;gap:4px;overflow-x:auto;width:100%;padding-top:10px}
+  .tab{background:none;border:none;color:var(--dim);font-size:13px;font-weight:700;letter-spacing:.4px;
+    padding:9px 15px;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:.15s}
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--aqua2);border-bottom-color:var(--aqua)}
+  .tab .b{background:#0a1a29;border:1px solid var(--line);border-radius:999px;padding:0 6px;font-size:10.5px;margin-left:5px}
 
-  /* ---------- KPI strip (horizontal) ---------- */
-  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:14px}
+  .view{display:none;animation:fade .25s} .view.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* ---------- KPIs ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}
   .kpi{background:var(--deck);border:1px solid var(--line);border-radius:15px;padding:13px 15px;position:relative;overflow:hidden}
-  .kpi .k{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim)}
-  .kpi .v{font-size:25px;font-weight:800;margin-top:5px}
+  .kpi .k{font-size:10.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim)}
+  .kpi .v{font-size:24px;font-weight:800;margin-top:5px}
   .kpi .s{font-size:11px;color:var(--faint);margin-top:3px}
   .kpi.money .v{color:var(--sand)} .kpi.win .v{color:var(--green)} .kpi.warn .v{color:var(--coral)} .kpi.pipe .v{color:var(--aqua2)}
-  .kpi .edge{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:15px 0 0 15px}
+  .kpi .edge{position:absolute;left:0;top:0;bottom:0;width:4px}
   .kpi.money .edge{background:var(--sand)} .kpi.win .edge{background:var(--green)}
   .kpi.warn .edge{background:var(--coral)} .kpi.pipe .edge{background:var(--aqua)} .kpi.clients .edge{background:var(--sky)}
 
-  /* ---------- section headers ---------- */
-  .head{display:flex;align-items:baseline;gap:12px;margin:28px 4px 12px}
-  .head h2{font-size:13px;letter-spacing:2.6px;text-transform:uppercase;color:var(--ink);margin:0}
+  .head{display:flex;align-items:baseline;gap:12px;margin:26px 4px 12px}
+  .head h2{font-size:13px;letter-spacing:2.4px;text-transform:uppercase;margin:0}
   .head .tag{font-size:12px;color:var(--faint)}
   .head .rt{margin-left:auto;display:flex;gap:8px}
 
-  /* ---------- Today's Sets ---------- */
+  /* ---------- Sets / tasks ---------- */
   .sets{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-  .set{display:flex;gap:11px;align-items:flex-start;background:var(--deck);border:1px solid var(--line);
-    border-radius:12px;padding:11px 13px;transition:.18s}
-  .set.done{opacity:.45}
-  .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--aqua);flex:none;cursor:pointer;
-    display:grid;place-items:center;font-size:13px;color:transparent;margin-top:1px;transition:.15s}
+  .set{display:flex;gap:11px;align-items:flex-start;background:var(--deck);border:1px solid var(--line);border-radius:12px;padding:11px 13px;transition:.15s}
+  .set.done{opacity:.5}
+  .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--aqua);flex:none;cursor:pointer;display:grid;place-items:center;font-size:13px;color:transparent;margin-top:1px}
   .set.done .box{background:var(--green);border-color:var(--green);color:#04180f}
   .set .t{font-weight:650;font-size:13.5px} .set.done .t{text-decoration:line-through}
   .set .d{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .set .sx{margin-left:auto;display:flex;gap:4px;opacity:0;transition:.15s}
+  .set:hover .sx{opacity:1}
+  .ic{background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;width:26px;height:26px;cursor:pointer;font-size:12px;display:grid;place-items:center;flex:none}
+  .ic:hover{color:var(--ink);border-color:var(--line2)}
   .pill{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:7px;vertical-align:middle}
   .pill.hot{background:#3a1a18;color:var(--coral);border:1px solid #5e2a26}
   .pill.warm{background:#3a2f16;color:var(--sand);border:1px solid #5e4c22}
   .pill.today{background:#132f2c;color:var(--aqua2);border:1px solid #1f5049}
 
-  /* ---------- Pipeline (horizontal kanban) ---------- */
+  /* ---------- Pipeline ---------- */
+  .hint{font-size:12px;color:var(--faint);background:var(--deck);border:1px dashed var(--line2);border-radius:10px;padding:9px 13px;margin-bottom:12px}
   .boardscroll{overflow-x:auto;padding-bottom:6px}
-  .board{display:grid;grid-template-columns:repeat(5,minmax(210px,1fr));gap:12px;min-width:960px}
-  .lane{background:linear-gradient(180deg,var(--deck),#0d2032);border:1px solid var(--line);border-radius:15px;padding:11px;display:flex;flex-direction:column}
+  .board{display:grid;grid-template-columns:repeat(5,minmax(214px,1fr));gap:12px;min-width:980px}
+  .lane{background:linear-gradient(180deg,var(--deck),#0d2032);border:1px solid var(--line);border-radius:15px;padding:11px;min-height:120px;transition:.15s}
+  .lane.drop{border-color:var(--aqua);background:linear-gradient(180deg,#123746,#0d2836)}
   .lane .lh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
-  .lane .lh b{font-size:12.5px;letter-spacing:.4px} .lane .lh .surf{font-size:10.5px;color:var(--faint);letter-spacing:.5px}
+  .lane .lh b{font-size:12.5px}.lane .lh .surf{font-size:10.5px;color:var(--faint)}
   .lane .lh .cnt{background:#0a1a29;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--dim);font-weight:700}
   .lane.won{background:linear-gradient(180deg,#123a34,#0e2b28);border-color:#1d5b4f}
-  .deal{background:var(--deck2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-bottom:9px;cursor:pointer;transition:.15s;position:relative}
-  .deal:hover{transform:translateY(-2px);border-color:var(--aqua);box-shadow:0 8px 20px rgba(0,0,0,.4)}
-  .deal .nm{font-weight:750;font-size:13.5px;display:flex;align-items:center;gap:6px}
+  .deal{background:var(--deck2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-bottom:9px;position:relative;cursor:grab}
+  .deal:hover{border-color:var(--line2)}
+  .deal.drag{opacity:.4}
+  .deal .nm{font-weight:750;font-size:13.5px}
   .deal .co{font-size:11px;color:var(--dim);margin-top:1px}
   .deal .mt{font-size:11px;color:var(--faint);margin-top:5px;line-height:1.4}
   .deal .val{font-weight:800;color:var(--sand);font-size:12.5px}
-  .deal .go{position:absolute;right:9px;bottom:9px;font-size:13px;color:var(--aqua);opacity:0;transition:.15s}
-  .deal:hover .go{opacity:1}
+  .deal .ctl{display:flex;gap:5px;margin-top:9px;align-items:center}
+  .deal .ctl .sp{flex:1}
   .whale .nm{color:var(--gold)}
-  .stag{font-size:9.5px;padding:1px 6px;border-radius:5px;border:1px solid var(--line);color:var(--dim);margin-top:6px;display:inline-block}
-  .lane.won .deal{background:#124038;border-color:#1f6656;cursor:default}
-  .lane.won .deal:hover{transform:none;box-shadow:none}
+  .lane.won .deal{background:#124038;border-color:#1f6656}
+  .stag{font-size:9.5px;padding:1px 7px;border-radius:5px;border:1px solid var(--line2);color:var(--aqua2)}
 
-  /* ---------- Roster (horizontal scroll) ---------- */
-  .rail{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
-  .client{flex:0 0 236px;background:linear-gradient(150deg,var(--deck2),#0f2133);border:1px solid var(--line);
-    border-radius:15px;padding:14px;position:relative;overflow:hidden}
-  .client .rib{position:absolute;top:0;right:0;font-size:9.5px;font-weight:800;letter-spacing:.8px;
-    padding:3px 10px;border-bottom-left-radius:11px;text-transform:uppercase}
+  /* ---------- Clients ---------- */
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .client{background:linear-gradient(150deg,var(--deck2),#0f2133);border:1px solid var(--line);border-radius:15px;padding:14px;position:relative;overflow:hidden}
+  .client .rib{position:absolute;top:0;right:0;font-size:9.5px;font-weight:800;letter-spacing:.7px;padding:3px 10px;border-bottom-left-radius:11px;text-transform:uppercase}
   .rib.anchor{background:linear-gradient(135deg,var(--gold),var(--sand));color:#241600}
   .rib.retainer{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#00201d}
   .rib.growth{background:linear-gradient(135deg,var(--coral),#ff9d5c);color:#2a0d06}
-  .client .cn{font-weight:800;font-size:15px;margin-right:64px} .client .cn .em{margin-right:5px}
-  .client .cs{font-size:11.5px;color:var(--dim);margin-top:3px;min-height:30px}
+  .client .cn{font-weight:800;font-size:15px;margin-right:66px}
+  .client .cs{font-size:11.5px;color:var(--dim);margin-top:4px;min-height:30px}
   .client .cd{font-size:11.5px;color:var(--faint);margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
-  .client .cm{font-size:16px;font-weight:800;color:var(--green);margin-top:5px}
+  .client .cm{font-size:16px;font-weight:800;color:var(--green);margin-top:4px}
+  .client .cx{display:flex;gap:5px;margin-top:10px}
 
   /* ---------- Milestones ---------- */
   .miles{display:flex;gap:11px;overflow-x:auto;padding-bottom:8px}
-  .mile{flex:0 0 158px;background:var(--deck);border:1px solid var(--line);border-radius:13px;padding:12px;text-align:center}
-  .mile.off{opacity:.35;filter:grayscale(.6)}
-  .mile .mi{font-size:24px} .mile .mn{font-weight:750;font-size:12px;margin-top:5px} .mile .md{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.3}
+  .mile{flex:0 0 156px;background:var(--deck);border:1px solid var(--line);border-radius:13px;padding:12px;text-align:center}
+  .mile.off{opacity:.32;filter:grayscale(.6)}
+  .mile .mi{font-size:23px}.mile .mn{font-weight:750;font-size:12px;margin-top:5px}.mile .md{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.3}
+
+  /* ---------- Money ---------- */
+  .panel{background:var(--deck);border:1px solid var(--line);border-radius:15px;padding:16px 18px}
+  .chart{display:flex;align-items:flex-end;gap:10px;height:150px;margin-top:6px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .bar .col{width:100%;max-width:34px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--aqua),#1f8fb0);transition:.2s}
+  .bar:hover .col{filter:brightness(1.15)}
+  .bar .bm{font-size:10px;color:var(--faint)} .bar .bv{font-size:10px;color:var(--dim);font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+  th{text-align:left;color:var(--dim);font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;padding:7px 8px;border-bottom:1px solid var(--line)}
+  td{padding:8px;border-bottom:1px solid #17324a}
+  tr:hover td{background:#0e2334}
+  .st{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
+  .st.paid{background:#123a2e;color:var(--green)} .st.open{background:#3a2a12;color:var(--sand)}
+  .twocol{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:14px}
 
   /* buttons */
-  .btn{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#04231f;border:none;border-radius:10px;
-    padding:8px 14px;font-weight:750;cursor:pointer;font-size:12.5px;transition:.15s}
-  .btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#04231f;border:none;border-radius:10px;padding:8px 14px;font-weight:750;cursor:pointer;font-size:12.5px;transition:.15s}
+  .btn:hover{filter:brightness(1.07)}
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
   .btn.sm{padding:5px 11px;font-size:12px}
+  .btn.danger{background:transparent;border:1px solid #6a2a2a;color:var(--coral)}
 
   /* modal */
   #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(5,12,20,.72);padding:18px}
-  #modal .m{width:100%;max-width:430px;background:var(--deck);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+  #modal .m{width:100%;max-width:440px;background:var(--deck);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
   #modal h3{margin:0 0 12px} label{display:block;font-size:11.5px;color:var(--dim);margin:10px 0 4px;letter-spacing:.3px}
   input,select,textarea{width:100%;background:#081521;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 11px;font-size:14px;font-family:inherit}
-  .row2{display:flex;gap:10px} .row2>div{flex:1}
-  .mact{display:flex;gap:9px;margin-top:16px}
+  .row2{display:flex;gap:10px}.row2>div{flex:1}
+  .mact{display:flex;gap:9px;margin-top:16px;align-items:center}
 
-  /* toast */
   #toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .toast{background:#0f2536;border:1px solid var(--aqua);border-radius:12px;padding:10px 14px;font-weight:700;font-size:13px;box-shadow:var(--shadow);animation:tin .3s}
   @keyframes tin{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 
-  /* ---------- WAVE overlay (the reward) ---------- */
+  /* wave reward */
   #wave{position:fixed;inset:0;z-index:80;display:none;background:rgba(4,10,18,.55);backdrop-filter:blur(2px)}
   #wave canvas{width:100%;height:100%;display:block}
-  #wave .banner{position:absolute;left:50%;top:22%;transform:translateX(-50%);text-align:center;
-    animation:drop .5s cubic-bezier(.2,1.4,.3,1);pointer-events:none;width:90%}
-  #wave .banner .big{font-size:clamp(28px,6vw,58px);font-weight:900;letter-spacing:1px;color:#fff;
-    text-shadow:0 4px 24px rgba(0,0,0,.5),0 0 40px rgba(55,214,200,.6)}
+  #wave .banner{position:absolute;left:50%;top:22%;transform:translateX(-50%);text-align:center;animation:drop .5s cubic-bezier(.2,1.4,.3,1);pointer-events:none;width:90%}
+  #wave .banner .big{font-size:clamp(28px,6vw,58px);font-weight:900;letter-spacing:1px;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.5),0 0 40px rgba(55,214,200,.6)}
   #wave .banner .sm{font-size:clamp(14px,2.4vw,20px);color:var(--gold);font-weight:800;margin-top:6px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
   @keyframes drop{from{transform:translateX(-50%) translateY(-40px) scale(.7);opacity:0}to{transform:translateX(-50%) translateY(0) scale(1);opacity:1}}
 
@@ -142,74 +165,122 @@
   @media(max-width:900px){
     .kpis{grid-template-columns:repeat(2,1fr)}
     .sets{grid-template-columns:1fr}
-    .deckdate{margin-left:0;text-align:left;width:100%}
+    .twocol{grid-template-columns:1fr}
   }
 </style>
 
 
+
+<header>
+  <div class="hbar">
+    <div class="brand"><div class="logo">🌊</div>
+      <div><h1>RET&nbsp;MEDIA</h1><div class="sub">Command&nbsp;Deck</div></div></div>
+    <div class="clock"><div id="clockDate">—</div><div id="clockFocus" class="faint" style="margin-top:2px"></div></div>
+  </div>
+  <div class="hbar" style="padding-top:0">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-v="overview">Overview</button>
+      <button class="tab" data-v="pipeline">Pipeline <span class="b" id="tabPipe">0</span></button>
+      <button class="tab" data-v="clients">Clients <span class="b" id="tabCli">0</span></button>
+      <button class="tab" data-v="tasks">Tasks <span class="b" id="tabTask">0</span></button>
+      <button class="tab" data-v="money">Money</button>
+    </div>
+  </div>
+</header>
+
 <div class="wrap">
 
-  <!-- DECK HEADER -->
-  <div class="deck">
-    <div class="brand">
-      <div class="logo">🌊</div>
+  <!-- ========= OVERVIEW ========= -->
+  <section class="view on" id="v-overview">
+    <div class="kpis">
+      <div class="kpi money"><div class="edge"></div><div class="k">Recurring / mo</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
+      <div class="kpi win"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="ytd">$0</div><div class="s" id="ytdSub"></div></div>
+      <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="ar">$0</div><div class="s" id="arSub"></div></div>
+      <div class="kpi pipe"><div class="edge"></div><div class="k">Open Pipeline</div><div class="v num" id="pipe">$0</div><div class="s" id="pipeSub"></div></div>
+      <div class="kpi clients"><div class="edge"></div><div class="k">Active Clients</div><div class="v num" id="cli">0</div><div class="s">on the roster</div></div>
+    </div>
+
+    <div class="head"><h2>Today's Sets</h2><span class="tag">what to ride today</span>
+      <div class="rt"><button class="btn sm ghost" onclick="setTab('tasks')">See all →</button></div></div>
+    <div class="sets" id="setsMini"></div>
+
+    <div class="head"><h2>Pipeline at a glance</h2><span class="tag">tap to open the board</span>
+      <div class="rt"><button class="btn sm ghost" onclick="setTab('pipeline')">Open board →</button></div></div>
+    <div class="kpis" id="pipeSnap" style="grid-template-columns:repeat(5,1fr);margin-top:0"></div>
+
+    <div class="head"><h2>Milestones</h2><span class="tag">banked wins</span>
+      <div class="rt"><button class="btn sm ghost" onclick="rideTheWave('the stoke')">🏄 Ride again</button></div></div>
+    <div class="miles" id="miles"></div>
+  </section>
+
+  <!-- ========= PIPELINE ========= -->
+  <section class="view" id="v-pipeline">
+    <div class="head"><h2>The Pipeline</h2><span class="tag">drag between lanes · or use ◀ ▶ · tap ✎ to edit</span>
+      <div class="rt"><button class="btn sm" onclick="editDeal()">＋ New lead</button></div></div>
+    <div class="hint">💡 <b>Drag a card</b> to any lane to move it, tap <b>◀ ▶</b> to nudge it a stage, or tap <b>✎</b> to edit / delete. Land one in <b>Won</b> and catch the wave 🤙</div>
+    <div class="boardscroll"><div class="board" id="board"></div></div>
+  </section>
+
+  <!-- ========= CLIENTS ========= -->
+  <section class="view" id="v-clients">
+    <div class="head"><h2>Your Roster</h2><span class="tag" id="rosterSub"></span>
+      <div class="rt"><button class="btn sm" onclick="editClient()">＋ Add client</button></div></div>
+    <div class="cgrid" id="roster"></div>
+  </section>
+
+  <!-- ========= TASKS ========= -->
+  <section class="view" id="v-tasks">
+    <div class="head"><h2>Today's Sets</h2><span class="tag" id="taskSub"></span>
+      <div class="rt"><button class="btn sm" onclick="editSet()">＋ Add a set</button>
+      <button class="btn sm ghost" onclick="clearDone()">Clear finished</button></div></div>
+    <div class="sets" id="sets"></div>
+  </section>
+
+  <!-- ========= MONEY ========= -->
+  <section class="view" id="v-money">
+    <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi win"><div class="edge"></div><div class="k">Collected 2026</div><div class="v num" id="mCollected">$0</div><div class="s">paid to date</div></div>
+      <div class="kpi money"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="mInvoiced">$0</div><div class="s">Jan–Aug</div></div>
+      <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="mAr">$0</div><div class="s">unpaid now</div></div>
+      <div class="kpi pipe"><div class="edge"></div><div class="k">Recurring / mo</div><div class="v num" id="mMrr">$0</div><div class="s">auto-billing</div></div>
+    </div>
+
+    <div class="head"><h2>Monthly Invoiced</h2><span class="tag">RET MEDIA LLC · 2026</span></div>
+    <div class="panel"><div class="chart" id="chart"></div></div>
+
+    <div class="twocol">
+      <div class="panel">
+        <div class="head" style="margin:0 0 8px"><h2>Invoice History</h2></div>
+        <div style="overflow-x:auto"><table id="invTable"><thead><tr><th>#</th><th>Client</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+      </div>
       <div>
-        <h1>RET&nbsp;MEDIA</h1>
-        <div class="sub">Command&nbsp;Deck</div>
+        <div class="panel">
+          <div class="head" style="margin:0 0 8px"><h2>Recurring</h2></div>
+          <div id="recur"></div>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <div class="head" style="margin:0 0 8px"><h2>Chase These</h2></div>
+          <div id="outstanding"></div>
+        </div>
       </div>
     </div>
-    <div class="deckdate">
-      <div>Thursday · <b id="today">Aug 13, 2026</b></div>
-      <div id="focus" class="faint" style="margin-top:3px">Next up: call ADAS Globus (Smit) — Thu 5:30pm Warsaw</div>
-    </div>
-  </div>
-
-  <!-- KPI STRIP -->
-  <div class="kpis">
-    <div class="kpi money"><div class="edge"></div><div class="k">Recurring / mo</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
-    <div class="kpi win"><div class="edge"></div><div class="k">Collected 2026</div><div class="v num" id="ytd">$0</div><div class="s">Jan–Aug · real invoices</div></div>
-    <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="ar">$0</div><div class="s" id="arSub"></div></div>
-    <div class="kpi pipe"><div class="edge"></div><div class="k">Pipeline</div><div class="v num" id="pipe">$0</div><div class="s" id="pipeSub"></div></div>
-    <div class="kpi clients"><div class="edge"></div><div class="k">Active Clients</div><div class="v num" id="cli">0</div><div class="s">on the roster</div></div>
-  </div>
-
-  <!-- TODAY'S SETS -->
-  <div class="head"><h2>Today's Sets</h2><span class="tag">what to ride today</span>
-    <span class="tag" id="setcount" style="margin-left:auto"></span></div>
-  <div class="sets" id="sets"></div>
-  <div style="margin-top:10px"><button class="btn sm ghost" onclick="addSet()">＋ Add a set</button>
-    <button class="btn sm ghost" onclick="clearDone()">Clear finished</button></div>
-
-  <!-- PIPELINE -->
-  <div class="head"><h2>The Pipeline</h2><span class="tag">tap a deal to move it down the line — land one and catch the wave 🤙</span>
-    <div class="rt"><button class="btn sm" onclick="addDeal()">＋ New lead</button></div></div>
-  <div class="boardscroll"><div class="board" id="board"></div></div>
-
-  <!-- ROSTER -->
-  <div class="head"><h2>Your Roster</h2><span class="tag">the crew paying the bills</span></div>
-  <div class="rail" id="roster"></div>
-
-  <!-- MILESTONES -->
-  <div class="head"><h2>Milestones</h2><span class="tag">banked wins</span>
-    <div class="rt"><button class="btn sm ghost" onclick="rideTheWave('the stoke')">🏄 Ride again</button></div></div>
-  <div class="miles" id="miles"></div>
+  </section>
 
   <div class="foot">
     RET MEDIA LLC · seeded from Notion CRM + QuickBooks + Calendar/Gmail on 2026-08-13.<br>
-    Your moves save in this browser. Say "refresh my CRM data" to Claude to re-pull live numbers.
+    Every move saves in this browser. Say "refresh my CRM data" to Claude to re-pull live numbers.
   </div>
 </div>
 
 <div id="toasts"></div>
 <div id="modal"><div class="m" id="modalBody"></div></div>
 <div id="wave"><canvas id="wc"></canvas>
-  <div class="banner"><div class="big" id="wbig">BARRELED! 🤙</div><div class="sm" id="wsm"></div></div>
-</div>
+  <div class="banner"><div class="big" id="wbig">BARRELED! 🤙</div><div class="sm" id="wsm"></div></div></div>
 
 <script>
 /* ============================================================
-   RET MEDIA COMMAND DECK
-   Seeded live from Notion CRM + QuickBooks + Calendar/Gmail (2026-08-13)
+   RET MEDIA COMMAND DECK  ·  seeded 2026-08-13
+   Notion CRM + QuickBooks invoices + Calendar/Gmail
    ============================================================ */
 const SEED = {
   clients:[
@@ -220,7 +291,6 @@ const SEED = {
     {name:"Paulo Prietto", em:"🏡", tier:"retainer", svc:"Instagram management 2x/week", deal:"$900/mo · recurring", mrr:900},
     {name:"Tara Bunker",   em:"🔑", tier:"retainer", svc:"Instagram management + website", deal:"$900/mo · recurring", mrr:900},
   ],
-  // stage: lineup(new) · paddle(contacted) · set(followup) · dropin(negotiation) · won
   deals:[
     {name:"Chosen Advisory", co:"", stage:"lineup",  value:5000, whale:true, note:"BIG WHALE — top priority"},
     {name:"ADAS Globus",     co:"Smit Shah", stage:"dropin", value:2500, note:"Marketing + consulting arrangement · call Thu 8/14"},
@@ -245,224 +315,335 @@ const SEED = {
     {t:"Review social-media-manager applicants", d:"10+ replies in inbox from the LinkedIn post", heat:""},
     {t:"Work the 80-creator cold outreach", d:"Blast sent 8/11 · reply to any bites", heat:""},
   ],
-  ytd:30483, ar:4900,
+  // real QuickBooks invoices (2026)
+  invoices:[
+    {n:"0093", c:"Foreign Waters", d:"Aug 13", amt:1500, paid:false},
+    {n:"0092", c:"Shane Dorian",   d:"Aug 10", amt:2500, paid:false},
+    {n:"0091", c:"Paulo Prietto",  d:"Aug 8",  amt:900,  paid:false},
+    {n:"0090", c:"Blair Conklin",  d:"Aug 1",  amt:1370.32, paid:true},
+    {n:"0089", c:"Tara Bunker",    d:"Jul 30", amt:399,  paid:true},
+    {n:"0088", c:"Tara Bunker",    d:"Jul 8",  amt:900,  paid:true},
+    {n:"0087", c:"Paulo Prietto",  d:"Jul 8",  amt:900,  paid:true},
+    {n:"0086", c:"Blair Conklin",  d:"Jun 15", amt:2396.16, paid:true},
+    {n:"0085", c:"Shane Dorian",   d:"Jun 4",  amt:2500, paid:true},
+    {n:"0084", c:"Paulo Prietto",  d:"Jun 4",  amt:900,  paid:true},
+    {n:"0082", c:"Blair Conklin",  d:"May 14", amt:2705.32, paid:true},
+    {n:"0081", c:"Blair Conklin",  d:"Apr 24", amt:3887.93, paid:true},
+    {n:"0080", c:"Blair Conklin",  d:"Mar 16", amt:1867.30, paid:true},
+    {n:"0079", c:"Blair Conklin",  d:"Feb 18", amt:2696.46, paid:true},
+    {n:"0077", c:"Blair Conklin",  d:"Jan 11", amt:5060.94, paid:true},
+  ],
+  monthly:[["Jan",5061],["Feb",2696],["Mar",1867],["Apr",3888],["May",2705],["Jun",5796],["Jul",2199],["Aug",6270]],
+  recurring:[
+    {c:"Paulo Prietto", amt:900, when:"8th monthly"},
+    {c:"Tara Bunker",   amt:900, when:"8th monthly · next 9/8"},
+  ],
 };
 
 const STAGES=[
   {id:"lineup", label:"New Leads",   surf:"the lineup"},
   {id:"paddle", label:"Contacted",   surf:"paddling out"},
-  {id:"set",    label:"Following Up", surf:"reading the set"},
+  {id:"set",    label:"Following Up",surf:"reading the set"},
   {id:"dropin", label:"Negotiating", surf:"dropping in"},
   {id:"won",    label:"Won",         surf:"barreled 🤙"},
 ];
-
 const MILES=[
-  {ic:"🩸", n:"First Client",  d:"Signed your first",       on:()=>true},
-  {ic:"🤝", n:"Full Crew",     d:"6 active clients",        on:()=>SEED.clients.length>=6},
-  {ic:"💰", n:"$30K Year",     d:"$30k collected in 2026",  on:()=>SEED.ytd>=30000},
-  {ic:"🔁", n:"Recurring Rev", d:"2 auto-billing retainers",on:()=>true},
-  {ic:"🐋", n:"Whale Hooked",  d:"5-figure deal in pipe",   on:()=>SEED.deals.some(d=>d.whale)},
-  {ic:"🌊", n:"First Barrel",  d:"Close a deal here",       on:()=>wonCount()>0},
-  {ic:"⭐️", n:"Big Month",     d:"3 deals closed here",     on:()=>wonCount()>=3},
+  {ic:"🩸",n:"First Client",d:"Signed your first",on:()=>true},
+  {ic:"🤝",n:"Full Crew",d:"6 active clients",on:()=>S.clients.length>=6},
+  {ic:"💰",n:"$30K Year",d:"$30k invoiced 2026",on:()=>invoiced()>=30000},
+  {ic:"🔁",n:"Recurring Rev",d:"2 auto-billing retainers",on:()=>true},
+  {ic:"🐋",n:"Whale Hooked",d:"5-figure deal in pipe",on:()=>S.deals.some(d=>d.whale&&d.stage!=="won")},
+  {ic:"🌊",n:"First Barrel",d:"Close a deal here",on:()=>wonCount()>0},
+  {ic:"⭐️",n:"Big Month",d:"3 deals closed here",on:()=>wonCount()>=3},
 ];
 
-/* ---------- state ---------- */
-const LS="retmedia_deck_v2";
+/* ---------- state (editable) ---------- */
+const LS="retmedia_deck_v3";
 function seed(){return{
+  clients:SEED.clients.map((c,i)=>({...c,id:"c"+i})),
   deals:SEED.deals.map((d,i)=>({...d,id:"d"+i})),
   sets:SEED.sets.map((s,i)=>({...s,id:"s"+i,done:false})),
+  tab:"overview",
 };}
 let S=load();
-function load(){try{const r=JSON.parse(localStorage.getItem(LS));if(r&&r.deals)return r;}catch(e){}return seed();}
+function load(){try{const r=JSON.parse(localStorage.getItem(LS));if(r&&r.deals&&r.clients&&r.sets)return r;}catch(e){}return seed();}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
 function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();render();}}
 
 /* ---------- derived ---------- */
-function wonCount(){return (S.deals||SEED.deals).filter(d=>d.stage==="won").length;}
-function mrr(){return SEED.clients.reduce((a,c)=>a+c.mrr,0);}
-function pipeVal(){return S.deals.filter(d=>d.stage!=="won").reduce((a,d)=>a+(d.value||0),0);}
+function wonCount(){return S.deals.filter(d=>d.stage==="won").length;}
+function mrr(){return S.clients.reduce((a,c)=>a+(+c.mrr||0),0);}
+function pipeVal(){return S.deals.filter(d=>d.stage!=="won").reduce((a,d)=>a+(+d.value||0),0);}
+function invoiced(){return SEED.invoices.reduce((a,i)=>a+i.amt,0);}
+function collected(){return SEED.invoices.filter(i=>i.paid).reduce((a,i)=>a+i.amt,0);}
+function outstanding(){return SEED.invoices.filter(i=>!i.paid).reduce((a,i)=>a+i.amt,0);}
 function fmt(n){return "$"+Math.round(n).toLocaleString();}
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function v(id){return (document.getElementById(id).value||"").trim();}
 
-/* ---------- actions ---------- */
-function toggleSet(id){const s=S.sets.find(x=>x.id===id);if(!s)return;s.done=!s.done;save();render();
-  if(s.done)toast("✔ "+ s.t.split("—")[0].trim());}
-function clearDone(){S.sets=S.sets.filter(s=>!s.done);save();render();}
-function advance(id){
-  const d=S.deals.find(x=>x.id===id);if(!d)return;
-  const i=STAGES.findIndex(s=>s.id===d.stage);
-  if(i>=STAGES.length-1)return;
-  d.stage=STAGES[i+1].id;save();render();
-  if(d.stage==="won"){rideTheWave(d.name);}
-  else toast(d.name+" → "+STAGES[i+1].label);
+/* ---------- tabs ---------- */
+function setTab(t){S.tab=t;save();
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.v===t));
+  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+t));
+  window.scrollTo({top:0,behavior:"smooth"});}
+document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b)setTab(b.dataset.v);});
+
+/* ---------- clock ---------- */
+function tickClock(){
+  const now=new Date();
+  const opts={weekday:"long",month:"short",day:"numeric",year:"numeric"};
+  document.getElementById("clockDate").innerHTML=now.toLocaleDateString("en-US",opts).replace(/, (\d{4})/," · <b>$1</b>");
+  const nextHot=S.sets.find(s=>!s.done&&(s.heat==="today"||s.heat==="hot"));
+  document.getElementById("clockFocus").textContent=nextHot?"Next up: "+nextHot.t:"All caught up 🤙";
 }
+
+/* ---------- toast ---------- */
 function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;
   document.getElementById("toasts").appendChild(t);
   setTimeout(()=>{t.style.transition=".4s";t.style.opacity=0;t.style.transform="translateY(8px)";},1600);
   setTimeout(()=>t.remove(),2100);}
 
-/* ---------- modals ---------- */
+/* ---------- modal ---------- */
 function openModal(h){document.getElementById("modalBody").innerHTML=h;document.getElementById("modal").style.display="grid";}
 function closeModal(){document.getElementById("modal").style.display="none";}
 document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal();});
-function addDeal(){openModal(`<h3>New lead</h3>
-  <label>Name</label><input id="x_n" placeholder="Person or business">
-  <div class="row2"><div><label>Company</label><input id="x_c" placeholder="optional"></div>
-  <div><label>Deal value ($)</label><input id="x_v" type="number" placeholder="1500"></div></div>
-  <label>Note</label><input id="x_no" placeholder="where it came from / next step">
-  <div class="mact"><button class="btn" onclick="saveDeal()">Add to lineup</button>
-  <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);}
-function saveDeal(){const n=v("x_n");if(!n)return;S.deals.unshift({id:"d"+Date.now(),name:n,co:v("x_c"),
-  stage:"lineup",value:+v("x_v")||1000,note:v("x_no")});closeModal();save();render();toast("Added "+n+" to the lineup");}
-function addSet(){openModal(`<h3>Add a set</h3>
-  <label>Task</label><input id="x_t" placeholder="Follow up with…">
-  <label>Detail</label><input id="x_d" placeholder="context / next step">
-  <label>Heat</label><select id="x_h"><option value="">normal</option><option value="today">today</option><option value="warm">warm</option><option value="hot">hot</option></select>
-  <div class="mact"><button class="btn" onclick="saveSet()">Add</button>
-  <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);}
-function saveSet(){const t=v("x_t");if(!t)return;S.sets.push({id:"s"+Date.now(),t,d:v("x_d"),heat:v("x_h"),done:false});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+/* ---------- DEALS: add / edit / delete / move ---------- */
+function editDeal(id){
+  const d=id?S.deals.find(x=>x.id===id):{name:"",co:"",value:"",stage:"lineup",note:""};
+  openModal(`<h3>${id?"Edit deal":"New lead"}</h3>
+    <label>Name</label><input id="x_n" value="${esc(d.name)}" placeholder="Person or business">
+    <div class="row2"><div><label>Company</label><input id="x_c" value="${esc(d.co||"")}"></div>
+    <div><label>Deal value ($)</label><input id="x_v" type="number" value="${d.value||""}" placeholder="1500"></div></div>
+    <label>Stage</label><select id="x_s">${STAGES.map(s=>`<option value="${s.id}" ${d.stage===s.id?"selected":""}>${s.label} · ${s.surf}</option>`).join("")}</select>
+    <label>Note</label><input id="x_no" value="${esc(d.note||"")}" placeholder="context / next step">
+    <div class="mact"><button class="btn" onclick="saveDeal('${id||""}')">${id?"Save":"Add to lineup"}</button>
+    <button class="btn ghost" onclick="closeModal()">Cancel</button>
+    ${id?`<button class="btn danger" style="margin-left:auto" onclick="delDeal('${id}')">Delete</button>`:""}</div>`);
+  setTimeout(()=>document.getElementById("x_n").focus(),50);
+}
+function saveDeal(id){
+  const n=v("x_n");if(!n){toast("Name required");return;}
+  const data={name:n,co:v("x_c"),value:+v("x_v")||0,stage:v("x_s"),note:v("x_no")};
+  if(id){const d=S.deals.find(x=>x.id===id);const wasWon=d.stage==="won";Object.assign(d,data);closeModal();save();render();
+    if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast("Saved");}
+  else{S.deals.unshift({id:"d"+Date.now(),whale:false,...data});closeModal();save();render();
+    if(data.stage==="won")rideTheWave(n);else toast("Added "+n);}
+}
+function delDeal(id){S.deals=S.deals.filter(x=>x.id!==id);closeModal();save();render();toast("Deleted");}
+function moveDeal(id,dir){
+  const d=S.deals.find(x=>x.id===id);if(!d)return;
+  const i=STAGES.findIndex(s=>s.id===d.stage)+dir;
+  if(i<0||i>=STAGES.length)return;
+  const wasWon=d.stage==="won";d.stage=STAGES[i].id;save();render();
+  if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES[i].label);
+}
+function dropDeal(id,stage){
+  const d=S.deals.find(x=>x.id===id);if(!d||d.stage===stage)return;
+  const wasWon=d.stage==="won";d.stage=stage;save();render();
+  if(stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES.find(s=>s.id===stage).label);
+}
+
+/* ---------- SETS ---------- */
+function toggleSet(id){const s=S.sets.find(x=>x.id===id);if(!s)return;s.done=!s.done;save();render();}
+function editSet(id){
+  const s=id?S.sets.find(x=>x.id===id):{t:"",d:"",heat:""};
+  openModal(`<h3>${id?"Edit set":"Add a set"}</h3>
+    <label>Task</label><input id="x_t" value="${esc(s.t)}" placeholder="Follow up with…">
+    <label>Detail</label><input id="x_d" value="${esc(s.d||"")}" placeholder="context / next step">
+    <label>Heat</label><select id="x_h">
+      ${["","today","warm","hot"].map(h=>`<option value="${h}" ${s.heat===h?"selected":""}>${h||"normal"}</option>`).join("")}</select>
+    <div class="mact"><button class="btn" onclick="saveSet('${id||""}')">${id?"Save":"Add"}</button>
+    <button class="btn ghost" onclick="closeModal()">Cancel</button>
+    ${id?`<button class="btn danger" style="margin-left:auto" onclick="delSet('${id}')">Delete</button>`:""}</div>`);
+  setTimeout(()=>document.getElementById("x_t").focus(),50);
+}
+function saveSet(id){const t=v("x_t");if(!t){toast("Task required");return;}
+  const data={t,d:v("x_d"),heat:v("x_h")};
+  if(id)Object.assign(S.sets.find(x=>x.id===id),data);
+  else S.sets.push({id:"s"+Date.now(),done:false,...data});
   closeModal();save();render();}
-function v(id){return (document.getElementById(id).value||"").trim();}
+function delSet(id){S.sets=S.sets.filter(x=>x.id!==id);closeModal();save();render();toast("Deleted");}
+function clearDone(){S.sets=S.sets.filter(s=>!s.done);save();render();}
+
+/* ---------- CLIENTS ---------- */
+function editClient(id){
+  const c=id?S.clients.find(x=>x.id===id):{name:"",em:"⭐️",tier:"retainer",svc:"",deal:"",mrr:""};
+  openModal(`<h3>${id?"Edit client":"Add client"}</h3>
+    <div class="row2"><div><label>Emoji</label><input id="x_em" value="${esc(c.em)}" maxlength="4"></div>
+    <div style="flex:3"><label>Name</label><input id="x_n" value="${esc(c.name)}"></div></div>
+    <label>Service</label><input id="x_svc" value="${esc(c.svc||"")}">
+    <label>Deal terms</label><input id="x_deal" value="${esc(c.deal||"")}">
+    <div class="row2"><div><label>Tier</label><select id="x_t">
+      ${["anchor","retainer","growth"].map(t=>`<option value="${t}" ${c.tier===t?"selected":""}>${t}</option>`).join("")}</select></div>
+    <div><label>MRR ($)</label><input id="x_m" type="number" value="${c.mrr||""}"></div></div>
+    <div class="mact"><button class="btn" onclick="saveClient('${id||""}')">${id?"Save":"Add"}</button>
+    <button class="btn ghost" onclick="closeModal()">Cancel</button>
+    ${id?`<button class="btn danger" style="margin-left:auto" onclick="delClient('${id}')">Delete</button>`:""}</div>`);
+  setTimeout(()=>document.getElementById("x_n").focus(),50);
+}
+function saveClient(id){const n=v("x_n");if(!n){toast("Name required");return;}
+  const data={name:n,em:v("x_em")||"⭐️",svc:v("x_svc"),deal:v("x_deal"),tier:v("x_t"),mrr:+v("x_m")||0};
+  if(id)Object.assign(S.clients.find(x=>x.id===id),data);
+  else S.clients.push({id:"c"+Date.now(),...data});
+  closeModal();save();render();}
+function delClient(id){S.clients=S.clients.filter(x=>x.id!==id);closeModal();save();render();toast("Removed");}
 
 /* ---------- render ---------- */
 function render(){
+  // KPIs
   document.getElementById("mrr").textContent=fmt(mrr());
-  document.getElementById("mrrSub").textContent=SEED.clients.length+" clients · some rev-split";
-  document.getElementById("ytd").textContent=fmt(SEED.ytd);
-  document.getElementById("ar").textContent=fmt(SEED.ar);
-  document.getElementById("arSub").textContent="3 invoices open";
+  document.getElementById("mrrSub").textContent=S.clients.length+" clients · some rev-split";
+  document.getElementById("ytd").textContent=fmt(invoiced());
+  document.getElementById("ytdSub").textContent=fmt(collected())+" collected";
+  document.getElementById("ar").textContent=fmt(outstanding());
+  document.getElementById("arSub").textContent=SEED.invoices.filter(i=>!i.paid).length+" invoices open";
   document.getElementById("pipe").textContent=fmt(pipeVal());
-  document.getElementById("pipeSub").textContent=S.deals.filter(d=>d.stage!=="won").length+" open · "+wonCount()+" won here";
-  document.getElementById("cli").textContent=SEED.clients.length;
+  document.getElementById("pipeSub").textContent=S.deals.filter(d=>d.stage!=="won").length+" open · "+wonCount()+" won";
+  document.getElementById("cli").textContent=S.clients.length;
+
+  // tab badges
+  document.getElementById("tabPipe").textContent=S.deals.filter(d=>d.stage!=="won").length;
+  document.getElementById("tabCli").textContent=S.clients.length;
+  document.getElementById("tabTask").textContent=S.sets.filter(s=>!s.done).length;
 
   // sets
   const order={today:0,hot:1,warm:2,"":3};
-  const ss=[...S.sets].sort((a,b)=>(a.done-b.done)||(order[a.heat]-order[b.heat]));
-  document.getElementById("sets").innerHTML=ss.map(s=>`
-    <div class="set ${s.done?"done":""}">
-      <div class="box" onclick="toggleSet('${s.id}')">✓</div>
-      <div><div class="t">${esc(s.t)}${s.heat?`<span class="pill ${s.heat}">${s.heat.toUpperCase()}</span>`:""}</div>
+  const sorted=[...S.sets].sort((a,b)=>(a.done-b.done)||(order[a.heat]-order[b.heat]));
+  const setHTML=s=>`<div class="set ${s.done?"done":""}">
+      <div class="box" role="checkbox" aria-checked="${s.done}" tabindex="0" onclick="toggleSet('${s.id}')" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleSet('${s.id}')}">✓</div>
+      <div style="flex:1"><div class="t">${esc(s.t)}${s.heat?`<span class="pill ${s.heat}">${s.heat.toUpperCase()}</span>`:""}</div>
       <div class="d">${esc(s.d||"")}</div></div>
-    </div>`).join("");
-  const done=S.sets.filter(s=>s.done).length;
-  document.getElementById("setcount").textContent=done+" / "+S.sets.length+" done";
+      <div class="sx"><button class="ic" title="Edit" onclick="editSet('${s.id}')">✎</button></div></div>`;
+  document.getElementById("sets").innerHTML=sorted.map(setHTML).join("")||emptyState("No tasks — add a set.");
+  document.getElementById("setsMini").innerHTML=sorted.filter(s=>!s.done).slice(0,4).map(setHTML).join("")||emptyState("All caught up 🤙");
+  document.getElementById("taskSub").textContent=S.sets.filter(s=>s.done).length+" / "+S.sets.length+" done";
 
   // board
   document.getElementById("board").innerHTML=STAGES.map(st=>{
-    const items=S.deals.filter(d=>d.stage===st.id);
-    return `<div class="lane ${st.id==="won"?"won":""}">
+    const items=S.deals.filter(d=>d.stage===st.id);const i=STAGES.indexOf(st);
+    return `<div class="lane ${st.id==="won"?"won":""}" data-stage="${st.id}"
+        ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')"
+        ondrop="this.classList.remove('drop');dropDeal(event.dataTransfer.getData('id'),'${st.id}')">
       <div class="lh"><div><b>${st.label}</b> <span class="surf">· ${st.surf}</span></div><span class="cnt">${items.length}</span></div>
       ${items.map(d=>`
-        <div class="deal ${d.whale?"whale":""}" ${st.id!=="won"?`onclick="advance('${d.id}')"`:""}>
+        <div class="deal ${d.whale?"whale":""}" draggable="true" ondragstart="event.dataTransfer.setData('id','${d.id}');this.classList.add('drag')" ondragend="this.classList.remove('drag')">
           <div class="nm">${d.whale?"🐋 ":""}${esc(d.name)}</div>
           ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
           ${d.value?`<div class="mt"><span class="val">${fmt(d.value)}</span>${st.id==="won"?" · signed":"/mo est"}</div>`:""}
           ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
-          ${st.id!=="won"?'<div class="go">move ➜</div>':'<span class="stag">🤙 landed</span>'}
+          <div class="ctl">
+            <button class="ic" title="Back a stage" ${i===0?"disabled style=opacity:.3":""} onclick="moveDeal('${d.id}',-1)">◀</button>
+            <button class="ic" title="Edit / delete" onclick="editDeal('${d.id}')">✎</button>
+            <span class="sp"></span>
+            ${st.id==="won"?'<span class="stag">🤙 landed</span>':`<button class="ic" title="Forward a stage" onclick="moveDeal('${d.id}',1)">▶</button>`}
+          </div>
         </div>`).join("")||`<div class="faint" style="font-size:11px;padding:6px 2px">—</div>`}
     </div>`;
   }).join("");
 
+  // pipeline snapshot
+  document.getElementById("pipeSnap").innerHTML=STAGES.map(st=>{
+    const items=S.deals.filter(d=>d.stage===st.id);
+    const val=items.reduce((a,d)=>a+(+d.value||0),0);
+    return `<div class="kpi"><div class="k">${st.label}</div><div class="v num" style="font-size:20px">${items.length}</div><div class="s">${val?fmt(val):"—"}</div></div>`;
+  }).join("");
+
   // roster
-  document.getElementById("roster").innerHTML=SEED.clients.map(c=>`
+  document.getElementById("rosterSub").textContent=fmt(mrr())+"/mo recurring · "+S.clients.length+" clients";
+  document.getElementById("roster").innerHTML=S.clients.map(c=>`
     <div class="client">
-      <div class="rib ${c.tier}">${c.tier}</div>
-      <div class="cn"><span class="em">${c.em}</span>${esc(c.name)}</div>
+      <div class="rib ${c.tier}">${esc(c.tier)}</div>
+      <div class="cn"><span style="margin-right:5px">${esc(c.em)}</span>${esc(c.name)}</div>
       <div class="cs">${esc(c.svc)}</div>
       <div class="cd">${esc(c.deal)}</div>
       <div class="cm">${c.mrr?fmt(c.mrr)+"/mo"+(c.variable?"*":""):"trial / rev-share"}</div>
-    </div>`).join("");
+      <div class="cx"><button class="ic" title="Edit" onclick="editClient('${c.id}')">✎</button></div>
+    </div>`).join("")||emptyState("No clients yet.");
 
   // milestones
   document.getElementById("miles").innerHTML=MILES.map(m=>{const on=m.on();
-    return `<div class="mile ${on?"":"off"}"><div class="mi">${on?m.ic:"🔒"}</div>
-      <div class="mn">${esc(m.n)}</div><div class="md">${esc(m.d)}</div></div>`;}).join("");
+    return `<div class="mile ${on?"":"off"}"><div class="mi">${on?m.ic:"🔒"}</div><div class="mn">${esc(m.n)}</div><div class="md">${esc(m.d)}</div></div>`;}).join("");
+
+  renderMoney();
+  tickClock();
+}
+function emptyState(msg){return `<div class="faint" style="padding:14px;font-size:13px">${esc(msg)}</div>`;}
+
+function renderMoney(){
+  document.getElementById("mCollected").textContent=fmt(collected());
+  document.getElementById("mInvoiced").textContent=fmt(invoiced());
+  document.getElementById("mAr").textContent=fmt(outstanding());
+  document.getElementById("mMrr").textContent=fmt(mrr());
+  const max=Math.max(...SEED.monthly.map(m=>m[1]));
+  document.getElementById("chart").innerHTML=SEED.monthly.map(([m,val])=>`
+    <div class="bar" title="${m}: ${fmt(val)}"><div class="bv">${(val/1000).toFixed(1)}k</div>
+      <div class="col" style="height:${Math.round(val/max*100)}%"></div><div class="bm">${m}</div></div>`).join("");
+  document.querySelector("#invTable tbody").innerHTML=SEED.invoices.map(i=>`
+    <tr><td class="num">${i.n}</td><td>${esc(i.c)}</td><td class="faint">${i.d}</td>
+      <td class="num" style="font-weight:700">${fmt(i.amt)}</td>
+      <td><span class="st ${i.paid?"paid":"open"}">${i.paid?"PAID":"OPEN"}</span></td></tr>`).join("");
+  document.getElementById("recur").innerHTML=SEED.recurring.map(r=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #17324a">
+      <div><div style="font-weight:700;font-size:13px">${esc(r.c)}</div><div class="faint" style="font-size:11px">${esc(r.when)}</div></div>
+      <div class="num" style="font-weight:800;color:var(--green)">${fmt(r.amt)}</div></div>`).join("");
+  document.getElementById("outstanding").innerHTML=SEED.invoices.filter(i=>!i.paid).map(i=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #17324a">
+      <div><div style="font-weight:700;font-size:13px">${esc(i.c)}</div><div class="faint" style="font-size:11px">Inv ${i.n} · ${i.d}</div></div>
+      <div class="num" style="font-weight:800;color:var(--sand)">${fmt(i.amt)}</div></div>`).join("");
 }
 
 /* ============================================================
-   THE REWARD — catch a wave (sound + surfer animation)
+   THE REWARD — catch a wave (sound + surfer)
    ============================================================ */
-function playStoke(){
-  try{
-    const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();
-    const now=ac.currentTime;
-    // triumphant arpeggio
-    [523.25,659.25,783.99,1046.5].forEach((f,i)=>{
-      const o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.value=f;
-      const t=now+i*0.10;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.22,t+0.03);
-      g.gain.exponentialRampToValueAtTime(.001,t+0.5);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+0.55);
-    });
-    // wave whoosh (filtered noise sweep)
-    const dur=1.1,buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),ch=buf.getChannelData(0);
-    for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*(1-i/ch.length);
-    const src=ac.createBufferSource();src.buffer=buf;
-    const bp=ac.createBiquadFilter();bp.type="bandpass";bp.frequency.setValueAtTime(400,now);
-    bp.frequency.exponentialRampToValueAtTime(2400,now+dur);bp.Q.value=0.7;
-    const ng=ac.createGain();ng.gain.setValueAtTime(.0001,now);ng.gain.linearRampToValueAtTime(.5,now+.15);
-    ng.gain.exponentialRampToValueAtTime(.001,now+dur);
-    src.connect(bp).connect(ng).connect(ac.destination);src.start(now);src.stop(now+dur);
-    setTimeout(()=>ac.close(),2000);
-  }catch(e){}
-}
+function playStoke(){try{
+  const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();const now=ac.currentTime;
+  [523.25,659.25,783.99,1046.5].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.value=f;
+    const t=now+i*0.10;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.22,t+0.03);g.gain.exponentialRampToValueAtTime(.001,t+0.5);
+    o.connect(g).connect(ac.destination);o.start(t);o.stop(t+0.55);});
+  const dur=1.1,buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),ch=buf.getChannelData(0);
+  for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*(1-i/ch.length);
+  const src=ac.createBufferSource();src.buffer=buf;const bp=ac.createBiquadFilter();bp.type="bandpass";
+  bp.frequency.setValueAtTime(400,now);bp.frequency.exponentialRampToValueAtTime(2400,now+dur);bp.Q.value=0.7;
+  const ng=ac.createGain();ng.gain.setValueAtTime(.0001,now);ng.gain.linearRampToValueAtTime(.5,now+.15);ng.gain.exponentialRampToValueAtTime(.001,now+dur);
+  src.connect(bp).connect(ng).connect(ac.destination);src.start(now);src.stop(now+dur);setTimeout(()=>ac.close(),2000);
+}catch(e){}}
 
 function rideTheWave(name){
   const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.getElementById("wbig").textContent="BARRELED! 🤙";
   document.getElementById("wsm").textContent=name==="the stoke"?"drop in.":name+" is signed. Go get the next one.";
-  const ov=document.getElementById("wave");ov.style.display="block";
-  playStoke();
+  const ov=document.getElementById("wave");ov.style.display="block";playStoke();
   const cv=document.getElementById("wc"),ctx=cv.getContext("2d");
-  const W=cv.width=innerWidth,H=cv.height=innerHeight;
-  let t=0;const dur=reduce?40:150;
-  const spray=[];
+  const W=cv.width=innerWidth,H=cv.height=innerHeight;let t=0;const dur=reduce?40:150;const spray=[];
   function frame(){
-    t++;ctx.clearRect(0,0,W,H);
-    const prog=t/dur;
-    // water base
-    const grd=ctx.createLinearGradient(0,H*0.45,0,H);
-    grd.addColorStop(0,"#1fb6c9");grd.addColorStop(.5,"#128aa8");grd.addColorStop(1,"#0a4f6e");
-    // wave curl travelling left->right, cresting near surfer
-    const baseY=H*0.62, amp=H*0.16;
-    const phase=prog*Math.PI; // wave rises then breaks
+    t++;ctx.clearRect(0,0,W,H);const prog=t/dur;
+    const grd=ctx.createLinearGradient(0,H*0.45,0,H);grd.addColorStop(0,"#1fb6c9");grd.addColorStop(.5,"#128aa8");grd.addColorStop(1,"#0a4f6e");
+    const baseY=H*0.62,amp=H*0.16,phase=prog*Math.PI;
     ctx.beginPath();ctx.moveTo(0,H);
-    for(let x=0;x<=W;x+=8){
-      const k=x/W;
-      const crest=Math.sin(k*Math.PI*1.3 - phase*1.2)*amp*(0.6+0.8*k);
-      const lift=Math.sin(prog*Math.PI)*amp*0.5;
-      const y=baseY - crest - lift + Math.sin((x*0.02)+(t*0.15))*4;
-      ctx.lineTo(x,y);
-    }
+    for(let x=0;x<=W;x+=8){const k=x/W;const crest=Math.sin(k*Math.PI*1.3-phase*1.2)*amp*(0.6+0.8*k);const lift=Math.sin(prog*Math.PI)*amp*0.5;
+      ctx.lineTo(x,baseY-crest-lift+Math.sin((x*0.02)+(t*0.15))*4);}
     ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
-    // foam line
     ctx.lineWidth=4;ctx.strokeStyle="rgba(255,255,255,.85)";ctx.beginPath();
-    for(let x=0;x<=W;x+=8){const k=x/W;
-      const crest=Math.sin(k*Math.PI*1.3 - phase*1.2)*amp*(0.6+0.8*k);
-      const lift=Math.sin(prog*Math.PI)*amp*0.5;
-      const y=baseY - crest - lift + Math.sin((x*0.02)+(t*0.15))*4;
-      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    for(let x=0;x<=W;x+=8){const k=x/W;const crest=Math.sin(k*Math.PI*1.3-phase*1.2)*amp*(0.6+0.8*k);const lift=Math.sin(prog*Math.PI)*amp*0.5;
+      const y=baseY-crest-lift+Math.sin((x*0.02)+(t*0.15))*4;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
     ctx.stroke();
-    // surfer rides along the crest
-    const sx=W*(0.08+0.84*prog);
-    const k=sx/W;
-    const crest=Math.sin(k*Math.PI*1.3 - phase*1.2)*amp*(0.6+0.8*k);
-    const lift=Math.sin(prog*Math.PI)*amp*0.5;
-    const sy=baseY - crest - lift - 6;
-    ctx.save();ctx.translate(sx,sy);ctx.rotate(-0.12);
-    ctx.font="46px serif";ctx.textAlign="center";ctx.fillText("🏄",0,0);ctx.restore();
-    // spray behind surfer
+    const sx=W*(0.08+0.84*prog),k=sx/W;const crest=Math.sin(k*Math.PI*1.3-phase*1.2)*amp*(0.6+0.8*k);const lift=Math.sin(prog*Math.PI)*amp*0.5;const sy=baseY-crest-lift-6;
+    ctx.save();ctx.translate(sx,sy);ctx.rotate(-0.12);ctx.font="46px serif";ctx.textAlign="center";ctx.fillText("🏄",0,0);ctx.restore();
     if(t%2===0)for(let i=0;i<3;i++)spray.push({x:sx-14,y:sy-6,vx:-(1+Math.random()*2.5),vy:-(1+Math.random()*3),life:1});
-    spray.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.02;
-      ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle="#fff";
-      ctx.beginPath();ctx.arc(p.x,p.y,2.4,0,7);ctx.fill();});
+    spray.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.02;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(p.x,p.y,2.4,0,7);ctx.fill();});
     ctx.globalAlpha=1;
-    if(t<dur)requestAnimationFrame(frame);
-    else setTimeout(()=>{ov.style.display="none";},650);
+    if(t<dur)requestAnimationFrame(frame);else setTimeout(()=>{ov.style.display="none";},650);
   }
   requestAnimationFrame(frame);
   ov.onclick=()=>{ov.style.display="none";};
 }
 
+/* ---------- boot ---------- */
+setTab(S.tab||"overview");
 render();save();
+setInterval(tickClock,60000);
 </script>
 
 
