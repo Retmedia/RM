@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>RET Media Command</title>
+<style>
+  :root{
+    --bg:#0a0b12; --bg2:#0f1120; --panel:#141733; --panel2:#1b1f45;
+    --line:#282d5c; --ink:#eef0ff; --dim:#9aa0d4; --faint:#6b70a8;
+    --xp:#7c5cff; --xp2:#b28bff; --gold:#ffcf4d; --green:#3ee89f;
+    --red:#ff5d73; --blue:#54c7ff; --pink:#ff7ac6; --orange:#ff9f45;
+    --shadow:0 10px 40px rgba(0,0,0,.55);
+    --glow:0 0 24px rgba(124,92,255,.55);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+     radial-gradient(1200px 700px at 80% -10%, #241a55 0%, transparent 55%),
+     radial-gradient(900px 600px at -10% 10%, #10314a 0%, transparent 50%),
+     var(--bg);
+     color:var(--ink); font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+     -webkit-font-smoothing:antialiased; min-height:100vh;}
+  a{color:var(--blue)}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 18px 90px;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .muted{color:var(--dim)} .faint{color:var(--faint)}
+
+  /* ===== Top HUD ===== */
+  .hud{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;
+    background:linear-gradient(135deg,#181b3d,#0f1228 60%);box-shadow:var(--shadow);padding:20px 22px;}
+  .hud::after{content:"";position:absolute;inset:0;background:
+    radial-gradient(500px 200px at 90% 0%, rgba(124,92,255,.25), transparent 60%);pointer-events:none}
+  .hud-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:relative;z-index:1}
+  .crest{width:64px;height:64px;border-radius:16px;flex:none;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--xp),#4b2fd6);box-shadow:var(--glow);font-size:30px}
+  .who{flex:1;min-width:220px}
+  .who h1{margin:0;font-size:22px;letter-spacing:.3px}
+  .rankline{display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap}
+  .rank{font-weight:700;color:var(--gold)}
+  .lvlbadge{background:linear-gradient(135deg,var(--gold),#ff9f45);color:#1a1400;font-weight:800;
+    padding:3px 10px;border-radius:999px;font-size:13px;box-shadow:0 4px 14px rgba(255,207,77,.35)}
+  .streak{display:flex;align-items:center;gap:6px;background:#2a1830;border:1px solid #5a2b45;
+    color:var(--orange);padding:5px 11px;border-radius:999px;font-weight:700;font-size:13px}
+  .xpwrap{margin-top:16px;position:relative;z-index:1}
+  .xprow{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px}
+  .bar{height:14px;border-radius:999px;background:#0a0c1c;border:1px solid var(--line);overflow:hidden;position:relative}
+  .bar > i{display:block;height:100%;border-radius:999px;
+    background:linear-gradient(90deg,var(--xp),var(--xp2));box-shadow:0 0 18px rgba(124,92,255,.8);
+    transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .bar.gold > i{background:linear-gradient(90deg,var(--gold),var(--orange));box-shadow:0 0 18px rgba(255,207,77,.7)}
+  .bar.green > i{background:linear-gradient(90deg,var(--green),#37c0ff);box-shadow:0 0 18px rgba(62,232,159,.6)}
+
+  /* ===== stat tiles ===== */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 15px;position:relative;overflow:hidden}
+  .tile .k{font-size:12px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
+  .tile .v{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:.3px}
+  .tile .s{font-size:12px;margin-top:3px;color:var(--faint)}
+  .tile .spark{position:absolute;right:10px;top:12px;opacity:.85}
+  .tile.good .v{color:var(--green)} .tile.warn .v{color:var(--orange)}
+
+  /* ===== section ===== */
+  h2.sec{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);
+    margin:26px 4px 12px;display:flex;align-items:center;gap:10px}
+  h2.sec::before{content:"";width:6px;height:18px;border-radius:3px;background:linear-gradient(var(--xp),var(--pink))}
+  .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+
+  /* ===== pipeline board ===== */
+  .board{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .col{background:linear-gradient(180deg,var(--panel),#101229);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:90px}
+  .col h3{margin:0 0 8px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;color:var(--dim)}
+  .col h3 .cnt{background:#0a0c1c;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--ink)}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:8px;cursor:pointer;transition:.15s;position:relative}
+  .card:hover{transform:translateY(-2px);border-color:var(--xp);box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .card .nm{font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
+  .card .meta{font-size:11px;color:var(--faint);margin-top:3px;line-height:1.35}
+  .whale{color:var(--gold)}
+  .tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;border:1px solid var(--line);color:var(--dim);margin-top:5px;margin-right:4px}
+  .adv{position:absolute;right:8px;top:8px;font-size:15px;opacity:0;transition:.15s}
+  .card:hover .adv{opacity:.9}
+
+  /* ===== quests ===== */
+  .quest{display:flex;gap:11px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:12px 13px;margin-bottom:9px;transition:.2s}
+  .quest.done{opacity:.5}
+  .qcheck{width:26px;height:26px;border-radius:8px;border:2px solid var(--xp);flex:none;cursor:pointer;
+    display:grid;place-items:center;font-size:15px;color:transparent;transition:.15s;margin-top:1px}
+  .quest.done .qcheck{background:var(--green);border-color:var(--green);color:#04180f}
+  .qbody{flex:1}
+  .qtitle{font-weight:700;font-size:14px} .quest.done .qtitle{text-decoration:line-through}
+  .qsub{font-size:12px;color:var(--faint);margin-top:2px}
+  .qxp{font-size:11px;font-weight:800;color:var(--gold);white-space:nowrap;margin-top:2px}
+  .qtag{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:8px}
+  .qtag.hot{background:#3a1523;color:var(--red);border:1px solid #6a2338}
+  .qtag.warm{background:#3a2a12;color:var(--orange);border:1px solid #6a4a20}
+
+  /* ===== clients / party ===== */
+  .party{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+  .hero{background:linear-gradient(135deg,var(--panel2),#12142e);border:1px solid var(--line);border-radius:14px;padding:13px;position:relative;overflow:hidden}
+  .hero .rb{position:absolute;top:0;right:0;font-size:10px;font-weight:800;letter-spacing:.5px;
+    padding:3px 9px;border-bottom-left-radius:10px;text-transform:uppercase}
+  .rb.legendary{background:linear-gradient(135deg,var(--gold),var(--orange));color:#1a1400}
+  .rb.epic{background:linear-gradient(135deg,var(--pink),#a24bff);color:#1a0018}
+  .rb.rare{background:linear-gradient(135deg,var(--blue),#3f7bff);color:#00121f}
+  .hero .hn{font-weight:800;font-size:15px;margin-right:70px}
+  .hero .hs{font-size:11px;color:var(--dim);margin-top:3px}
+  .hero .hd{font-size:12px;color:var(--faint);margin-top:8px}
+  .hero .hm{font-size:17px;font-weight:800;color:var(--green);margin-top:6px}
+
+  /* ===== achievements ===== */
+  .achs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .ach{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px;text-align:center;transition:.2s}
+  .ach.locked{opacity:.38;filter:grayscale(.7)}
+  .ach .ic{font-size:26px} .ach .an{font-weight:700;font-size:12px;margin-top:5px}
+  .ach .ad{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.3}
+  .ach.unlocked{border-color:#3a3f7a;box-shadow:0 0 0 1px rgba(124,92,255,.15) inset}
+
+  /* buttons */
+  .btn{background:linear-gradient(135deg,var(--xp),#5a34e6);color:#fff;border:none;border-radius:10px;
+    padding:9px 15px;font-weight:700;cursor:pointer;font-size:13px;box-shadow:0 6px 16px rgba(90,52,230,.35);transition:.15s}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim);box-shadow:none}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
+
+  /* toast + levelup */
+  #toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .toast{background:#171a3a;border:1px solid var(--xp);border-radius:12px;padding:11px 15px;font-weight:700;
+    box-shadow:var(--shadow);animation:pop .3s;display:flex;align-items:center;gap:9px}
+  .toast .xp{color:var(--gold)}
+  @keyframes pop{from{transform:translateY(12px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+  #flash{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:rgba(6,7,16,.78);backdrop-filter:blur(3px)}
+  #flash .card2{text-align:center;animation:pop .35s}
+  #flash .lu{font-size:64px} #flash h3{margin:6px 0 2px;font-size:30px;color:var(--gold);letter-spacing:1px}
+  #flash p{color:var(--dim);margin:0}
+
+  /* modal */
+  #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(6,7,16,.7);padding:18px}
+  #modal .m{width:100%;max-width:430px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+  #modal h3{margin:0 0 14px} label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
+  input,select,textarea{width:100%;background:#0b0d1e;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 11px;font-size:14px;font-family:inherit}
+  .foot{color:var(--faint);font-size:11px;text-align:center;margin-top:30px;line-height:1.6}
+
+  @media(max-width:860px){
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .grid2{grid-template-columns:1fr}
+    .board{grid-template-columns:1fr;gap:8px}
+    .party{grid-template-columns:1fr}
+    .hud-top{gap:12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== HUD ===== -->
+  <div class="hud">
+    <div class="hud-top">
+      <div class="crest">🎯</div>
+      <div class="who">
+        <h1>RET&nbsp;MEDIA&nbsp;<span class="faint">// COMMAND</span></h1>
+        <div class="rankline">
+          <span class="lvlbadge" id="lvlBadge">LVL 1</span>
+          <span class="rank" id="rankName">Rookie Closer</span>
+          <span class="streak" id="streak">🔥 1 day streak</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="faint" style="font-size:11px;letter-spacing:1px">TOTAL XP</div>
+        <div class="mono" id="totalXp" style="font-size:24px;font-weight:800;color:var(--xp2)">0</div>
+      </div>
+    </div>
+    <div class="xpwrap">
+      <div class="xprow"><span id="xpNow">0 XP</span><span id="xpNext">next level →</span></div>
+      <div class="bar"><i id="xpBar" style="width:0%"></i></div>
+    </div>
+    <div class="tiles">
+      <div class="tile good"><div class="k">Monthly Recurring</div><div class="v" id="mrr">$0</div><div class="s" id="mrrSub">active clients</div></div>
+      <div class="tile"><div class="k">Collected 2026</div><div class="v" id="ytd">$0</div><div class="s">Jan–Aug real invoices</div></div>
+      <div class="tile warn"><div class="k">Outstanding</div><div class="v" id="ar">$0</div><div class="s" id="arSub">unpaid invoices</div></div>
+      <div class="tile"><div class="k">Pipeline Value</div><div class="v" id="pipe">$0</div><div class="s" id="pipeSub">open prospects</div></div>
+    </div>
+  </div>
+
+  <!-- ===== QUESTS ===== -->
+  <h2 class="sec">Daily Quests <span class="faint" style="font-size:11px;letter-spacing:0;text-transform:none">— tap to complete, bank the XP</span></h2>
+  <div id="quests"></div>
+  <div class="actions">
+    <button class="btn sm ghost" onclick="addQuest()">＋ Add quest</button>
+    <button class="btn sm ghost" onclick="resetDaily()">↻ New day (reset quests)</button>
+  </div>
+
+  <div class="grid2" style="margin-top:6px">
+    <div>
+      <!-- ===== PIPELINE ===== -->
+      <h2 class="sec">Deal Pipeline</h2>
+      <div class="board" id="board"></div>
+      <div class="actions"><button class="btn sm" onclick="addProspect()">＋ New prospect</button>
+        <span class="faint" style="font-size:11px;align-self:center">Tap a card to push it to the next stage &amp; earn XP</span></div>
+    </div>
+    <div>
+      <!-- ===== CLIENTS ===== -->
+      <h2 class="sec">Your Roster</h2>
+      <div class="party" id="party"></div>
+    </div>
+  </div>
+
+  <!-- ===== ACHIEVEMENTS ===== -->
+  <h2 class="sec">Achievements</h2>
+  <div class="achs" id="achs"></div>
+
+  <div class="foot">
+    Built for Garrett @ RET Media LLC · seeded from your Notion CRM + QuickBooks on 2026-08-13.<br>
+    Everything you do here saves in this browser. Ask Claude to "refresh my CRM data" anytime to re-pull live numbers.
+  </div>
+</div>
+
+<div id="toasts"></div>
+<div id="flash"><div class="card2"><div class="lu">⭐️</div><h3 id="luTitle">LEVEL UP!</h3><p id="luSub"></p></div></div>
+<div id="modal"><div class="m" id="modalBody"></div></div>
+
+<script>
+/* ============================================================
+   RET MEDIA COMMAND — gamified CRM
+   Seed data pulled live from Notion CRM + QuickBooks (2026-08-13)
+   ============================================================ */
+const SEED = {
+  // Won clients / active roster
+  clients: [
+    {name:"Blair Conklin", tier:"legendary", service:"TikTok + FB Reels + YouTube", deal:"35% rev split", mrr:2400, variable:true, emoji:"🏄"},
+    {name:"Shane Dorian",  tier:"legendary", service:"Skool community + course build", deal:"$5k + 18% split + $100/mo", mrr:2600, variable:true, emoji:"🌊"},
+    {name:"Foreign Waters",tier:"epic",      service:"TikTok Shop + UGC army", deal:"Contract + rev share", mrr:1500, variable:true, emoji:"🥤"},
+    {name:"Xander Budnick",tier:"epic",      service:"Clips / repurposing", deal:"30-day trial → 3–5k/mo", mrr:0, variable:true, emoji:"🎣"},
+    {name:"Paulo Prietto", tier:"rare",      service:"IG management 2x/wk", deal:"$900/mo (recurring)", mrr:900, emoji:"🏡"},
+    {name:"Tara Bunker",   tier:"rare",      service:"IG management", deal:"$900/mo (recurring)", mrr:900, emoji:"🔑"},
+  ],
+  // Pipeline prospects  (stage: new, contacted, followup, negotiation, won)
+  prospects: [
+    {name:"Chosen Advisory", stage:"new",        value:5000, note:"BIG WHALE 🐋", whale:true, svc:"—"},
+    {name:"Recall Masters",  stage:"new",        value:1500, note:"", svc:"—"},
+    {name:"Dylan Graves",    stage:"new",        value:1200, note:"YT Shorts / TikTok repurposing", svc:"Repurposing"},
+    {name:"1Rod1ReelFishing",stage:"new",        value:1000, note:"", svc:"—"},
+    {name:"Predictive History",stage:"new",      value:1000, note:"", svc:"—"},
+    {name:"Mario",           stage:"new",        value:800,  note:"", svc:"—"},
+    {name:"Larry",           stage:"new",        value:900,  note:"Tara Bunker referral — waiting on text", svc:"—"},
+    {name:"Adas Global",     stage:"contacted",  value:1500, note:"Call Monday", svc:"—"},
+    {name:"Steve Ruff",      stage:"contacted",  value:1500, note:"Athlete social mgmt · Mason Ho", svc:"Social"},
+    {name:"Kill Tony",       stage:"followup",   value:3000, note:"Podcast repurposing · agent to email", svc:"Repurposing"},
+    {name:"Tom",             stage:"followup",   value:1000, note:"Wants to talk soon", svc:"—"},
+  ],
+  // Quests seeded from follow-ups + open Notion task
+  quests: [
+    {t:"Follow up Kill Tony's team (podcast repurposing)", s:"Big podcast repurposing deal · they owe an email", xp:120, heat:"hot"},
+    {t:"Call Adas Global", s:"Scheduled for Monday", xp:100, heat:"hot"},
+    {t:"Chase the whale — Chosen Advisory", s:"Highest-value prospect in the pipe", xp:150, heat:"hot"},
+    {t:"Follow up with Tom", s:"They want to talk soon", xp:80, heat:"warm"},
+    {t:"Nudge Larry (Tara's referral)", s:"Waiting on their text — go first", xp:70, heat:"warm"},
+    {t:"Reconnect Steve Ruff / Mason Ho", s:"Athlete social management pitch", xp:80, heat:"warm"},
+    {t:"Post rest of Blair's FB schedule", s:"Open task in Notion · in progress", xp:60, heat:""},
+    {t:"Collect $4,900 outstanding (Foreign Waters, Shane, Paulo)", s:"Send reminders in QuickBooks", xp:110, heat:"warm"},
+  ],
+  ytd: 30483,          // real 2026 collected (Jan–Aug, non-voided)
+  ar: 4900,            // currently outstanding balances
+};
+
+const STAGES = [
+  {id:"new",        label:"New",         xp:0},
+  {id:"contacted",  label:"Contacted",   xp:40},
+  {id:"followup",   label:"Follow-up",   xp:60},
+  {id:"negotiation",label:"Negotiation", xp:90},
+  {id:"won",        label:"Won 🏆",       xp:300},
+];
+
+const RANKS = [
+  "Rookie Closer","Street Hustler","Deal Maker","Account Slayer","Pipeline Boss",
+  "Rainmaker","Media Mogul","Empire Builder","Legend of Laguna"
+];
+
+const ACHIEVEMENTS = [
+  {id:"first",   ic:"🩸", n:"First Blood",     d:"Land your first client", test:s=>clientCount()>=1},
+  {id:"squad",   ic:"👥", n:"Full Squad",      d:"5+ active clients", test:s=>clientCount()>=5},
+  {id:"k30",     ic:"💰", n:"$30K Club",       d:"$30k collected in a year", test:s=>SEED.ytd>=30000},
+  {id:"whale",   ic:"🐋", n:"Whale Hunter",    d:"Close Chosen Advisory", test:s=>wonNames().includes("Chosen Advisory")},
+  {id:"streak5", ic:"🔥", n:"On Fire",         d:"5-day streak", test:s=>s.streak>=5},
+  {id:"grind",   ic:"⚡️", n:"Grinder",         d:"Complete 25 quests", test:s=>s.questsDone>=25},
+  {id:"lvl5",    ic:"⭐️", n:"Seasoned",        d:"Reach level 5", test:s=>levelFromXp(s.xp).level>=5},
+  {id:"closer",  ic:"🤝", n:"Closer",          d:"Advance 10 prospects", test:s=>s.advances>=10},
+  {id:"mogul",   ic:"👑", n:"Media Mogul",     d:"Reach level 7", test:s=>levelFromXp(s.xp).level>=7},
+];
+
+/* ---------- state ---------- */
+const LS="retmedia_command_v1";
+function seedState(){
+  return {
+    xp: Math.floor(SEED.ytd/50) + SEED.clients.length*250, // seed XP from real traction
+    streak:1, lastDay:todayKey(), questsDone:0, advances:0,
+    quests: SEED.quests.map((q,i)=>({...q, id:"q"+i, done:false})),
+    prospects: SEED.prospects.map((p,i)=>({...p, id:"p"+i})),
+    unlocked:{}
+  };
+}
+let S = load();
+function load(){ try{const r=JSON.parse(localStorage.getItem(LS)); if(r&&r.quests) return r;}catch(e){} return seedState(); }
+function save(){ localStorage.setItem(LS, JSON.stringify(S)); }
+function todayKey(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+
+/* ---------- leveling (rising curve) ---------- */
+function xpForLevel(l){ return Math.round(300*Math.pow(l,1.55)); } // cumulative to reach level l+1 boundary
+function levelFromXp(xp){
+  let lvl=1, need=xpForLevel(1), prev=0;
+  while(xp>=need && lvl<60){ lvl++; prev=need; need+=xpForLevel(lvl); }
+  return {level:lvl, into:xp-prev, span:need-prev, floor:prev, ceil:need};
+}
+
+/* ---------- derived ---------- */
+function clientCount(){ return SEED.clients.length + S.prospects.filter(p=>p.stage==="won").length; }
+function wonNames(){ return S.prospects.filter(p=>p.stage==="won").map(p=>p.name); }
+function mrrTotal(){ return SEED.clients.reduce((a,c)=>a+c.mrr,0); }
+function pipeValue(){ return S.prospects.filter(p=>p.stage!=="won").reduce((a,p)=>a+(p.value||0),0); }
+
+/* ---------- XP + toast ---------- */
+function grantXp(n,msg){
+  const before=levelFromXp(S.xp).level;
+  S.xp+=n;
+  const after=levelFromXp(S.xp).level;
+  toast((msg||"Nice.")+" ", n);
+  if(after>before) levelUp(after);
+  checkAchievements(); save(); render();
+}
+function toast(msg,xp){
+  const t=document.createElement("div"); t.className="toast";
+  t.innerHTML=`<span>${msg}</span>`+(xp?`<span class="xp">+${xp} XP</span>`:"");
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(()=>{t.style.transition=".4s";t.style.opacity=0;t.style.transform="translateY(8px)";},1700);
+  setTimeout(()=>t.remove(),2200);
+}
+function levelUp(l){
+  const f=document.getElementById("flash");
+  document.getElementById("luTitle").textContent="LEVEL "+l+"!";
+  document.getElementById("luSub").textContent="You are now a "+RANKS[Math.min(l-1,RANKS.length-1)];
+  f.style.display="grid";
+  setTimeout(()=>f.style.display="none",1600);
+}
+function checkAchievements(){
+  ACHIEVEMENTS.forEach(a=>{
+    if(!S.unlocked[a.id] && a.test(S)){
+      S.unlocked[a.id]=true;
+      setTimeout(()=>toast("🏅 Unlocked: "+a.n,0),400);
+    }
+  });
+}
+
+/* ---------- streak ---------- */
+function touchStreak(){
+  const tk=todayKey();
+  if(S.lastDay!==tk){
+    // naive: any new calendar day of use bumps streak
+    S.streak=(S.streak||0)+1; S.lastDay=tk; save();
+  }
+}
+
+/* ---------- actions ---------- */
+function toggleQuest(id){
+  const q=S.quests.find(x=>x.id===id); if(!q) return;
+  if(q.done){ q.done=false; S.questsDone=Math.max(0,S.questsDone-1); save(); render(); return; }
+  q.done=true; S.questsDone++; grantXp(q.xp,"Quest complete!");
+}
+function advanceProspect(id){
+  const p=S.prospects.find(x=>x.id===id); if(!p) return;
+  const idx=STAGES.findIndex(s=>s.id===p.stage);
+  if(idx>=STAGES.length-1){ toast("Already Won 🏆",0); return; }
+  p.stage=STAGES[idx+1].id; S.advances++;
+  const g=STAGES[idx+1];
+  if(p.stage==="won"){ grantXp(300+Math.round((p.value||0)/50), "🏆 CLOSED "+p.name+"!"); }
+  else grantXp(g.xp, p.name+" → "+g.label);
+}
+function resetDaily(){
+  S.quests.forEach(q=>q.done=false);
+  touchStreakForce();
+  save(); render(); toast("New day. Quests reset. 🔥 "+S.streak+" streak",0);
+}
+function touchStreakForce(){ S.streak=(S.streak||0)+1; S.lastDay=todayKey(); }
+
+/* ---------- modals ---------- */
+function openModal(html){ document.getElementById("modalBody").innerHTML=html; document.getElementById("modal").style.display="grid"; }
+function closeModal(){ document.getElementById("modal").style.display="none"; }
+document.getElementById("modal").addEventListener("click",e=>{ if(e.target.id==="modal") closeModal(); });
+
+function addProspect(){
+  openModal(`<h3>New prospect</h3>
+    <label>Name</label><input id="np_name" placeholder="Business or person">
+    <label>Estimated monthly / deal value ($)</label><input id="np_val" type="number" placeholder="1500">
+    <label>Note</label><input id="np_note" placeholder="Where you met, next step…">
+    <div class="actions" style="margin-top:16px"><button class="btn" onclick="saveProspect()">Add to pipeline</button>
+    <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+}
+function saveProspect(){
+  const n=document.getElementById("np_name").value.trim(); if(!n) return;
+  S.prospects.unshift({id:"p"+Date.now(), name:n, stage:"new",
+    value:+document.getElementById("np_val").value||1000,
+    note:document.getElementById("np_note").value.trim(), svc:"—"});
+  closeModal(); grantXp(25,"New lead added 🎯");
+}
+function addQuest(){
+  openModal(`<h3>Add quest</h3>
+    <label>What needs doing?</label><input id="nq_t" placeholder="Follow up with…">
+    <label>Detail</label><input id="nq_s" placeholder="context / next step">
+    <label>XP reward</label><input id="nq_xp" type="number" value="80">
+    <div class="actions" style="margin-top:16px"><button class="btn" onclick="saveQuest()">Add quest</button>
+    <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+}
+function saveQuest(){
+  const t=document.getElementById("nq_t").value.trim(); if(!t) return;
+  S.quests.push({id:"q"+Date.now(), t, s:document.getElementById("nq_s").value.trim(),
+    xp:+document.getElementById("nq_xp").value||80, heat:"", done:false});
+  closeModal(); save(); render(); toast("Quest added.",0);
+}
+function hardReset(){ if(confirm("Reset all progress back to the seeded data?")){ localStorage.removeItem(LS); S=load(); render(); } }
+
+/* ---------- render ---------- */
+function fmt(n){ return "$"+Math.round(n).toLocaleString(); }
+function render(){
+  const lv=levelFromXp(S.xp);
+  document.getElementById("lvlBadge").textContent="LVL "+lv.level;
+  document.getElementById("rankName").textContent=RANKS[Math.min(lv.level-1,RANKS.length-1)];
+  document.getElementById("streak").textContent="🔥 "+S.streak+" day streak";
+  document.getElementById("totalXp").textContent=S.xp.toLocaleString();
+  document.getElementById("xpNow").textContent=lv.into+" / "+lv.span+" XP";
+  document.getElementById("xpNext").textContent="LVL "+(lv.level+1)+" →";
+  document.getElementById("xpBar").style.width=Math.min(100,100*lv.into/lv.span)+"%";
+
+  document.getElementById("mrr").textContent=fmt(mrrTotal());
+  document.getElementById("mrrSub").textContent=SEED.clients.length+" clients · some variable rev-split";
+  document.getElementById("ytd").textContent=fmt(SEED.ytd);
+  document.getElementById("ar").textContent=fmt(SEED.ar);
+  document.getElementById("arSub").textContent="3 invoices open";
+  document.getElementById("pipe").textContent=fmt(pipeValue());
+  const openCount=S.prospects.filter(p=>p.stage!=="won").length;
+  document.getElementById("pipeSub").textContent=openCount+" open prospects";
+
+  // quests
+  const qs=[...S.quests].sort((a,b)=>(a.done-b.done)||({hot:0,warm:1,"":2}[a.heat]-{hot:0,warm:1,"":2}[b.heat]));
+  document.getElementById("quests").innerHTML=qs.map(q=>`
+    <div class="quest ${q.done?"done":""}">
+      <div class="qcheck" onclick="toggleQuest('${q.id}')">✓</div>
+      <div class="qbody">
+        <div class="qtitle">${esc(q.t)}${q.heat?`<span class="qtag ${q.heat}">${q.heat.toUpperCase()}</span>`:""}</div>
+        <div class="qsub">${esc(q.s||"")}</div>
+      </div>
+      <div class="qxp">+${q.xp} XP</div>
+    </div>`).join("");
+
+  // board
+  document.getElementById("board").innerHTML=STAGES.map(st=>{
+    const items=S.prospects.filter(p=>p.stage===st.id);
+    return `<div class="col"><h3>${st.label}<span class="cnt">${items.length}</span></h3>
+      ${items.map(p=>`
+        <div class="card" onclick="advanceProspect('${p.id}')">
+          <div class="adv">➜</div>
+          <div class="nm ${p.whale?"whale":""}">${p.whale?"🐋 ":""}${esc(p.name)}</div>
+          <div class="meta">${p.value?fmt(p.value)+(st.id==="won"?"":"/mo est"):""}${p.note?" · "+esc(p.note):""}</div>
+          ${p.svc&&p.svc!=="—"?`<span class="tag">${esc(p.svc)}</span>`:""}
+        </div>`).join("")||`<div class="faint" style="font-size:11px;padding:4px">—</div>`}
+    </div>`;
+  }).join("");
+
+  // party
+  document.getElementById("party").innerHTML=SEED.clients.map(c=>`
+    <div class="hero">
+      <div class="rb ${c.tier}">${c.tier}</div>
+      <div class="hn">${c.emoji} ${esc(c.name)}</div>
+      <div class="hs">${esc(c.service)}</div>
+      <div class="hd">${esc(c.deal)}</div>
+      <div class="hm">${c.mrr?fmt(c.mrr)+"/mo"+(c.variable?"*":""):"trial / rev-share"}</div>
+    </div>`).join("");
+
+  // achievements
+  document.getElementById("achs").innerHTML=ACHIEVEMENTS.map(a=>{
+    const on=S.unlocked[a.id]||a.test(S);
+    if(on&&!S.unlocked[a.id]) S.unlocked[a.id]=true;
+    return `<div class="ach ${on?"unlocked":"locked"}">
+      <div class="ic">${on?a.ic:"🔒"}</div><div class="an">${esc(a.n)}</div><div class="ad">${esc(a.d)}</div></div>`;
+  }).join("");
+}
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+touchStreak();
+checkAchievements();
+render();
+save();
+</script>
+</body>
+</html>
