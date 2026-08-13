@@ -479,7 +479,7 @@ let S=load();
 let lostOpen=false, CAL={y:2026,m:7,sel:""};
 let LIVE={invoices:null, at:null, status:"snapshot"}, liveUnsub=null;
 function load(){try{const r=JSON.parse(localStorage.getItem(LS));
-  if(r&&r.deals&&r.clients&&r.sets){if(!r.tabOrder)r.tabOrder=[...DEFAULT_TABORDER];if(!r.growthPeriod)r.growthPeriod="ytd";return r;}}catch(e){}
+  if(r&&r.deals&&r.clients&&r.sets){if(!r.tabOrder)r.tabOrder=[...DEFAULT_TABORDER];if(!["3m","6m","ytd"].includes(r.growthPeriod))r.growthPeriod="ytd";return r;}}catch(e){}
   return seed();}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
 function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();renderTabs();render();}}
@@ -786,31 +786,23 @@ function emptyState(msg){return `<div class="faint" style="padding:14px;font-siz
 
 /* ---------- income & growth (interactive) ---------- */
 function setGrowthPeriod(p){S.growthPeriod=p;save();render();}
-function fmtMs(ms){return new Date(ms).toLocaleDateString("en-US",{month:"short",day:"numeric"});}
 function growthSeries(){
   const period=S.growthPeriod||"ytd";
-  const invs=invoicesData().filter(i=>i.iso).map(i=>({t:new Date(i.iso+"T00:00:00").getTime(),amt:i.amt})).sort((a,b)=>a.t-b.t);
-  const today=new Date(todayISO()+"T00:00:00"),DAY=86400000,endMs=today.getTime();
-  let startMs;
-  if(period==="ytd")startMs=new Date(today.getFullYear(),0,1).getTime();
-  else startMs=endMs-((period==="30d"?29:89)*DAY);
-  const pts=[];let cum=0,j=0;
-  for(let d=startMs;d<=endMs;d+=DAY){
-    while(j<invs.length&&invs[j].t<=d){if(invs[j].t>=startMs)cum+=invs[j].amt;j++;}
-    pts.push({ms:d,cum});}
-  const total=cum;
+  const all=monthlyData();               // [[monthName,value], ...] Jan..current
+  const months=period==="ytd"?all:all.slice(period==="3m"?-3:-6);
+  const total=months.reduce((a,m)=>a+m[1],0);
   let delta=null,deltaLab="";
-  if(period==="ytd"){const m=monthlyData();const f=m[0]?m[0][1]:0,l=m.length?m[m.length-1][1]:0;delta=f?(l-f)/f*100:null;deltaLab="since Jan";}
-  else{const days=period==="30d"?30:90,pStart=startMs-days*DAY,pEnd=startMs-1;let pv=0;
-    invs.forEach(i=>{if(i.t>=pStart&&i.t<=pEnd)pv+=i.amt;});delta=pv?(total-pv)/pv*100:null;deltaLab="vs prior "+days+" days";}
-  const headLab=period==="ytd"?"2026 income (YTD)":(period==="30d"?"Last 30 days":"Last 90 days");
-  return {period,pts,total,delta,deltaLab,headLab};
+  if(period==="ytd"){const f=all[0]?all[0][1]:0,l=all.length?all[all.length-1][1]:0;delta=f?(l-f)/f*100:null;deltaLab="since "+((all[0]&&all[0][0])||"Jan");}
+  else{const k=period==="3m"?3:6,prev=all.slice(-2*k,-k),pv=prev.reduce((a,m)=>a+m[1],0);
+    delta=pv?(total-pv)/pv*100:null;deltaLab="vs prior "+k+" months";}
+  const headLab=period==="ytd"?"2026 income (YTD)":(period==="3m"?"Last 3 months":"Last 6 months");
+  return {period,months,total,delta,deltaLab,headLab};
 }
 function buildGrowthGeom(){
-  const s=growthSeries(),W=320,H=92,padL=36,padB=15,padT=8,padR=8,iw=W-padL-padR,ih=H-padT-padB;
-  const n=s.pts.length,max=Math.max(1,s.total);
+  const s=growthSeries(),W=320,H=94,padL=36,padT=8,padR=8,padB=16,iw=W-padL-padR,ih=H-padT-padB;
+  const vals=s.months.map(m=>m[1]),labs=s.months.map(m=>m[0]),n=vals.length,max=Math.max(1,...vals);
   const X=i=>n<=1?padL+iw/2:padL+iw*i/(n-1),Y=v=>padT+ih*(1-v/max);
-  const pts=s.pts.map((p,i)=>({x:X(i),y:Y(p.cum),ms:p.ms,cum:p.cum}));
+  const pts=vals.map((v,i)=>({x:X(i),y:Y(v),val:v,label:labs[i]}));
   return {s,W,H,padL,padT,padR,ih,n,max,pts};
 }
 function growthChartSVG(loc){
@@ -822,8 +814,8 @@ function growthChartSVG(loc){
   const grid=[0,max/2,max].map(v=>{const yy=padT+ih*(1-v/max);
     return `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--line)" stroke-width="0.8"/>`+
       `<text x="${padL-4}" y="${(yy+3).toFixed(1)}" text-anchor="end" font-size="8" fill="var(--faint)">$${v>=1000?(v/1000).toFixed(0)+"k":Math.round(v)}</text>`;}).join("");
-  const li=[0,Math.floor((pts.length-1)/2),pts.length-1];
-  const xl=li.map(i=>`<text x="${pts[i].x.toFixed(1)}" y="${H-3}" text-anchor="middle" font-size="8" fill="var(--faint)">${fmtMs(pts[i].ms)}</text>`).join("");
+  const markers=pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.3" fill="var(--aqua)"/>`).join("");
+  const xl=pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="8" fill="var(--faint)">${esc(p.label)}</text>`).join("");
   return `<div class="chartwrap" id="gwrap_${loc}">
     <div class="gtip" id="gtip_${loc}"></div>
     <svg id="gsvg_${loc}" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block"
@@ -832,8 +824,9 @@ function growthChartSVG(loc){
         <stop offset="0" stop-color="var(--aqua)" stop-opacity="0.3"/><stop offset="1" stop-color="var(--aqua)" stop-opacity="0"/></linearGradient></defs>
       ${grid}<path d="${area}" fill="url(#garea)"/>
       <path d="${line}" fill="none" stroke="var(--aqua)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${markers}
       <line id="gguide_${loc}" y1="${padT}" y2="${padT+ih}" stroke="var(--aqua2)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/>
-      <circle id="gdot_${loc}" r="3.3" fill="var(--aqua2)" stroke="#04231f" stroke-width="1.4" style="opacity:0"/>
+      <circle id="gdot_${loc}" r="3.6" fill="var(--aqua2)" stroke="#04231f" stroke-width="1.5" style="opacity:0"/>
       ${xl}</svg></div>`;
 }
 function growthHTML(loc){
@@ -844,7 +837,7 @@ function growthHTML(loc){
   return `<div class="growthhead">
       <div><div class="faint" style="font-size:10px;text-transform:uppercase;letter-spacing:1px">${esc(s.headLab)}</div>
         <div class="num" style="font-size:22px;font-weight:800;color:var(--sand)">${fmt(s.total)}</div>${deltaHTML}</div>
-      <div class="gtoggles">${btn("30d","30D")}${btn("90d","90D")}${btn("ytd","YTD")}</div>
+      <div class="gtoggles">${btn("3m","3M")}${btn("6m","6M")}${btn("ytd","YTD")}</div>
     </div>${growthChartSVG(loc)}`;
 }
 function gMove(e,loc){
@@ -859,7 +852,7 @@ function gMove(e,loc){
   if(guide){guide.setAttribute("x1",p.x);guide.setAttribute("x2",p.x);guide.style.opacity=1;}
   if(dot){dot.setAttribute("cx",p.x);dot.setAttribute("cy",p.y);dot.style.opacity=1;}
   if(tip&&wrap){const wr=wrap.getBoundingClientRect();
-    tip.innerHTML=`<b>${fmtMs(p.ms)}</b> · ${fmt(p.cum)}`;tip.style.opacity=1;
+    tip.innerHTML=`<b>${esc(p.label)}</b> · ${fmt(p.val)}`;tip.style.opacity=1;
     let px=(p.x/g.W)*r.width+(r.left-wr.left);px=Math.max(32,Math.min(wr.width-32,px));tip.style.left=px+"px";}
 }
 function gLeave(loc){["gguide_","gdot_","gtip_"].forEach(pre=>{const el=document.getElementById(pre+loc);if(el)el.style.opacity=0;});}
