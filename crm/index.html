@@ -3,491 +3,471 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>RET Media Command</title>
+<title>RET Media Command Deck</title>
 <style>
   :root{
-    --bg:#0a0b12; --bg2:#0f1120; --panel:#141733; --panel2:#1b1f45;
-    --line:#282d5c; --ink:#eef0ff; --dim:#9aa0d4; --faint:#6b70a8;
-    --xp:#7c5cff; --xp2:#b28bff; --gold:#ffcf4d; --green:#3ee89f;
-    --red:#ff5d73; --blue:#54c7ff; --pink:#ff7ac6; --orange:#ff9f45;
-    --shadow:0 10px 40px rgba(0,0,0,.55);
-    --glow:0 0 24px rgba(124,92,255,.55);
+    --bg:#0a1624; --bg2:#0c1a2b; --deck:#102639; --deck2:#143049; --line:#204058;
+    --ink:#eaf3fb; --dim:#93b0cb; --faint:#5f7f9c;
+    --aqua:#37d6c8; --aqua2:#66ebde; --sand:#f2c078; --gold:#ffd27a;
+    --coral:#ff7a6b; --green:#5fdd9d; --sky:#5ec2ff;
+    --shadow:0 14px 44px rgba(0,0,0,.5);
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:
-     radial-gradient(1200px 700px at 80% -10%, #241a55 0%, transparent 55%),
-     radial-gradient(900px 600px at -10% 10%, #10314a 0%, transparent 50%),
-     var(--bg);
-     color:var(--ink); font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
-     -webkit-font-smoothing:antialiased; min-height:100vh;}
-  a{color:var(--blue)}
-  .wrap{max-width:1180px;margin:0 auto;padding:20px 18px 90px;}
-  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  html,body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1100px 520px at 78% -8%, #16405a 0%, transparent 58%),
+      radial-gradient(900px 480px at 0% 0%, #0f2f3a 0%, transparent 52%),
+      linear-gradient(180deg,#0b1a2b,var(--bg) 60%);}
+  a{color:var(--sky);text-decoration:none}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
   .muted{color:var(--dim)} .faint{color:var(--faint)}
+  .wrap{max-width:1320px;margin:0 auto;padding:20px 20px 70px}
 
-  /* ===== Top HUD ===== */
-  .hud{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;
-    background:linear-gradient(135deg,#181b3d,#0f1228 60%);box-shadow:var(--shadow);padding:20px 22px;}
-  .hud::after{content:"";position:absolute;inset:0;background:
-    radial-gradient(500px 200px at 90% 0%, rgba(124,92,255,.25), transparent 60%);pointer-events:none}
-  .hud-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:relative;z-index:1}
-  .crest{width:64px;height:64px;border-radius:16px;flex:none;display:grid;place-items:center;
-    background:linear-gradient(135deg,var(--xp),#4b2fd6);box-shadow:var(--glow);font-size:30px}
-  .who{flex:1;min-width:220px}
-  .who h1{margin:0;font-size:22px;letter-spacing:.3px}
-  .rankline{display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap}
-  .rank{font-weight:700;color:var(--gold)}
-  .lvlbadge{background:linear-gradient(135deg,var(--gold),#ff9f45);color:#1a1400;font-weight:800;
-    padding:3px 10px;border-radius:999px;font-size:13px;box-shadow:0 4px 14px rgba(255,207,77,.35)}
-  .streak{display:flex;align-items:center;gap:6px;background:#2a1830;border:1px solid #5a2b45;
-    color:var(--orange);padding:5px 11px;border-radius:999px;font-weight:700;font-size:13px}
-  .xpwrap{margin-top:16px;position:relative;z-index:1}
-  .xprow{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px}
-  .bar{height:14px;border-radius:999px;background:#0a0c1c;border:1px solid var(--line);overflow:hidden;position:relative}
-  .bar > i{display:block;height:100%;border-radius:999px;
-    background:linear-gradient(90deg,var(--xp),var(--xp2));box-shadow:0 0 18px rgba(124,92,255,.8);
-    transition:width .6s cubic-bezier(.2,.8,.2,1)}
-  .bar.gold > i{background:linear-gradient(90deg,var(--gold),var(--orange));box-shadow:0 0 18px rgba(255,207,77,.7)}
-  .bar.green > i{background:linear-gradient(90deg,var(--green),#37c0ff);box-shadow:0 0 18px rgba(62,232,159,.6)}
+  /* ---------- Deck header ---------- */
+  .deck{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;
+    background:linear-gradient(120deg,#123049,#0e2135 62%);box-shadow:var(--shadow);
+    padding:18px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .deck::after{content:"";position:absolute;right:-40px;bottom:-60px;width:320px;height:320px;
+    background:radial-gradient(circle at 50% 50%, rgba(55,214,200,.18), transparent 62%);pointer-events:none}
+  .brand{display:flex;align-items:center;gap:14px;min-width:230px}
+  .logo{width:52px;height:52px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:26px;
+    background:linear-gradient(135deg,var(--aqua),#1f9fd6);box-shadow:0 0 26px rgba(55,214,200,.45)}
+  .brand h1{margin:0;font-size:19px;letter-spacing:.4px;line-height:1.05}
+  .brand .sub{font-size:11.5px;color:var(--dim);letter-spacing:2.4px;text-transform:uppercase;margin-top:3px}
+  .deckdate{margin-left:auto;text-align:right;font-size:12px;color:var(--dim);z-index:1}
+  .deckdate b{color:var(--sand);font-size:13px}
 
-  /* ===== stat tiles ===== */
-  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
-  .tile{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 15px;position:relative;overflow:hidden}
-  .tile .k{font-size:12px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
-  .tile .v{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:.3px}
-  .tile .s{font-size:12px;margin-top:3px;color:var(--faint)}
-  .tile .spark{position:absolute;right:10px;top:12px;opacity:.85}
-  .tile.good .v{color:var(--green)} .tile.warn .v{color:var(--orange)}
+  /* ---------- KPI strip (horizontal) ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:14px}
+  .kpi{background:var(--deck);border:1px solid var(--line);border-radius:15px;padding:13px 15px;position:relative;overflow:hidden}
+  .kpi .k{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim)}
+  .kpi .v{font-size:25px;font-weight:800;margin-top:5px}
+  .kpi .s{font-size:11px;color:var(--faint);margin-top:3px}
+  .kpi.money .v{color:var(--sand)} .kpi.win .v{color:var(--green)} .kpi.warn .v{color:var(--coral)} .kpi.pipe .v{color:var(--aqua2)}
+  .kpi .edge{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:15px 0 0 15px}
+  .kpi.money .edge{background:var(--sand)} .kpi.win .edge{background:var(--green)}
+  .kpi.warn .edge{background:var(--coral)} .kpi.pipe .edge{background:var(--aqua)} .kpi.clients .edge{background:var(--sky)}
 
-  /* ===== section ===== */
-  h2.sec{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);
-    margin:26px 4px 12px;display:flex;align-items:center;gap:10px}
-  h2.sec::before{content:"";width:6px;height:18px;border-radius:3px;background:linear-gradient(var(--xp),var(--pink))}
-  .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+  /* ---------- section headers ---------- */
+  .head{display:flex;align-items:baseline;gap:12px;margin:28px 4px 12px}
+  .head h2{font-size:13px;letter-spacing:2.6px;text-transform:uppercase;color:var(--ink);margin:0}
+  .head .tag{font-size:12px;color:var(--faint)}
+  .head .rt{margin-left:auto;display:flex;gap:8px}
 
-  /* ===== pipeline board ===== */
-  .board{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-  .col{background:linear-gradient(180deg,var(--panel),#101229);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:90px}
-  .col h3{margin:0 0 8px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;color:var(--dim)}
-  .col h3 .cnt{background:#0a0c1c;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--ink)}
-  .card{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:8px;cursor:pointer;transition:.15s;position:relative}
-  .card:hover{transform:translateY(-2px);border-color:var(--xp);box-shadow:0 6px 18px rgba(0,0,0,.4)}
-  .card .nm{font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
-  .card .meta{font-size:11px;color:var(--faint);margin-top:3px;line-height:1.35}
-  .whale{color:var(--gold)}
-  .tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;border:1px solid var(--line);color:var(--dim);margin-top:5px;margin-right:4px}
-  .adv{position:absolute;right:8px;top:8px;font-size:15px;opacity:0;transition:.15s}
-  .card:hover .adv{opacity:.9}
+  /* ---------- Today's Sets ---------- */
+  .sets{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  .set{display:flex;gap:11px;align-items:flex-start;background:var(--deck);border:1px solid var(--line);
+    border-radius:12px;padding:11px 13px;transition:.18s}
+  .set.done{opacity:.45}
+  .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--aqua);flex:none;cursor:pointer;
+    display:grid;place-items:center;font-size:13px;color:transparent;margin-top:1px;transition:.15s}
+  .set.done .box{background:var(--green);border-color:var(--green);color:#04180f}
+  .set .t{font-weight:650;font-size:13.5px} .set.done .t{text-decoration:line-through}
+  .set .d{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .pill{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:7px;vertical-align:middle}
+  .pill.hot{background:#3a1a18;color:var(--coral);border:1px solid #5e2a26}
+  .pill.warm{background:#3a2f16;color:var(--sand);border:1px solid #5e4c22}
+  .pill.today{background:#132f2c;color:var(--aqua2);border:1px solid #1f5049}
 
-  /* ===== quests ===== */
-  .quest{display:flex;gap:11px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:12px 13px;margin-bottom:9px;transition:.2s}
-  .quest.done{opacity:.5}
-  .qcheck{width:26px;height:26px;border-radius:8px;border:2px solid var(--xp);flex:none;cursor:pointer;
-    display:grid;place-items:center;font-size:15px;color:transparent;transition:.15s;margin-top:1px}
-  .quest.done .qcheck{background:var(--green);border-color:var(--green);color:#04180f}
-  .qbody{flex:1}
-  .qtitle{font-weight:700;font-size:14px} .quest.done .qtitle{text-decoration:line-through}
-  .qsub{font-size:12px;color:var(--faint);margin-top:2px}
-  .qxp{font-size:11px;font-weight:800;color:var(--gold);white-space:nowrap;margin-top:2px}
-  .qtag{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:8px}
-  .qtag.hot{background:#3a1523;color:var(--red);border:1px solid #6a2338}
-  .qtag.warm{background:#3a2a12;color:var(--orange);border:1px solid #6a4a20}
+  /* ---------- Pipeline (horizontal kanban) ---------- */
+  .boardscroll{overflow-x:auto;padding-bottom:6px}
+  .board{display:grid;grid-template-columns:repeat(5,minmax(210px,1fr));gap:12px;min-width:960px}
+  .lane{background:linear-gradient(180deg,var(--deck),#0d2032);border:1px solid var(--line);border-radius:15px;padding:11px;display:flex;flex-direction:column}
+  .lane .lh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .lane .lh b{font-size:12.5px;letter-spacing:.4px} .lane .lh .surf{font-size:10.5px;color:var(--faint);letter-spacing:.5px}
+  .lane .lh .cnt{background:#0a1a29;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--dim);font-weight:700}
+  .lane.won{background:linear-gradient(180deg,#123a34,#0e2b28);border-color:#1d5b4f}
+  .deal{background:var(--deck2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-bottom:9px;cursor:pointer;transition:.15s;position:relative}
+  .deal:hover{transform:translateY(-2px);border-color:var(--aqua);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+  .deal .nm{font-weight:750;font-size:13.5px;display:flex;align-items:center;gap:6px}
+  .deal .co{font-size:11px;color:var(--dim);margin-top:1px}
+  .deal .mt{font-size:11px;color:var(--faint);margin-top:5px;line-height:1.4}
+  .deal .val{font-weight:800;color:var(--sand);font-size:12.5px}
+  .deal .go{position:absolute;right:9px;bottom:9px;font-size:13px;color:var(--aqua);opacity:0;transition:.15s}
+  .deal:hover .go{opacity:1}
+  .whale .nm{color:var(--gold)}
+  .stag{font-size:9.5px;padding:1px 6px;border-radius:5px;border:1px solid var(--line);color:var(--dim);margin-top:6px;display:inline-block}
+  .lane.won .deal{background:#124038;border-color:#1f6656;cursor:default}
+  .lane.won .deal:hover{transform:none;box-shadow:none}
 
-  /* ===== clients / party ===== */
-  .party{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
-  .hero{background:linear-gradient(135deg,var(--panel2),#12142e);border:1px solid var(--line);border-radius:14px;padding:13px;position:relative;overflow:hidden}
-  .hero .rb{position:absolute;top:0;right:0;font-size:10px;font-weight:800;letter-spacing:.5px;
-    padding:3px 9px;border-bottom-left-radius:10px;text-transform:uppercase}
-  .rb.legendary{background:linear-gradient(135deg,var(--gold),var(--orange));color:#1a1400}
-  .rb.epic{background:linear-gradient(135deg,var(--pink),#a24bff);color:#1a0018}
-  .rb.rare{background:linear-gradient(135deg,var(--blue),#3f7bff);color:#00121f}
-  .hero .hn{font-weight:800;font-size:15px;margin-right:70px}
-  .hero .hs{font-size:11px;color:var(--dim);margin-top:3px}
-  .hero .hd{font-size:12px;color:var(--faint);margin-top:8px}
-  .hero .hm{font-size:17px;font-weight:800;color:var(--green);margin-top:6px}
+  /* ---------- Roster (horizontal scroll) ---------- */
+  .rail{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
+  .client{flex:0 0 236px;background:linear-gradient(150deg,var(--deck2),#0f2133);border:1px solid var(--line);
+    border-radius:15px;padding:14px;position:relative;overflow:hidden}
+  .client .rib{position:absolute;top:0;right:0;font-size:9.5px;font-weight:800;letter-spacing:.8px;
+    padding:3px 10px;border-bottom-left-radius:11px;text-transform:uppercase}
+  .rib.anchor{background:linear-gradient(135deg,var(--gold),var(--sand));color:#241600}
+  .rib.retainer{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#00201d}
+  .rib.growth{background:linear-gradient(135deg,var(--coral),#ff9d5c);color:#2a0d06}
+  .client .cn{font-weight:800;font-size:15px;margin-right:64px} .client .cn .em{margin-right:5px}
+  .client .cs{font-size:11.5px;color:var(--dim);margin-top:3px;min-height:30px}
+  .client .cd{font-size:11.5px;color:var(--faint);margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+  .client .cm{font-size:16px;font-weight:800;color:var(--green);margin-top:5px}
 
-  /* ===== achievements ===== */
-  .achs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-  .ach{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px;text-align:center;transition:.2s}
-  .ach.locked{opacity:.38;filter:grayscale(.7)}
-  .ach .ic{font-size:26px} .ach .an{font-weight:700;font-size:12px;margin-top:5px}
-  .ach .ad{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.3}
-  .ach.unlocked{border-color:#3a3f7a;box-shadow:0 0 0 1px rgba(124,92,255,.15) inset}
+  /* ---------- Milestones ---------- */
+  .miles{display:flex;gap:11px;overflow-x:auto;padding-bottom:8px}
+  .mile{flex:0 0 158px;background:var(--deck);border:1px solid var(--line);border-radius:13px;padding:12px;text-align:center}
+  .mile.off{opacity:.35;filter:grayscale(.6)}
+  .mile .mi{font-size:24px} .mile .mn{font-weight:750;font-size:12px;margin-top:5px} .mile .md{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.3}
 
   /* buttons */
-  .btn{background:linear-gradient(135deg,var(--xp),#5a34e6);color:#fff;border:none;border-radius:10px;
-    padding:9px 15px;font-weight:700;cursor:pointer;font-size:13px;box-shadow:0 6px 16px rgba(90,52,230,.35);transition:.15s}
-  .btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
-  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim);box-shadow:none}
-  .btn.sm{padding:5px 10px;font-size:12px}
-  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
-
-  /* toast + levelup */
-  #toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-  .toast{background:#171a3a;border:1px solid var(--xp);border-radius:12px;padding:11px 15px;font-weight:700;
-    box-shadow:var(--shadow);animation:pop .3s;display:flex;align-items:center;gap:9px}
-  .toast .xp{color:var(--gold)}
-  @keyframes pop{from{transform:translateY(12px) scale(.9);opacity:0}to{transform:none;opacity:1}}
-  #flash{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:rgba(6,7,16,.78);backdrop-filter:blur(3px)}
-  #flash .card2{text-align:center;animation:pop .35s}
-  #flash .lu{font-size:64px} #flash h3{margin:6px 0 2px;font-size:30px;color:var(--gold);letter-spacing:1px}
-  #flash p{color:var(--dim);margin:0}
+  .btn{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#04231f;border:none;border-radius:10px;
+    padding:8px 14px;font-weight:750;cursor:pointer;font-size:12.5px;transition:.15s}
+  .btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+  .btn.sm{padding:5px 11px;font-size:12px}
 
   /* modal */
-  #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(6,7,16,.7);padding:18px}
-  #modal .m{width:100%;max-width:430px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
-  #modal h3{margin:0 0 14px} label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
-  input,select,textarea{width:100%;background:#0b0d1e;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 11px;font-size:14px;font-family:inherit}
-  .foot{color:var(--faint);font-size:11px;text-align:center;margin-top:30px;line-height:1.6}
+  #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(5,12,20,.72);padding:18px}
+  #modal .m{width:100%;max-width:430px;background:var(--deck);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+  #modal h3{margin:0 0 12px} label{display:block;font-size:11.5px;color:var(--dim);margin:10px 0 4px;letter-spacing:.3px}
+  input,select,textarea{width:100%;background:#081521;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 11px;font-size:14px;font-family:inherit}
+  .row2{display:flex;gap:10px} .row2>div{flex:1}
+  .mact{display:flex;gap:9px;margin-top:16px}
 
-  @media(max-width:860px){
-    .tiles{grid-template-columns:repeat(2,1fr)}
-    .grid2{grid-template-columns:1fr}
-    .board{grid-template-columns:1fr;gap:8px}
-    .party{grid-template-columns:1fr}
-    .hud-top{gap:12px}
+  /* toast */
+  #toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .toast{background:#0f2536;border:1px solid var(--aqua);border-radius:12px;padding:10px 14px;font-weight:700;font-size:13px;box-shadow:var(--shadow);animation:tin .3s}
+  @keyframes tin{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+
+  /* ---------- WAVE overlay (the reward) ---------- */
+  #wave{position:fixed;inset:0;z-index:80;display:none;background:rgba(4,10,18,.55);backdrop-filter:blur(2px)}
+  #wave canvas{width:100%;height:100%;display:block}
+  #wave .banner{position:absolute;left:50%;top:22%;transform:translateX(-50%);text-align:center;
+    animation:drop .5s cubic-bezier(.2,1.4,.3,1);pointer-events:none;width:90%}
+  #wave .banner .big{font-size:clamp(28px,6vw,58px);font-weight:900;letter-spacing:1px;color:#fff;
+    text-shadow:0 4px 24px rgba(0,0,0,.5),0 0 40px rgba(55,214,200,.6)}
+  #wave .banner .sm{font-size:clamp(14px,2.4vw,20px);color:var(--gold);font-weight:800;margin-top:6px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+  @keyframes drop{from{transform:translateX(-50%) translateY(-40px) scale(.7);opacity:0}to{transform:translateX(-50%) translateY(0) scale(1);opacity:1}}
+
+  .foot{color:var(--faint);font-size:11px;text-align:center;margin-top:34px;line-height:1.7}
+
+  @media(max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .sets{grid-template-columns:1fr}
+    .deckdate{margin-left:0;text-align:left;width:100%}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- ===== HUD ===== -->
-  <div class="hud">
-    <div class="hud-top">
-      <div class="crest">🎯</div>
-      <div class="who">
-        <h1>RET&nbsp;MEDIA&nbsp;<span class="faint">// COMMAND</span></h1>
-        <div class="rankline">
-          <span class="lvlbadge" id="lvlBadge">LVL 1</span>
-          <span class="rank" id="rankName">Rookie Closer</span>
-          <span class="streak" id="streak">🔥 1 day streak</span>
-        </div>
-      </div>
-      <div style="text-align:right">
-        <div class="faint" style="font-size:11px;letter-spacing:1px">TOTAL XP</div>
-        <div class="mono" id="totalXp" style="font-size:24px;font-weight:800;color:var(--xp2)">0</div>
+  <!-- DECK HEADER -->
+  <div class="deck">
+    <div class="brand">
+      <div class="logo">🌊</div>
+      <div>
+        <h1>RET&nbsp;MEDIA</h1>
+        <div class="sub">Command&nbsp;Deck</div>
       </div>
     </div>
-    <div class="xpwrap">
-      <div class="xprow"><span id="xpNow">0 XP</span><span id="xpNext">next level →</span></div>
-      <div class="bar"><i id="xpBar" style="width:0%"></i></div>
-    </div>
-    <div class="tiles">
-      <div class="tile good"><div class="k">Monthly Recurring</div><div class="v" id="mrr">$0</div><div class="s" id="mrrSub">active clients</div></div>
-      <div class="tile"><div class="k">Collected 2026</div><div class="v" id="ytd">$0</div><div class="s">Jan–Aug real invoices</div></div>
-      <div class="tile warn"><div class="k">Outstanding</div><div class="v" id="ar">$0</div><div class="s" id="arSub">unpaid invoices</div></div>
-      <div class="tile"><div class="k">Pipeline Value</div><div class="v" id="pipe">$0</div><div class="s" id="pipeSub">open prospects</div></div>
+    <div class="deckdate">
+      <div>Thursday · <b id="today">Aug 13, 2026</b></div>
+      <div id="focus" class="faint" style="margin-top:3px">Next up: call ADAS Globus (Smit) — Thu 5:30pm Warsaw</div>
     </div>
   </div>
 
-  <!-- ===== QUESTS ===== -->
-  <h2 class="sec">Daily Quests <span class="faint" style="font-size:11px;letter-spacing:0;text-transform:none">— tap to complete, bank the XP</span></h2>
-  <div id="quests"></div>
-  <div class="actions">
-    <button class="btn sm ghost" onclick="addQuest()">＋ Add quest</button>
-    <button class="btn sm ghost" onclick="resetDaily()">↻ New day (reset quests)</button>
+  <!-- KPI STRIP -->
+  <div class="kpis">
+    <div class="kpi money"><div class="edge"></div><div class="k">Recurring / mo</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
+    <div class="kpi win"><div class="edge"></div><div class="k">Collected 2026</div><div class="v num" id="ytd">$0</div><div class="s">Jan–Aug · real invoices</div></div>
+    <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="ar">$0</div><div class="s" id="arSub"></div></div>
+    <div class="kpi pipe"><div class="edge"></div><div class="k">Pipeline</div><div class="v num" id="pipe">$0</div><div class="s" id="pipeSub"></div></div>
+    <div class="kpi clients"><div class="edge"></div><div class="k">Active Clients</div><div class="v num" id="cli">0</div><div class="s">on the roster</div></div>
   </div>
 
-  <div class="grid2" style="margin-top:6px">
-    <div>
-      <!-- ===== PIPELINE ===== -->
-      <h2 class="sec">Deal Pipeline</h2>
-      <div class="board" id="board"></div>
-      <div class="actions"><button class="btn sm" onclick="addProspect()">＋ New prospect</button>
-        <span class="faint" style="font-size:11px;align-self:center">Tap a card to push it to the next stage &amp; earn XP</span></div>
-    </div>
-    <div>
-      <!-- ===== CLIENTS ===== -->
-      <h2 class="sec">Your Roster</h2>
-      <div class="party" id="party"></div>
-    </div>
-  </div>
+  <!-- TODAY'S SETS -->
+  <div class="head"><h2>Today's Sets</h2><span class="tag">what to ride today</span>
+    <span class="tag" id="setcount" style="margin-left:auto"></span></div>
+  <div class="sets" id="sets"></div>
+  <div style="margin-top:10px"><button class="btn sm ghost" onclick="addSet()">＋ Add a set</button>
+    <button class="btn sm ghost" onclick="clearDone()">Clear finished</button></div>
 
-  <!-- ===== ACHIEVEMENTS ===== -->
-  <h2 class="sec">Achievements</h2>
-  <div class="achs" id="achs"></div>
+  <!-- PIPELINE -->
+  <div class="head"><h2>The Pipeline</h2><span class="tag">tap a deal to move it down the line — land one and catch the wave 🤙</span>
+    <div class="rt"><button class="btn sm" onclick="addDeal()">＋ New lead</button></div></div>
+  <div class="boardscroll"><div class="board" id="board"></div></div>
+
+  <!-- ROSTER -->
+  <div class="head"><h2>Your Roster</h2><span class="tag">the crew paying the bills</span></div>
+  <div class="rail" id="roster"></div>
+
+  <!-- MILESTONES -->
+  <div class="head"><h2>Milestones</h2><span class="tag">banked wins</span>
+    <div class="rt"><button class="btn sm ghost" onclick="rideTheWave('the stoke')">🏄 Ride again</button></div></div>
+  <div class="miles" id="miles"></div>
 
   <div class="foot">
-    Built for Garrett @ RET Media LLC · seeded from your Notion CRM + QuickBooks on 2026-08-13.<br>
-    Everything you do here saves in this browser. Ask Claude to "refresh my CRM data" anytime to re-pull live numbers.
+    RET MEDIA LLC · seeded from Notion CRM + QuickBooks + Calendar/Gmail on 2026-08-13.<br>
+    Your moves save in this browser. Say "refresh my CRM data" to Claude to re-pull live numbers.
   </div>
 </div>
 
 <div id="toasts"></div>
-<div id="flash"><div class="card2"><div class="lu">⭐️</div><h3 id="luTitle">LEVEL UP!</h3><p id="luSub"></p></div></div>
 <div id="modal"><div class="m" id="modalBody"></div></div>
+<div id="wave"><canvas id="wc"></canvas>
+  <div class="banner"><div class="big" id="wbig">BARRELED! 🤙</div><div class="sm" id="wsm"></div></div>
+</div>
 
 <script>
 /* ============================================================
-   RET MEDIA COMMAND — gamified CRM
-   Seed data pulled live from Notion CRM + QuickBooks (2026-08-13)
+   RET MEDIA COMMAND DECK
+   Seeded live from Notion CRM + QuickBooks + Calendar/Gmail (2026-08-13)
    ============================================================ */
 const SEED = {
-  // Won clients / active roster
-  clients: [
-    {name:"Blair Conklin", tier:"legendary", service:"TikTok + FB Reels + YouTube", deal:"35% rev split", mrr:2400, variable:true, emoji:"🏄"},
-    {name:"Shane Dorian",  tier:"legendary", service:"Skool community + course build", deal:"$5k + 18% split + $100/mo", mrr:2600, variable:true, emoji:"🌊"},
-    {name:"Foreign Waters",tier:"epic",      service:"TikTok Shop + UGC army", deal:"Contract + rev share", mrr:1500, variable:true, emoji:"🥤"},
-    {name:"Xander Budnick",tier:"epic",      service:"Clips / repurposing", deal:"30-day trial → 3–5k/mo", mrr:0, variable:true, emoji:"🎣"},
-    {name:"Paulo Prietto", tier:"rare",      service:"IG management 2x/wk", deal:"$900/mo (recurring)", mrr:900, emoji:"🏡"},
-    {name:"Tara Bunker",   tier:"rare",      service:"IG management", deal:"$900/mo (recurring)", mrr:900, emoji:"🔑"},
+  clients:[
+    {name:"Blair Conklin", em:"🏄", tier:"anchor",   svc:"TikTok · FB Reels · YouTube shorts", deal:"35% revenue split", mrr:2400, variable:true},
+    {name:"Shane Dorian",  em:"🌊", tier:"anchor",   svc:"Skool community + surf-fitness course", deal:"$5k + 18% split + $100/mo", mrr:2600, variable:true},
+    {name:"Foreign Waters",em:"🥤", tier:"growth",   svc:"TikTok Shop + UGC creator army (Gianni)", deal:"Contract + rev share", mrr:1500, variable:true},
+    {name:"Xander Budnick",em:"🎣", tier:"growth",   svc:"Clips / repurposing channel", deal:"30-day trial → 3–5k/mo", mrr:0, variable:true},
+    {name:"Paulo Prietto", em:"🏡", tier:"retainer", svc:"Instagram management 2x/week", deal:"$900/mo · recurring", mrr:900},
+    {name:"Tara Bunker",   em:"🔑", tier:"retainer", svc:"Instagram management + website", deal:"$900/mo · recurring", mrr:900},
   ],
-  // Pipeline prospects  (stage: new, contacted, followup, negotiation, won)
-  prospects: [
-    {name:"Chosen Advisory", stage:"new",        value:5000, note:"BIG WHALE 🐋", whale:true, svc:"—"},
-    {name:"Recall Masters",  stage:"new",        value:1500, note:"", svc:"—"},
-    {name:"Dylan Graves",    stage:"new",        value:1200, note:"YT Shorts / TikTok repurposing", svc:"Repurposing"},
-    {name:"1Rod1ReelFishing",stage:"new",        value:1000, note:"", svc:"—"},
-    {name:"Predictive History",stage:"new",      value:1000, note:"", svc:"—"},
-    {name:"Mario",           stage:"new",        value:800,  note:"", svc:"—"},
-    {name:"Larry",           stage:"new",        value:900,  note:"Tara Bunker referral — waiting on text", svc:"—"},
-    {name:"Adas Global",     stage:"contacted",  value:1500, note:"Call Monday", svc:"—"},
-    {name:"Steve Ruff",      stage:"contacted",  value:1500, note:"Athlete social mgmt · Mason Ho", svc:"Social"},
-    {name:"Kill Tony",       stage:"followup",   value:3000, note:"Podcast repurposing · agent to email", svc:"Repurposing"},
-    {name:"Tom",             stage:"followup",   value:1000, note:"Wants to talk soon", svc:"—"},
+  // stage: lineup(new) · paddle(contacted) · set(followup) · dropin(negotiation) · won
+  deals:[
+    {name:"Chosen Advisory", co:"", stage:"lineup",  value:5000, whale:true, note:"BIG WHALE — top priority"},
+    {name:"ADAS Globus",     co:"Smit Shah", stage:"dropin", value:2500, note:"Marketing + consulting arrangement · call Thu 8/14"},
+    {name:"Mario Kalpou",    co:"Man Eats Wild", stage:"paddle", value:1500, note:"Shane referral · TV host building brand · call 8/17"},
+    {name:"Kill Tony",       co:"", stage:"set", value:3000, note:"Podcast repurposing · agent to email"},
+    {name:"Steve Ruff",      co:"Mason Ho", stage:"paddle", value:1500, note:"Athlete social management"},
+    {name:"Dylan Graves",    co:"", stage:"lineup", value:1200, note:"YT Shorts / TikTok repurposing"},
+    {name:"Recall Masters",  co:"", stage:"lineup", value:1500, note:""},
+    {name:"Larry",           co:"", stage:"lineup", value:900,  note:"Tara Bunker referral — waiting on text"},
+    {name:"Tom",             co:"", stage:"set", value:1000, note:"Wants to talk soon"},
+    {name:"1Rod1ReelFishing",co:"", stage:"lineup", value:1000, note:""},
+    {name:"Predictive History",co:"",stage:"lineup", value:1000, note:""},
   ],
-  // Quests seeded from follow-ups + open Notion task
-  quests: [
-    {t:"Follow up Kill Tony's team (podcast repurposing)", s:"Big podcast repurposing deal · they owe an email", xp:120, heat:"hot"},
-    {t:"Call Adas Global", s:"Scheduled for Monday", xp:100, heat:"hot"},
-    {t:"Chase the whale — Chosen Advisory", s:"Highest-value prospect in the pipe", xp:150, heat:"hot"},
-    {t:"Follow up with Tom", s:"They want to talk soon", xp:80, heat:"warm"},
-    {t:"Nudge Larry (Tara's referral)", s:"Waiting on their text — go first", xp:70, heat:"warm"},
-    {t:"Reconnect Steve Ruff / Mason Ho", s:"Athlete social management pitch", xp:80, heat:"warm"},
-    {t:"Post rest of Blair's FB schedule", s:"Open task in Notion · in progress", xp:60, heat:""},
-    {t:"Collect $4,900 outstanding (Foreign Waters, Shane, Paulo)", s:"Send reminders in QuickBooks", xp:110, heat:"warm"},
+  sets:[
+    {t:"Call ADAS Globus — Smit Shah", d:"Thu 8/14, 5:30pm Warsaw · commercial arrangement", heat:"today"},
+    {t:"Chase the whale — Chosen Advisory", d:"Highest-value deal in the pipe", heat:"hot"},
+    {t:"Prep call with Mario Kalpou", d:"Man Eats Wild · Mon 8/17 · Shane referral", heat:"warm"},
+    {t:"Follow up Kill Tony's team", d:"Podcast repurposing · they owe an email", heat:"hot"},
+    {t:"Collect $4,900 outstanding", d:"Foreign Waters · Shane 0092 (paying now) · Paulo", heat:"warm"},
+    {t:"Finish Foreign Waters onboarding", d:"Euka + TikTok Shop access with Gianni", heat:"warm"},
+    {t:"Post rest of Blair's FB schedule", d:"Open task in Notion", heat:""},
+    {t:"Review social-media-manager applicants", d:"10+ replies in inbox from the LinkedIn post", heat:""},
+    {t:"Work the 80-creator cold outreach", d:"Blast sent 8/11 · reply to any bites", heat:""},
   ],
-  ytd: 30483,          // real 2026 collected (Jan–Aug, non-voided)
-  ar: 4900,            // currently outstanding balances
+  ytd:30483, ar:4900,
 };
 
-const STAGES = [
-  {id:"new",        label:"New",         xp:0},
-  {id:"contacted",  label:"Contacted",   xp:40},
-  {id:"followup",   label:"Follow-up",   xp:60},
-  {id:"negotiation",label:"Negotiation", xp:90},
-  {id:"won",        label:"Won 🏆",       xp:300},
+const STAGES=[
+  {id:"lineup", label:"New Leads",   surf:"the lineup"},
+  {id:"paddle", label:"Contacted",   surf:"paddling out"},
+  {id:"set",    label:"Following Up", surf:"reading the set"},
+  {id:"dropin", label:"Negotiating", surf:"dropping in"},
+  {id:"won",    label:"Won",         surf:"barreled 🤙"},
 ];
 
-const RANKS = [
-  "Rookie Closer","Street Hustler","Deal Maker","Account Slayer","Pipeline Boss",
-  "Rainmaker","Media Mogul","Empire Builder","Legend of Laguna"
-];
-
-const ACHIEVEMENTS = [
-  {id:"first",   ic:"🩸", n:"First Blood",     d:"Land your first client", test:s=>clientCount()>=1},
-  {id:"squad",   ic:"👥", n:"Full Squad",      d:"5+ active clients", test:s=>clientCount()>=5},
-  {id:"k30",     ic:"💰", n:"$30K Club",       d:"$30k collected in a year", test:s=>SEED.ytd>=30000},
-  {id:"whale",   ic:"🐋", n:"Whale Hunter",    d:"Close Chosen Advisory", test:s=>wonNames().includes("Chosen Advisory")},
-  {id:"streak5", ic:"🔥", n:"On Fire",         d:"5-day streak", test:s=>s.streak>=5},
-  {id:"grind",   ic:"⚡️", n:"Grinder",         d:"Complete 25 quests", test:s=>s.questsDone>=25},
-  {id:"lvl5",    ic:"⭐️", n:"Seasoned",        d:"Reach level 5", test:s=>levelFromXp(s.xp).level>=5},
-  {id:"closer",  ic:"🤝", n:"Closer",          d:"Advance 10 prospects", test:s=>s.advances>=10},
-  {id:"mogul",   ic:"👑", n:"Media Mogul",     d:"Reach level 7", test:s=>levelFromXp(s.xp).level>=7},
+const MILES=[
+  {ic:"🩸", n:"First Client",  d:"Signed your first",       on:()=>true},
+  {ic:"🤝", n:"Full Crew",     d:"6 active clients",        on:()=>SEED.clients.length>=6},
+  {ic:"💰", n:"$30K Year",     d:"$30k collected in 2026",  on:()=>SEED.ytd>=30000},
+  {ic:"🔁", n:"Recurring Rev", d:"2 auto-billing retainers",on:()=>true},
+  {ic:"🐋", n:"Whale Hooked",  d:"5-figure deal in pipe",   on:()=>SEED.deals.some(d=>d.whale)},
+  {ic:"🌊", n:"First Barrel",  d:"Close a deal here",       on:()=>wonCount()>0},
+  {ic:"⭐️", n:"Big Month",     d:"3 deals closed here",     on:()=>wonCount()>=3},
 ];
 
 /* ---------- state ---------- */
-const LS="retmedia_command_v1";
-function seedState(){
-  return {
-    xp: Math.floor(SEED.ytd/50) + SEED.clients.length*250, // seed XP from real traction
-    streak:1, lastDay:todayKey(), questsDone:0, advances:0,
-    quests: SEED.quests.map((q,i)=>({...q, id:"q"+i, done:false})),
-    prospects: SEED.prospects.map((p,i)=>({...p, id:"p"+i})),
-    unlocked:{}
-  };
-}
-let S = load();
-function load(){ try{const r=JSON.parse(localStorage.getItem(LS)); if(r&&r.quests) return r;}catch(e){} return seedState(); }
-function save(){ localStorage.setItem(LS, JSON.stringify(S)); }
-function todayKey(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
-
-/* ---------- leveling (rising curve) ---------- */
-function xpForLevel(l){ return Math.round(300*Math.pow(l,1.55)); } // cumulative to reach level l+1 boundary
-function levelFromXp(xp){
-  let lvl=1, need=xpForLevel(1), prev=0;
-  while(xp>=need && lvl<60){ lvl++; prev=need; need+=xpForLevel(lvl); }
-  return {level:lvl, into:xp-prev, span:need-prev, floor:prev, ceil:need};
-}
+const LS="retmedia_deck_v2";
+function seed(){return{
+  deals:SEED.deals.map((d,i)=>({...d,id:"d"+i})),
+  sets:SEED.sets.map((s,i)=>({...s,id:"s"+i,done:false})),
+};}
+let S=load();
+function load(){try{const r=JSON.parse(localStorage.getItem(LS));if(r&&r.deals)return r;}catch(e){}return seed();}
+function save(){localStorage.setItem(LS,JSON.stringify(S));}
+function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();render();}}
 
 /* ---------- derived ---------- */
-function clientCount(){ return SEED.clients.length + S.prospects.filter(p=>p.stage==="won").length; }
-function wonNames(){ return S.prospects.filter(p=>p.stage==="won").map(p=>p.name); }
-function mrrTotal(){ return SEED.clients.reduce((a,c)=>a+c.mrr,0); }
-function pipeValue(){ return S.prospects.filter(p=>p.stage!=="won").reduce((a,p)=>a+(p.value||0),0); }
-
-/* ---------- XP + toast ---------- */
-function grantXp(n,msg){
-  const before=levelFromXp(S.xp).level;
-  S.xp+=n;
-  const after=levelFromXp(S.xp).level;
-  toast((msg||"Nice.")+" ", n);
-  if(after>before) levelUp(after);
-  checkAchievements(); save(); render();
-}
-function toast(msg,xp){
-  const t=document.createElement("div"); t.className="toast";
-  t.innerHTML=`<span>${msg}</span>`+(xp?`<span class="xp">+${xp} XP</span>`:"");
-  document.getElementById("toasts").appendChild(t);
-  setTimeout(()=>{t.style.transition=".4s";t.style.opacity=0;t.style.transform="translateY(8px)";},1700);
-  setTimeout(()=>t.remove(),2200);
-}
-function levelUp(l){
-  const f=document.getElementById("flash");
-  document.getElementById("luTitle").textContent="LEVEL "+l+"!";
-  document.getElementById("luSub").textContent="You are now a "+RANKS[Math.min(l-1,RANKS.length-1)];
-  f.style.display="grid";
-  setTimeout(()=>f.style.display="none",1600);
-}
-function checkAchievements(){
-  ACHIEVEMENTS.forEach(a=>{
-    if(!S.unlocked[a.id] && a.test(S)){
-      S.unlocked[a.id]=true;
-      setTimeout(()=>toast("🏅 Unlocked: "+a.n,0),400);
-    }
-  });
-}
-
-/* ---------- streak ---------- */
-function touchStreak(){
-  const tk=todayKey();
-  if(S.lastDay!==tk){
-    // naive: any new calendar day of use bumps streak
-    S.streak=(S.streak||0)+1; S.lastDay=tk; save();
-  }
-}
+function wonCount(){return (S.deals||SEED.deals).filter(d=>d.stage==="won").length;}
+function mrr(){return SEED.clients.reduce((a,c)=>a+c.mrr,0);}
+function pipeVal(){return S.deals.filter(d=>d.stage!=="won").reduce((a,d)=>a+(d.value||0),0);}
+function fmt(n){return "$"+Math.round(n).toLocaleString();}
+function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 
 /* ---------- actions ---------- */
-function toggleQuest(id){
-  const q=S.quests.find(x=>x.id===id); if(!q) return;
-  if(q.done){ q.done=false; S.questsDone=Math.max(0,S.questsDone-1); save(); render(); return; }
-  q.done=true; S.questsDone++; grantXp(q.xp,"Quest complete!");
+function toggleSet(id){const s=S.sets.find(x=>x.id===id);if(!s)return;s.done=!s.done;save();render();
+  if(s.done)toast("✔ "+ s.t.split("—")[0].trim());}
+function clearDone(){S.sets=S.sets.filter(s=>!s.done);save();render();}
+function advance(id){
+  const d=S.deals.find(x=>x.id===id);if(!d)return;
+  const i=STAGES.findIndex(s=>s.id===d.stage);
+  if(i>=STAGES.length-1)return;
+  d.stage=STAGES[i+1].id;save();render();
+  if(d.stage==="won"){rideTheWave(d.name);}
+  else toast(d.name+" → "+STAGES[i+1].label);
 }
-function advanceProspect(id){
-  const p=S.prospects.find(x=>x.id===id); if(!p) return;
-  const idx=STAGES.findIndex(s=>s.id===p.stage);
-  if(idx>=STAGES.length-1){ toast("Already Won 🏆",0); return; }
-  p.stage=STAGES[idx+1].id; S.advances++;
-  const g=STAGES[idx+1];
-  if(p.stage==="won"){ grantXp(300+Math.round((p.value||0)/50), "🏆 CLOSED "+p.name+"!"); }
-  else grantXp(g.xp, p.name+" → "+g.label);
-}
-function resetDaily(){
-  S.quests.forEach(q=>q.done=false);
-  touchStreakForce();
-  save(); render(); toast("New day. Quests reset. 🔥 "+S.streak+" streak",0);
-}
-function touchStreakForce(){ S.streak=(S.streak||0)+1; S.lastDay=todayKey(); }
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(()=>{t.style.transition=".4s";t.style.opacity=0;t.style.transform="translateY(8px)";},1600);
+  setTimeout(()=>t.remove(),2100);}
 
 /* ---------- modals ---------- */
-function openModal(html){ document.getElementById("modalBody").innerHTML=html; document.getElementById("modal").style.display="grid"; }
-function closeModal(){ document.getElementById("modal").style.display="none"; }
-document.getElementById("modal").addEventListener("click",e=>{ if(e.target.id==="modal") closeModal(); });
-
-function addProspect(){
-  openModal(`<h3>New prospect</h3>
-    <label>Name</label><input id="np_name" placeholder="Business or person">
-    <label>Estimated monthly / deal value ($)</label><input id="np_val" type="number" placeholder="1500">
-    <label>Note</label><input id="np_note" placeholder="Where you met, next step…">
-    <div class="actions" style="margin-top:16px"><button class="btn" onclick="saveProspect()">Add to pipeline</button>
-    <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
-}
-function saveProspect(){
-  const n=document.getElementById("np_name").value.trim(); if(!n) return;
-  S.prospects.unshift({id:"p"+Date.now(), name:n, stage:"new",
-    value:+document.getElementById("np_val").value||1000,
-    note:document.getElementById("np_note").value.trim(), svc:"—"});
-  closeModal(); grantXp(25,"New lead added 🎯");
-}
-function addQuest(){
-  openModal(`<h3>Add quest</h3>
-    <label>What needs doing?</label><input id="nq_t" placeholder="Follow up with…">
-    <label>Detail</label><input id="nq_s" placeholder="context / next step">
-    <label>XP reward</label><input id="nq_xp" type="number" value="80">
-    <div class="actions" style="margin-top:16px"><button class="btn" onclick="saveQuest()">Add quest</button>
-    <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
-}
-function saveQuest(){
-  const t=document.getElementById("nq_t").value.trim(); if(!t) return;
-  S.quests.push({id:"q"+Date.now(), t, s:document.getElementById("nq_s").value.trim(),
-    xp:+document.getElementById("nq_xp").value||80, heat:"", done:false});
-  closeModal(); save(); render(); toast("Quest added.",0);
-}
-function hardReset(){ if(confirm("Reset all progress back to the seeded data?")){ localStorage.removeItem(LS); S=load(); render(); } }
+function openModal(h){document.getElementById("modalBody").innerHTML=h;document.getElementById("modal").style.display="grid";}
+function closeModal(){document.getElementById("modal").style.display="none";}
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal();});
+function addDeal(){openModal(`<h3>New lead</h3>
+  <label>Name</label><input id="x_n" placeholder="Person or business">
+  <div class="row2"><div><label>Company</label><input id="x_c" placeholder="optional"></div>
+  <div><label>Deal value ($)</label><input id="x_v" type="number" placeholder="1500"></div></div>
+  <label>Note</label><input id="x_no" placeholder="where it came from / next step">
+  <div class="mact"><button class="btn" onclick="saveDeal()">Add to lineup</button>
+  <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);}
+function saveDeal(){const n=v("x_n");if(!n)return;S.deals.unshift({id:"d"+Date.now(),name:n,co:v("x_c"),
+  stage:"lineup",value:+v("x_v")||1000,note:v("x_no")});closeModal();save();render();toast("Added "+n+" to the lineup");}
+function addSet(){openModal(`<h3>Add a set</h3>
+  <label>Task</label><input id="x_t" placeholder="Follow up with…">
+  <label>Detail</label><input id="x_d" placeholder="context / next step">
+  <label>Heat</label><select id="x_h"><option value="">normal</option><option value="today">today</option><option value="warm">warm</option><option value="hot">hot</option></select>
+  <div class="mact"><button class="btn" onclick="saveSet()">Add</button>
+  <button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);}
+function saveSet(){const t=v("x_t");if(!t)return;S.sets.push({id:"s"+Date.now(),t,d:v("x_d"),heat:v("x_h"),done:false});
+  closeModal();save();render();}
+function v(id){return (document.getElementById(id).value||"").trim();}
 
 /* ---------- render ---------- */
-function fmt(n){ return "$"+Math.round(n).toLocaleString(); }
 function render(){
-  const lv=levelFromXp(S.xp);
-  document.getElementById("lvlBadge").textContent="LVL "+lv.level;
-  document.getElementById("rankName").textContent=RANKS[Math.min(lv.level-1,RANKS.length-1)];
-  document.getElementById("streak").textContent="🔥 "+S.streak+" day streak";
-  document.getElementById("totalXp").textContent=S.xp.toLocaleString();
-  document.getElementById("xpNow").textContent=lv.into+" / "+lv.span+" XP";
-  document.getElementById("xpNext").textContent="LVL "+(lv.level+1)+" →";
-  document.getElementById("xpBar").style.width=Math.min(100,100*lv.into/lv.span)+"%";
-
-  document.getElementById("mrr").textContent=fmt(mrrTotal());
-  document.getElementById("mrrSub").textContent=SEED.clients.length+" clients · some variable rev-split";
+  document.getElementById("mrr").textContent=fmt(mrr());
+  document.getElementById("mrrSub").textContent=SEED.clients.length+" clients · some rev-split";
   document.getElementById("ytd").textContent=fmt(SEED.ytd);
   document.getElementById("ar").textContent=fmt(SEED.ar);
   document.getElementById("arSub").textContent="3 invoices open";
-  document.getElementById("pipe").textContent=fmt(pipeValue());
-  const openCount=S.prospects.filter(p=>p.stage!=="won").length;
-  document.getElementById("pipeSub").textContent=openCount+" open prospects";
+  document.getElementById("pipe").textContent=fmt(pipeVal());
+  document.getElementById("pipeSub").textContent=S.deals.filter(d=>d.stage!=="won").length+" open · "+wonCount()+" won here";
+  document.getElementById("cli").textContent=SEED.clients.length;
 
-  // quests
-  const qs=[...S.quests].sort((a,b)=>(a.done-b.done)||({hot:0,warm:1,"":2}[a.heat]-{hot:0,warm:1,"":2}[b.heat]));
-  document.getElementById("quests").innerHTML=qs.map(q=>`
-    <div class="quest ${q.done?"done":""}">
-      <div class="qcheck" onclick="toggleQuest('${q.id}')">✓</div>
-      <div class="qbody">
-        <div class="qtitle">${esc(q.t)}${q.heat?`<span class="qtag ${q.heat}">${q.heat.toUpperCase()}</span>`:""}</div>
-        <div class="qsub">${esc(q.s||"")}</div>
-      </div>
-      <div class="qxp">+${q.xp} XP</div>
+  // sets
+  const order={today:0,hot:1,warm:2,"":3};
+  const ss=[...S.sets].sort((a,b)=>(a.done-b.done)||(order[a.heat]-order[b.heat]));
+  document.getElementById("sets").innerHTML=ss.map(s=>`
+    <div class="set ${s.done?"done":""}">
+      <div class="box" onclick="toggleSet('${s.id}')">✓</div>
+      <div><div class="t">${esc(s.t)}${s.heat?`<span class="pill ${s.heat}">${s.heat.toUpperCase()}</span>`:""}</div>
+      <div class="d">${esc(s.d||"")}</div></div>
     </div>`).join("");
+  const done=S.sets.filter(s=>s.done).length;
+  document.getElementById("setcount").textContent=done+" / "+S.sets.length+" done";
 
   // board
   document.getElementById("board").innerHTML=STAGES.map(st=>{
-    const items=S.prospects.filter(p=>p.stage===st.id);
-    return `<div class="col"><h3>${st.label}<span class="cnt">${items.length}</span></h3>
-      ${items.map(p=>`
-        <div class="card" onclick="advanceProspect('${p.id}')">
-          <div class="adv">➜</div>
-          <div class="nm ${p.whale?"whale":""}">${p.whale?"🐋 ":""}${esc(p.name)}</div>
-          <div class="meta">${p.value?fmt(p.value)+(st.id==="won"?"":"/mo est"):""}${p.note?" · "+esc(p.note):""}</div>
-          ${p.svc&&p.svc!=="—"?`<span class="tag">${esc(p.svc)}</span>`:""}
-        </div>`).join("")||`<div class="faint" style="font-size:11px;padding:4px">—</div>`}
+    const items=S.deals.filter(d=>d.stage===st.id);
+    return `<div class="lane ${st.id==="won"?"won":""}">
+      <div class="lh"><div><b>${st.label}</b> <span class="surf">· ${st.surf}</span></div><span class="cnt">${items.length}</span></div>
+      ${items.map(d=>`
+        <div class="deal ${d.whale?"whale":""}" ${st.id!=="won"?`onclick="advance('${d.id}')"`:""}>
+          <div class="nm">${d.whale?"🐋 ":""}${esc(d.name)}</div>
+          ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
+          ${d.value?`<div class="mt"><span class="val">${fmt(d.value)}</span>${st.id==="won"?" · signed":"/mo est"}</div>`:""}
+          ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
+          ${st.id!=="won"?'<div class="go">move ➜</div>':'<span class="stag">🤙 landed</span>'}
+        </div>`).join("")||`<div class="faint" style="font-size:11px;padding:6px 2px">—</div>`}
     </div>`;
   }).join("");
 
-  // party
-  document.getElementById("party").innerHTML=SEED.clients.map(c=>`
-    <div class="hero">
-      <div class="rb ${c.tier}">${c.tier}</div>
-      <div class="hn">${c.emoji} ${esc(c.name)}</div>
-      <div class="hs">${esc(c.service)}</div>
-      <div class="hd">${esc(c.deal)}</div>
-      <div class="hm">${c.mrr?fmt(c.mrr)+"/mo"+(c.variable?"*":""):"trial / rev-share"}</div>
+  // roster
+  document.getElementById("roster").innerHTML=SEED.clients.map(c=>`
+    <div class="client">
+      <div class="rib ${c.tier}">${c.tier}</div>
+      <div class="cn"><span class="em">${c.em}</span>${esc(c.name)}</div>
+      <div class="cs">${esc(c.svc)}</div>
+      <div class="cd">${esc(c.deal)}</div>
+      <div class="cm">${c.mrr?fmt(c.mrr)+"/mo"+(c.variable?"*":""):"trial / rev-share"}</div>
     </div>`).join("");
 
-  // achievements
-  document.getElementById("achs").innerHTML=ACHIEVEMENTS.map(a=>{
-    const on=S.unlocked[a.id]||a.test(S);
-    if(on&&!S.unlocked[a.id]) S.unlocked[a.id]=true;
-    return `<div class="ach ${on?"unlocked":"locked"}">
-      <div class="ic">${on?a.ic:"🔒"}</div><div class="an">${esc(a.n)}</div><div class="ad">${esc(a.d)}</div></div>`;
-  }).join("");
+  // milestones
+  document.getElementById("miles").innerHTML=MILES.map(m=>{const on=m.on();
+    return `<div class="mile ${on?"":"off"}"><div class="mi">${on?m.ic:"🔒"}</div>
+      <div class="mn">${esc(m.n)}</div><div class="md">${esc(m.d)}</div></div>`;}).join("");
 }
-function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-touchStreak();
-checkAchievements();
-render();
-save();
+/* ============================================================
+   THE REWARD — catch a wave (sound + surfer animation)
+   ============================================================ */
+function playStoke(){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();
+    const now=ac.currentTime;
+    // triumphant arpeggio
+    [523.25,659.25,783.99,1046.5].forEach((f,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.value=f;
+      const t=now+i*0.10;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.22,t+0.03);
+      g.gain.exponentialRampToValueAtTime(.001,t+0.5);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+0.55);
+    });
+    // wave whoosh (filtered noise sweep)
+    const dur=1.1,buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*(1-i/ch.length);
+    const src=ac.createBufferSource();src.buffer=buf;
+    const bp=ac.createBiquadFilter();bp.type="bandpass";bp.frequency.setValueAtTime(400,now);
+    bp.frequency.exponentialRampToValueAtTime(2400,now+dur);bp.Q.value=0.7;
+    const ng=ac.createGain();ng.gain.setValueAtTime(.0001,now);ng.gain.linearRampToValueAtTime(.5,now+.15);
+    ng.gain.exponentialRampToValueAtTime(.001,now+dur);
+    src.connect(bp).connect(ng).connect(ac.destination);src.start(now);src.stop(now+dur);
+    setTimeout(()=>ac.close(),2000);
+  }catch(e){}
+}
+
+function rideTheWave(name){
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById("wbig").textContent="BARRELED! 🤙";
+  document.getElementById("wsm").textContent=name==="the stoke"?"drop in.":name+" is signed. Go get the next one.";
+  const ov=document.getElementById("wave");ov.style.display="block";
+  playStoke();
+  const cv=document.getElementById("wc"),ctx=cv.getContext("2d");
+  const W=cv.width=innerWidth,H=cv.height=innerHeight;
+  let t=0;const dur=reduce?40:150;
+  const spray=[];
+  function frame(){
+    t++;ctx.clearRect(0,0,W,H);
+    const prog=t/dur;
+    // water base
+    const grd=ctx.createLinearGradient(0,H*0.45,0,H);
+    grd.addColorStop(0,"#1fb6c9");grd.addColorStop(.5,"#128aa8");grd.addColorStop(1,"#0a4f6e");
+    // wave curl travelling left->right, cresting near surfer
+    const baseY=H*0.62, amp=H*0.16;
+    const phase=prog*Math.PI; // wave rises then breaks
+    ctx.beginPath();ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=8){
+      const k=x/W;
+      const crest=Math.sin(k*Math.PI*1.3 - phase*1.2)*amp*(0.6+0.8*k);
+      const lift=Math.sin(prog*Math.PI)*amp*0.5;
+      const y=baseY - crest - lift + Math.sin((x*0.02)+(t*0.15))*4;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
+    // foam line
+    ctx.lineWidth=4;ctx.strokeStyle="rgba(255,255,255,.85)";ctx.beginPath();
+    for(let x=0;x<=W;x+=8){const k=x/W;
+      const crest=Math.sin(k*Math.PI*1.3 - phase*1.2)*amp*(0.6+0.8*k);
+      const lift=Math.sin(prog*Math.PI)*amp*0.5;
+      const y=baseY - crest - lift + Math.sin((x*0.02)+(t*0.15))*4;
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+    // surfer rides along the crest
+    const sx=W*(0.08+0.84*prog);
+    const k=sx/W;
+    const crest=Math.sin(k*Math.PI*1.3 - phase*1.2)*amp*(0.6+0.8*k);
+    const lift=Math.sin(prog*Math.PI)*amp*0.5;
+    const sy=baseY - crest - lift - 6;
+    ctx.save();ctx.translate(sx,sy);ctx.rotate(-0.12);
+    ctx.font="46px serif";ctx.textAlign="center";ctx.fillText("🏄",0,0);ctx.restore();
+    // spray behind surfer
+    if(t%2===0)for(let i=0;i<3;i++)spray.push({x:sx-14,y:sy-6,vx:-(1+Math.random()*2.5),vy:-(1+Math.random()*3),life:1});
+    spray.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.02;
+      ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle="#fff";
+      ctx.beginPath();ctx.arc(p.x,p.y,2.4,0,7);ctx.fill();});
+    ctx.globalAlpha=1;
+    if(t<dur)requestAnimationFrame(frame);
+    else setTimeout(()=>{ov.style.display="none";},650);
+  }
+  requestAnimationFrame(frame);
+  ov.onclick=()=>{ov.style.display="none";};
+}
+
+render();save();
 </script>
 </body>
 </html>
