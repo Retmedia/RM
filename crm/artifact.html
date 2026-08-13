@@ -181,6 +181,10 @@
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
   .btn.sm{padding:5px 11px;font-size:12px}
   .btn.danger{background:transparent;border:1px solid #6a2a2a;color:var(--coral)}
+  .gtoggle{background:none;border:none;color:var(--dim);font-size:11.5px;font-weight:700;padding:5px 13px;cursor:pointer}
+  .gtoggle.on{background:var(--aqua);color:#04231f}
+  .delta{font-size:12px;font-weight:800;margin-top:3px}
+  .delta.up{color:var(--green)} .delta.down{color:var(--coral)}
 
   /* modal */
   #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(5,12,20,.72);padding:18px;overflow:auto}
@@ -252,6 +256,9 @@
       <div class="kpi clients"><div class="edge"></div><div class="k">Active Clients</div><div class="v num" id="cli">0</div><div class="s">on the roster</div></div>
     </div>
 
+    <div class="head"><h2>Income &amp; Growth</h2><span class="tag">how the money is moving</span></div>
+    <div class="panel" id="growthOver"></div>
+
     <div class="head"><h2>Goals</h2><span class="tag">where you're headed</span></div>
     <div class="goals" id="goals"></div>
 
@@ -304,6 +311,9 @@
     </div>
 
     <div id="liveBadge" style="margin-top:14px;font-size:12px;font-weight:700"></div>
+
+    <div class="head"><h2>Income &amp; Growth</h2><span class="tag">month over month, or across the year</span></div>
+    <div class="panel" id="growthMoney"></div>
 
     <div class="head"><h2>Monthly Invoiced</h2><span class="tag">RET MEDIA LLC · 2026</span></div>
     <div class="panel"><div class="chart" id="chart"></div></div>
@@ -444,13 +454,13 @@ function seed(){return{
   clients:SEED.clients.map((c,i)=>({...c,id:"c"+i})),
   deals:SEED.deals.map((d,i)=>({...d,id:"d"+i})),
   sets:SEED.sets.map((s,i)=>({...s,id:"s"+i,done:false})),
-  tab:"overview", tabOrder:[...DEFAULT_TABORDER],
+  tab:"overview", tabOrder:[...DEFAULT_TABORDER], growthMode:"month",
 };}
 let S=load();
 let lostOpen=false, CAL={y:2026,m:7,sel:""};
 let LIVE={invoices:null, at:null, status:"snapshot"}, liveUnsub=null;
 function load(){try{const r=JSON.parse(localStorage.getItem(LS));
-  if(r&&r.deals&&r.clients&&r.sets){if(!r.tabOrder)r.tabOrder=[...DEFAULT_TABORDER];return r;}}catch(e){}
+  if(r&&r.deals&&r.clients&&r.sets){if(!r.tabOrder)r.tabOrder=[...DEFAULT_TABORDER];if(!r.growthMode)r.growthMode="month";return r;}}catch(e){}
   return seed();}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
 function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();renderTabs();render();}}
@@ -747,9 +757,62 @@ function render(){
   document.getElementById("miles").innerHTML=MILES.map(m=>{const on=m.on();
     return `<div class="mile ${on?"":"off"}"><div class="mi">${on?m.ic:"🔒"}</div><div class="mn">${esc(m.n)}</div><div class="md">${esc(m.d)}</div></div>`;}).join("");
 
+  const gh=renderGrowth();
+  document.getElementById("growthOver").innerHTML=gh;
+  document.getElementById("growthMoney").innerHTML=gh;
+
   renderMoney();tickClock();
 }
 function emptyState(msg){return `<div class="faint" style="padding:14px;font-size:13px">${esc(msg)}</div>`;}
+
+/* ---------- income + growth chart ---------- */
+function setGrowth(m){S.growthMode=m;save();render();}
+function growthStats(){
+  const m=monthlyData(),vals=m.map(x=>x[1]),labs=m.map(x=>x[0]),n=vals.length;
+  const latest=vals[n-1]||0,prev=vals[n-2]||0,first=vals[0]||0,ytd=vals.reduce((a,b)=>a+b,0);
+  return {vals,labs,n,latest,prev,first,ytd,
+    mom:prev?(latest-prev)/prev*100:0, yoy:first?(latest-first)/first*100:0,
+    latestLabel:labs[n-1]||"", prevLabel:labs[n-2]||"last month", firstLabel:labs[0]||"Jan"};
+}
+function svgLine(vals,labs){
+  const W=320,H=120,padL=38,padB=20,padT=10,padR=10,iw=W-padL-padR,ih=H-padT-padB;
+  const max=Math.max(1,...vals);
+  const X=i=>vals.length<=1?padL+iw/2:padL+iw*i/(vals.length-1);
+  const Y=val=>padT+ih*(1-val/max);
+  const pts=vals.map((v,i)=>[X(i),Y(v)]);
+  if(!pts.length)return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"></svg>`;
+  const line=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const area=line+" L "+X(vals.length-1).toFixed(1)+" "+(padT+ih)+" L "+padL+" "+(padT+ih)+" Z";
+  const grid=[0,max/2,max].map(g=>{const yy=Y(g);
+    return `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`+
+      `<text x="${padL-5}" y="${(yy+3).toFixed(1)}" text-anchor="end" font-size="8.5" fill="var(--faint)">$${g>=1000?(g/1000).toFixed(0)+"k":Math.round(g)}</text>`;}).join("");
+  const idxs=vals.length<=4?vals.map((_,i)=>i):[0,Math.floor((vals.length-1)/2),vals.length-1];
+  const xl=idxs.map(i=>`<text x="${X(i).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="8.5" fill="var(--faint)">${esc(labs[i]||"")}</text>`).join("");
+  const last=pts[pts.length-1];
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    <defs><linearGradient id="garea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--aqua)" stop-opacity="0.32"/><stop offset="1" stop-color="var(--aqua)" stop-opacity="0"/></linearGradient></defs>
+    ${grid}<path d="${area}" fill="url(#garea)"/>
+    <path d="${line}" fill="none" stroke="var(--aqua)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.6" fill="var(--aqua2)" stroke="#04231f" stroke-width="1.5"/>
+    ${xl}</svg>`;
+}
+function renderGrowth(){
+  const g=growthStats(),isM=(S.growthMode||"month")==="month";
+  const headNum=isM?fmt(g.latest):fmt(g.ytd);
+  const headLab=isM?(g.latestLabel+" income"):"2026 income so far";
+  const delta=isM?g.mom:g.yoy, up=delta>=0;
+  const deltaLab=isM?("vs "+g.prevLabel):("since "+g.firstLabel);
+  const vals=isM?g.vals.slice(-6):g.vals, labs=isM?g.labs.slice(-6):g.labs;
+  return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+    <div><div class="faint" style="font-size:10.5px;text-transform:uppercase;letter-spacing:1px">${esc(headLab)}</div>
+      <div class="num" style="font-size:26px;font-weight:800;color:var(--sand)">${headNum}</div>
+      <div class="delta ${up?"up":"down"}">${up?"▲":"▼"} ${Math.abs(delta).toFixed(1)}% <span class="faint" style="font-weight:600">${esc(deltaLab)}</span></div></div>
+    <div style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+      <button class="gtoggle ${isM?"on":""}" onclick="setGrowth('month')">Month</button>
+      <button class="gtoggle ${!isM?"on":""}" onclick="setGrowth('year')">Year</button></div>
+  </div>${svgLine(vals,labs)}`;
+}
 
 function renderMoney(){
   const inv=invoicesData(), months=monthlyData();
