@@ -1,0 +1,603 @@
+<title>RET Media Operating System</title>
+<style>
+  :root {
+    --ground: #F7F8F9;
+    --surface: #FFFFFF;
+    --surface-2: #EEF1F2;
+    --line: #D9DFE1;
+    --ink: #0C1A21;
+    --ink-soft: #47585F;
+    --ink-faint: #7E8D92;
+    --accent: #0E7C86;
+    --accent-bright: #12A3B0;
+    --red: #C4453B;
+    --amber: #B5731A;
+    --green: #2E8B6B;
+    --red-wash: rgba(196,69,59,0.10);
+    --amber-wash: rgba(181,115,26,0.12);
+    --green-wash: rgba(46,139,107,0.12);
+    --accent-wash: rgba(14,124,134,0.10);
+    --shadow: 0 1px 2px rgba(12,26,33,0.06), 0 8px 24px rgba(12,26,33,0.05);
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #08151B;
+      --surface: #0E212A;
+      --surface-2: #142B35;
+      --line: #21414D;
+      --ink: #E9EFF0;
+      --ink-soft: #A6BAC0;
+      --ink-faint: #6C858D;
+      --accent: #2FB6C4;
+      --accent-bright: #46D2DF;
+      --red: #E4695E;
+      --amber: #E0A64A;
+      --green: #4FBF95;
+      --red-wash: rgba(228,105,94,0.14);
+      --amber-wash: rgba(224,166,74,0.14);
+      --green-wash: rgba(79,191,149,0.14);
+      --accent-wash: rgba(47,182,196,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #08151B;
+    --surface: #0E212A;
+    --surface-2: #142B35;
+    --line: #21414D;
+    --ink: #E9EFF0;
+    --ink-soft: #A6BAC0;
+    --ink-faint: #6C858D;
+    --accent: #2FB6C4;
+    --accent-bright: #46D2DF;
+    --red: #E4695E;
+    --amber: #E0A64A;
+    --green: #4FBF95;
+    --red-wash: rgba(228,105,94,0.14);
+    --amber-wash: rgba(224,166,74,0.14);
+    --green-wash: rgba(79,191,149,0.14);
+    --accent-wash: rgba(47,182,196,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px 88px; }
+
+  /* ---- eyebrow / labels ---- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  h2 {
+    font-size: clamp(20px, 2.4vw, 26px);
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+  section > .sec-note { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 22px; max-width: 60ch; }
+  section { margin-top: 60px; }
+
+  /* ---- header ---- */
+  header { padding: 54px 0 30px; border-bottom: 1px solid var(--line); }
+  .brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--accent-bright); box-shadow: 0 0 0 4px var(--accent-wash); }
+  .brandline .name { font-family: var(--mono); font-weight: 600; letter-spacing: 0.04em; font-size: 14px; }
+  .brandline .meta { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); margin-left: auto; }
+  h1 {
+    font-size: clamp(30px, 5.4vw, 54px);
+    line-height: 1.03;
+    letter-spacing: -0.025em;
+    margin: 0 0 18px;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+  h1 .thin { color: var(--ink-faint); font-weight: 300; }
+  .lede { font-size: clamp(16px, 2vw, 19px); color: var(--ink-soft); max-width: 68ch; margin: 0; }
+  .two-jobs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .job {
+    font-family: var(--mono); font-size: 13px; padding: 9px 14px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+    display: flex; gap: 9px; align-items: center;
+  }
+  .job b { color: var(--accent); font-weight: 600; }
+
+  /* ---- metric strip ---- */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 30px; }
+  .metric { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 16px; box-shadow: var(--shadow); }
+  .metric .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .metric .v { font-family: var(--mono); font-weight: 700; font-size: 27px; letter-spacing: -0.02em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .metric .s { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; }
+  .metric.flag { border-color: var(--red); background: var(--red-wash); }
+  .metric.flag .v { color: var(--red); }
+
+  /* ---- concentration bars ---- */
+  .bars { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); }
+  .bar-row { display: grid; grid-template-columns: 168px 1fr 92px; align-items: center; gap: 14px; padding: 7px 0; }
+  .bar-row .lbl { font-size: 14px; font-weight: 600; }
+  .bar-row .lbl small { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); font-weight: 400; letter-spacing: 0.03em; text-transform: uppercase; }
+  .track { height: 22px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent-bright)); }
+  .fill.risk { background: linear-gradient(90deg, var(--red), #d9645b); }
+  .bar-row .amt { font-family: var(--mono); font-size: 13.5px; text-align: right; font-variant-numeric: tabular-nums; }
+  .bar-row .amt b { display:block; }
+  .bar-row .amt span { color: var(--ink-faint); font-size: 11.5px; }
+  .bars-foot { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); font-size: 13.5px; color: var(--ink-soft); }
+  .bars-foot b { color: var(--red); }
+
+  /* ---- org chart ---- */
+  .org { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .tier-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); align-self: flex-start; margin: 0 0 4px; }
+  .node {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 22px; text-align: center; box-shadow: var(--shadow); min-width: 240px;
+  }
+  .node .role { font-weight: 700; font-size: 17px; }
+  .node .who { font-family: var(--mono); font-size: 12.5px; color: var(--accent); margin-top: 2px; }
+  .node .desc { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; }
+  .node.ceo { border-color: var(--accent); border-width: 1.5px; }
+  .node.recruit { border-style: dashed; }
+  .badge { display:inline-block; font-family: var(--mono); font-size: 10px; letter-spacing:0.06em; text-transform:uppercase; padding: 2px 7px; border-radius: 5px; margin-top:8px; }
+  .badge.open { background: var(--amber-wash); color: var(--amber); }
+  .connector { width: 2px; height: 26px; background: var(--line); }
+  .fanout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; width: 100%; }
+  .fanout .node { min-width: 0; }
+  .org-row { display: flex; align-items: stretch; gap: 14px; width: 100%; justify-content: center; }
+  .side-fn { display: flex; flex-direction: column; gap: 10px; }
+  .fn-node { background: var(--surface-2); border: 1px dashed var(--line); border-radius: 10px; padding: 11px 15px; }
+  .fn-node .role { font-weight: 600; font-size: 13.5px; }
+  .fn-node .sop { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+
+  /* ---- generic cards grid ---- */
+  .grid { display: grid; gap: 14px; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+  .card h3 { margin: 0; font-size: 16px; display: flex; align-items: baseline; gap: 8px; }
+  .card h3 .who { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; }
+  .card .comp { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); margin: 6px 0 12px; }
+  .kpis { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .kpis li { font-size: 13px; color: var(--ink-soft); padding-left: 16px; position: relative; }
+  .kpis li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); font-size: 11px; top: 1px; }
+
+  /* ---- pipeline ---- */
+  .pipe { display: flex; gap: 0; align-items: stretch; overflow-x: auto; padding-bottom: 6px; }
+  .step { flex: 1 1 0; min-width: 150px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; position: relative; box-shadow: var(--shadow); }
+  .step + .step { margin-left: 26px; }
+  .step + .step::before { content: "→"; position: absolute; left: -22px; top: 50%; transform: translateY(-50%); color: var(--accent); font-family: var(--mono); font-size: 18px; }
+  .step .n { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+  .step .t { font-weight: 700; font-size: 15px; margin: 4px 0 5px; }
+  .step .o { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+  .step .d { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; }
+
+  /* ---- client table ---- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; background: var(--surface); }
+  th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  th { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  td .cname { font-weight: 700; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 10.5px; padding: 2px 7px; border-radius: 5px; background: var(--surface-2); color: var(--ink-soft); margin: 2px 3px 2px 0; }
+  .pill { font-family: var(--mono); font-size: 10.5px; padding: 3px 9px; border-radius: 20px; font-weight: 600; letter-spacing: 0.03em; }
+  .pill.active { background: var(--green-wash); color: var(--green); }
+  .pill.trial { background: var(--amber-wash); color: var(--amber); }
+  .pill.owned { background: var(--accent-wash); color: var(--accent); }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ---- engines ---- */
+  .engine { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+  .engine .num-tag { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; }
+  .engine h3 { margin: 6px 0 6px; font-size: 15.5px; }
+  .engine p { margin: 0; font-size: 13px; color: var(--ink-soft); }
+  .engine .own { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-top: 10px; }
+
+  /* ---- risk register ---- */
+  .risk { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; padding: 15px 18px; box-shadow: var(--shadow); }
+  .risk.high { border-left-color: var(--red); }
+  .risk.med { border-left-color: var(--amber); }
+  .risk.low { border-left-color: var(--green); }
+  .risk .r-title { font-weight: 700; font-size: 14.5px; }
+  .risk .r-fix { font-size: 13px; color: var(--ink-soft); margin-top: 3px; grid-column: 1 / -1; }
+  .sev { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; height: fit-content; white-space: nowrap; }
+  .sev.high { background: var(--red-wash); color: var(--red); }
+  .sev.med { background: var(--amber-wash); color: var(--amber); }
+  .sev.low { background: var(--green-wash); color: var(--green); }
+
+  footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--ink-faint); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+  @media (max-width: 760px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .g3, .g2, .fanout { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 120px 1fr 70px; }
+    .org-row { flex-direction: column; align-items: center; }
+    .side-fn { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .fill { animation: grow 1s cubic-bezier(.22,.61,.36,1) both; transform-origin: left; }
+    @keyframes grow { from { transform: scaleX(0); } }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brandline">
+      <span class="dot"></span>
+      <span class="name">RET MEDIA LLC</span>
+      <span class="meta">NAICS 541613 · v2026.08.13</span>
+    </div>
+    <p class="eyebrow">Organizational Operating System</p>
+    <h1>An org built so the founder does <span class="thin">only</span> two things.</h1>
+    <p class="lede">Not a chart — an operating system. Every role is backed by a written SOP, every dollar reconciles to QuickBooks, and every client already has a runbook. Here's how RET Media is staffed, how work flows, and how money moves.</p>
+    <div class="two-jobs">
+      <span class="job"><b>Job 1</b> Client strategy &amp; creative direction</span>
+      <span class="job"><b>Job 2</b> Partnerships &amp; sales</span>
+      <span class="job">Everything else → <b>delegated</b></span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="k">Revenue YTD 2026</div>
+        <div class="v">$30,512</div>
+        <div class="s">6 billed clients · QuickBooks</div>
+      </div>
+      <div class="metric">
+        <div class="k">Recurring floor</div>
+        <div class="v">$1,800<span style="font-size:14px;color:var(--ink-faint)">/mo</span></div>
+        <div class="s">Paulo + Tara (from Sep 8)</div>
+      </div>
+      <div class="metric">
+        <div class="k">Team run-rate</div>
+        <div class="v">~$1,000<span style="font-size:14px;color:var(--ink-faint)">/mo</span></div>
+        <div class="s">Victor + 2 interns, pre-SMM</div>
+      </div>
+      <div class="metric flag">
+        <div class="k">Top-client share</div>
+        <div class="v">65.5%</div>
+        <div class="s">Concentration risk → diversify</div>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">The number that shapes the org</p>
+    <h2>Revenue concentration, YTD 2026</h2>
+    <p class="sec-note">One client is two-thirds of the business. This single fact is why the SMM hire and the sales function are structural, not optional — they're the two levers that free the founder to sell and widen the base.</p>
+    <div class="bars">
+      <div class="bar-row">
+        <div class="lbl">Blair Conklin <small>35% rev-share</small></div>
+        <div class="track"><div class="fill risk" style="width:100%"></div></div>
+        <div class="amt"><b>$19,984</b><span>65.5%</span></div>
+      </div>
+      <div class="bar-row">
+        <div class="lbl">Foresight 20/20 <small>Shane Dorian</small></div>
+        <div class="track"><div class="fill" style="width:25%"></div></div>
+        <div class="amt"><b>$5,000</b><span>16.4%</span></div>
+      </div>
+      <div class="bar-row">
+        <div class="lbl">Paulo Prietto <small>$900/mo</small></div>
+        <div class="track"><div class="fill" style="width:13.5%"></div></div>
+        <div class="amt"><b>$2,700</b><span>8.8%</span></div>
+      </div>
+      <div class="bar-row">
+        <div class="lbl">Foreign Waters <small>Energy Flow</small></div>
+        <div class="track"><div class="fill" style="width:7.5%"></div></div>
+        <div class="amt"><b>$1,500</b><span>4.9%</span></div>
+      </div>
+      <div class="bar-row">
+        <div class="lbl">Tara Bunker <small>$900/mo</small></div>
+        <div class="track"><div class="fill" style="width:6.5%"></div></div>
+        <div class="amt"><b>$1,299</b><span>4.3%</span></div>
+      </div>
+      <div class="bar-row">
+        <div class="lbl">Nathan Florence <small>one-off</small></div>
+        <div class="track"><div class="fill" style="width:1%"></div></div>
+        <div class="amt"><b>$28</b><span>0.1%</span></div>
+      </div>
+      <p class="bars-foot"><b>Top two clients = 82% of revenue.</b> Target: no single client above 40% by year-end. Xander Budnick (free trial, re-eval end of Aug) not yet billed.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Who reports to whom</p>
+    <h2>The structure</h2>
+    <p class="sec-note">A deliberately lean pyramid. The Social Media Manager is the unlock hire — the single role that removes QC, scheduling, and access management from the founder's plate.</p>
+    <div class="org">
+      <div class="org-row">
+        <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center;">
+          <span class="tier-label">Tier 1 · Ownership</span>
+          <div class="node ceo">
+            <div class="role">CEO / Founder</div>
+            <div class="who">Garrett Abdulla</div>
+            <div class="desc">Strategy · creative direction · sales · final approval</div>
+          </div>
+        </div>
+        <div class="side-fn" style="justify-content:center;">
+          <div class="fn-node">
+            <div class="role">Sales / Pipeline</div>
+            <div class="sop">held by Garrett · skill: rm-sales</div>
+          </div>
+          <div class="fn-node">
+            <div class="role">Accounting / Billing</div>
+            <div class="sop">held by Garrett · skill: ret-media-accountant</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
+        <span class="tier-label" style="align-self:center;">Tier 2 · Operations</span>
+        <div class="node recruit">
+          <div class="role">Social Media Manager</div>
+          <div class="who">recruiting</div>
+          <div class="desc">QC every video · scheduling · RM Drive · access hygiene</div>
+          <span class="badge open">Unlock hire · intern → $800–1,200/mo</span>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <span class="tier-label" style="align-self:center; margin-bottom:8px;">Tier 3 · Production</span>
+      <div class="fanout">
+        <div class="node">
+          <div class="role">Editor</div>
+          <div class="who">Victor</div>
+          <div class="desc">~30 shorts + 1 midform/wk · $400 → $800–1k on Xander close</div>
+        </div>
+        <div class="node">
+          <div class="role">Intern Editor 1</div>
+          <div class="who">$300 / 30-video batch</div>
+          <div class="desc">Short-form cuts → RM/Intern for SMM review</div>
+        </div>
+        <div class="node">
+          <div class="role">Intern Editor 2</div>
+          <div class="who">$300 / 30-video batch</div>
+          <div class="desc">Short-form cuts → RM/Intern for SMM review</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Scored on outcomes, not hours</p>
+    <h2>Role scorecards</h2>
+    <p class="sec-note">Each role is defined by 3–5 measurable KPIs and a clear "definition of done." These are the only things scored.</p>
+    <div class="grid g3">
+      <div class="card">
+        <h3>CEO / Founder <span class="who">Garrett</span></h3>
+        <div class="comp">owner · the two jobs only</div>
+        <ul class="kpis">
+          <li>New paying clients / MRR</li>
+          <li>Podcast guests booked → Ekko pipeline</li>
+          <li>Ekko deliverables sold</li>
+          <li>NOT: editing, scheduling, captioning, invoicing</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Social Media Mgr <span class="who">recruiting</span></h3>
+        <div class="comp">intern → $800–1,200/mo when trusted</div>
+        <ul class="kpis">
+          <li>On-time publishing cadence</li>
+          <li>Zero lost files</li>
+          <li>QC pass rate (founder spot-check)</li>
+          <li>Team velocity — videos shipped/week</li>
+          <li>Access hygiene — 0 personal-login deps</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Editor <span class="who">Victor</span></h3>
+        <div class="comp">$400 → $800–1,000/mo on Xander close</div>
+        <ul class="kpis">
+          <li>Volume delivered on time</li>
+          <li>Style-guide adherence</li>
+          <li>First-pass QC acceptance %</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Intern Editors <span class="who">×2</span></h3>
+        <div class="comp">$300 / 30-video batch</div>
+        <ul class="kpis">
+          <li>Batch completion rate</li>
+          <li>Quality after one SMM feedback loop</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Sales <span class="who">skill: rm-sales</span></h3>
+        <div class="comp">held by founder → delegate later</div>
+        <ul class="kpis">
+          <li>Prospects moved New → Won</li>
+          <li>One thoughtful pitch / week (not 25 blasts)</li>
+          <li>Clean access handoff on close</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Accounting <span class="who">skill: ret-media-accountant</span></h3>
+        <div class="comp">held by founder → delegate later</div>
+        <ul class="kpis">
+          <li>Invoices out on schedule</li>
+          <li>A/R &gt; 30 days chased (now: Paulo $900)</li>
+          <li>Rev-share splits reconciled</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Footage in → published out</p>
+    <h2>The production pipeline</h2>
+    <p class="sec-note">One canonical flow for every client. The founder's touch on QC and publish drops away once the SMM has earned publishing trust.</p>
+    <div class="pipe">
+      <div class="step"><div class="n">01</div><div class="t">Footage In</div><div class="o">Client · R</div><div class="d">Drops into shared cloud folder, mobile auto-upload on.</div></div>
+      <div class="step"><div class="n">02</div><div class="t">Edit</div><div class="o">Victor + Interns · R</div><div class="d">Cut to the client's style guide.</div></div>
+      <div class="step"><div class="n">03</div><div class="t">QC + Caption</div><div class="o">SMM · R/A</div><div class="d">Review quality, apply on-brand titles &amp; captions.</div></div>
+      <div class="step"><div class="n">04</div><div class="t">Publish</div><div class="o">SMM · R/A</div><div class="d">Schedule via agency-owned access.</div></div>
+      <div class="step"><div class="n">05</div><div class="t">Strategy</div><div class="o">Garrett · R/A</div><div class="d">Read results, adjust direction, sell.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Who the work serves · each has a codified SOP</p>
+    <h2>Clients &amp; owned properties</h2>
+    <p class="sec-note">Every account below already has a dedicated skill = a documented, repeatable runbook. That's why the org is delegable: onboarding a new operator means "run the skill."</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Account</th><th>Status</th><th>Deliverables</th><th>Terms</th><th class="num">YTD</th><th>SOP</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cname">Blair Conklin</span></td>
+            <td><span class="pill active">Active</span></td>
+            <td>~60 TikToks/mo + FB Reels, Skid Kids captions</td>
+            <td>35% rev-share</td>
+            <td class="num">$19,984</td>
+            <td><span class="tag">blair-conklin</span><span class="tag">blair-tiktok-monthly</span></td>
+          </tr>
+          <tr>
+            <td><span class="cname">Xander Budnick</span></td>
+            <td><span class="pill trial">Trial</span></td>
+            <td>5 shorts/day + midforms + TikTok/FB redistribution</td>
+            <td>Free 30d → convert</td>
+            <td class="num">—</td>
+            <td><span class="tag">xander-clips</span></td>
+          </tr>
+          <tr>
+            <td><span class="cname">Shane Dorian</span></td>
+            <td><span class="pill active">Active</span></td>
+            <td>Surf Longevity — Skool course, brand, scripts</td>
+            <td>via Foresight 20/20</td>
+            <td class="num">$5,000</td>
+            <td><span class="tag">shane-dorian</span></td>
+          </tr>
+          <tr>
+            <td><span class="cname">Paulo Prietto</span></td>
+            <td><span class="pill active">Active</span></td>
+            <td>2–3 real-estate posts/wk (IG)</td>
+            <td>$900/mo recurring</td>
+            <td class="num">$2,700</td>
+            <td><span class="tag">paulo-prietto</span><span class="tag">real-estate</span></td>
+          </tr>
+          <tr>
+            <td><span class="cname">Tara Bunker</span></td>
+            <td><span class="pill trial">Sep 1</span></td>
+            <td>IG management (Compass / ALCOVE)</td>
+            <td>$900/mo recurring</td>
+            <td class="num">$1,299</td>
+            <td><span class="tag">tara-bunker</span><span class="tag">real-estate</span></td>
+          </tr>
+          <tr>
+            <td><span class="cname">Foreign Waters</span></td>
+            <td><span class="pill active">Active</span></td>
+            <td>Energy Flow brand content from Gianni footage</td>
+            <td>Per agreement</td>
+            <td class="num">$1,500</td>
+            <td><span class="tag">foreign-waters</span></td>
+          </tr>
+          <tr>
+            <td><span class="cname">Modern Marketing</span></td>
+            <td><span class="pill owned">Owned</span></td>
+            <td>Skool community · $997/mo Premium</td>
+            <td>Own property</td>
+            <td class="num">—</td>
+            <td><span class="tag">modern-marketing</span></td>
+          </tr>
+          <tr>
+            <td><span class="cname">Garrett Personal Brand</span></td>
+            <td><span class="pill owned">Owned</span></td>
+            <td>Proof-first content → funnel</td>
+            <td>Own property</td>
+            <td class="num">—</td>
+            <td><span class="tag">garrett-pb</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Four ways the business makes money</p>
+    <h2>Revenue engines</h2>
+    <p class="sec-note">The org serves four distinct engines. Engines 3 &amp; 4 are the deliberate hedge against the Blair concentration risk.</p>
+    <div class="grid g2">
+      <div class="engine">
+        <div class="num-tag">Engine 01</div>
+        <h3>Client retainers &amp; rev-share</h3>
+        <p>Done-for-you social for creators &amp; agents. The current core.</p>
+        <div class="own">SMM (delivery) · Garrett (strategy) · per-client skills</div>
+      </div>
+      <div class="engine">
+        <div class="num-tag">Engine 02</div>
+        <h3>Owned audience</h3>
+        <p>Modern Marketing (Skool, $997 Premium) + the founder's personal brand.</p>
+        <div class="own">Garrett · modern-marketing, garrett-pb</div>
+      </div>
+      <div class="engine">
+        <div class="num-tag">Engine 03</div>
+        <h3>Ekko Archive — productized</h3>
+        <p>Voice Map (free) → $799 Content Engine Report → $3,497 Blueprint.</p>
+        <div class="own">Garrett · 90-Day Focus System</div>
+      </div>
+      <div class="engine">
+        <div class="num-tag">Engine 04</div>
+        <h3>Yeah You podcast</h3>
+        <p>A sales engine, not a content business — every outro is a Voice Map CTA into Ekko.</p>
+        <div class="own">Garrett · 90-Day Focus System</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">What could break it → what we do about it</p>
+    <h2>Risk register</h2>
+    <div class="grid" style="gap:12px;">
+      <div class="risk high">
+        <div class="r-title">Blair = 66% of revenue</div>
+        <span class="sev high">High</span>
+        <div class="r-fix">Land 2–3 retainers · grow Ekko + podcast engines · enforce the 40% concentration ceiling.</div>
+      </div>
+      <div class="risk high">
+        <div class="r-title">Access lives on the founder's personal Gmail</div>
+        <span class="sev high">High</span>
+        <div class="r-fix">Migrate to a Meta Business Portfolio owned by info@retmediaagency.com; SMM gets task-level, not admin.</div>
+      </div>
+      <div class="risk med">
+        <div class="r-title">No SMM = founder is the bottleneck</div>
+        <span class="sev med">Med</span>
+        <div class="r-fix">Close the SMM hire; grant trusted publishing rights once QC is proven.</div>
+      </div>
+      <div class="risk med">
+        <div class="r-title">Xander trial may not convert</div>
+        <span class="sev med">Med</span>
+        <div class="r-fix">Editor comp is contingent on the close; re-eval end of Aug; don't overhire ahead of revenue.</div>
+      </div>
+      <div class="risk low">
+        <div class="r-title">A/R slippage — Paulo $900 overdue</div>
+        <span class="sev low">Low</span>
+        <div class="r-fix">30-day collections cadence via the ret-media-accountant skill.</div>
+      </div>
+      <div class="risk low">
+        <div class="r-title">Shiny-object churn</div>
+        <span class="sev low">Low</span>
+        <div class="r-fix">90-Day Focus System — Parking Lot + Paused list keep focus on what's in motion.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>RET MEDIA LLC · Organizational Operating System</span>
+    <span>Sources: QuickBooks · Notion CRM · 90-Day Focus System · skill library</span>
+    <span>Reconciled 2026-08-13</span>
+  </footer>
+</div>
