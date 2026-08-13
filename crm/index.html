@@ -26,7 +26,7 @@
   :focus-visible{outline:2px solid var(--aqua);outline-offset:2px;border-radius:6px}
   .wrap{max-width:1320px;margin:0 auto;padding:0 20px 70px}
 
-  /* ---------- sticky header + tabs ---------- */
+  /* header + tabs */
   header{position:sticky;top:0;z-index:40;backdrop-filter:blur(10px);
     background:linear-gradient(180deg,rgba(10,22,36,.95),rgba(10,22,36,.82));
     border-bottom:1px solid var(--line);margin:0 -20px;padding:0 20px}
@@ -40,16 +40,19 @@
   .clock b{color:var(--sand)}
   .tabs{display:flex;gap:4px;overflow-x:auto;width:100%;padding-top:10px}
   .tab{background:none;border:none;color:var(--dim);font-size:13px;font-weight:700;letter-spacing:.4px;
-    padding:9px 15px;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:.15s}
+    padding:9px 15px;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;border-radius:8px 8px 0 0}
   .tab:hover{color:var(--ink)}
   .tab.active{color:var(--aqua2);border-bottom-color:var(--aqua)}
+  .tab.dragging{opacity:.4}
+  .tab.tabdrop{background:#16324a}
   .tab .b{background:#0a1a29;border:1px solid var(--line);border-radius:999px;padding:0 6px;font-size:10.5px;margin-left:5px}
 
   .view{display:none;animation:fade .25s} .view.on{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
-  /* ---------- KPIs ---------- */
+  /* KPIs */
   .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}
+  .kpis.four{grid-template-columns:repeat(4,1fr)}
   .kpi{background:var(--deck);border:1px solid var(--line);border-radius:15px;padding:13px 15px;position:relative;overflow:hidden}
   .kpi .k{font-size:10.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim)}
   .kpi .v{font-size:24px;font-weight:800;margin-top:5px}
@@ -59,34 +62,49 @@
   .kpi.money .edge{background:var(--sand)} .kpi.win .edge{background:var(--green)}
   .kpi.warn .edge{background:var(--coral)} .kpi.pipe .edge{background:var(--aqua)} .kpi.clients .edge{background:var(--sky)}
 
-  .head{display:flex;align-items:baseline;gap:12px;margin:26px 4px 12px}
+  .head{display:flex;align-items:baseline;gap:12px;margin:26px 4px 12px;flex-wrap:wrap}
   .head h2{font-size:13px;letter-spacing:2.4px;text-transform:uppercase;margin:0}
   .head .tag{font-size:12px;color:var(--faint)}
   .head .rt{margin-left:auto;display:flex;gap:8px}
 
-  /* ---------- Sets / tasks ---------- */
+  /* Goals */
+  .goals{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+  .goal{background:var(--deck);border:1px solid var(--line);border-radius:13px;padding:13px 15px}
+  .goal .gt{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:700;margin-bottom:8px}
+  .goal .gt .gv{color:var(--aqua2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .gbar{height:9px;border-radius:999px;background:#0a1a29;border:1px solid var(--line);overflow:hidden}
+  .gbar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--aqua),#1f9fd6);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .goal.done .gbar>i{background:linear-gradient(90deg,var(--green),#37c0ff)}
+  .goal .gs{font-size:10.5px;color:var(--faint);margin-top:6px}
+
+  /* tasks */
   .sets{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-  .set{display:flex;gap:11px;align-items:flex-start;background:var(--deck);border:1px solid var(--line);border-radius:12px;padding:11px 13px;transition:.15s}
+  #sets{grid-template-columns:1fr}
+  .set{display:flex;gap:11px;align-items:flex-start;background:var(--deck);border:1px solid var(--line);border-radius:12px;padding:11px 13px;transition:border-color .15s}
   .set.done{opacity:.5}
+  .set.dragging{opacity:.4}
+  .set.setdrop{border-color:var(--aqua)}
+  .grip{color:var(--faint);cursor:grab;font-size:14px;line-height:1;margin-top:3px;flex:none;user-select:none}
   .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--aqua);flex:none;cursor:pointer;display:grid;place-items:center;font-size:13px;color:transparent;margin-top:1px}
   .set.done .box{background:var(--green);border-color:var(--green);color:#04180f}
   .set .t{font-weight:650;font-size:13.5px} .set.done .t{text-decoration:line-through}
   .set .d{font-size:11.5px;color:var(--faint);margin-top:2px}
-  .set .sx{margin-left:auto;display:flex;gap:4px;opacity:.5;transition:.15s}
+  .set .sx{margin-left:auto;display:flex;gap:4px;opacity:.55;transition:.15s}
   .set:hover .sx,.set:focus-within .sx{opacity:1}
   .ic{background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;width:26px;height:26px;cursor:pointer;font-size:12px;display:grid;place-items:center;flex:none}
   .ic:hover{color:var(--ink);border-color:var(--line2)}
+  .ic:disabled{opacity:.3;cursor:default}
   .pill{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:7px;vertical-align:middle;white-space:nowrap}
   .pill.over{background:#3a1a18;color:var(--coral);border:1px solid #5e2a26}
   .pill.due{background:#3a2f16;color:var(--sand);border:1px solid #5e4c22}
   .pill.upc{background:#132f2c;color:var(--aqua2);border:1px solid #1f5049}
   .pill.none{background:#182a3a;color:var(--faint);border:1px solid var(--line)}
 
-  /* ---------- Pipeline ---------- */
+  /* pipeline */
   .hint{font-size:12px;color:var(--faint);background:var(--deck);border:1px dashed var(--line2);border-radius:10px;padding:9px 13px;margin-bottom:12px}
   .boardscroll{overflow-x:auto;padding-bottom:6px}
   .board{display:grid;grid-template-columns:repeat(5,minmax(214px,1fr));gap:12px;min-width:980px}
-  .lane{background:linear-gradient(180deg,var(--deck),#0d2032);border:1px solid var(--line);border-radius:15px;padding:11px;min-height:120px;transition:.15s}
+  .lane{background:linear-gradient(180deg,var(--deck),#0d2032);border:1px solid var(--line);border-radius:15px;padding:11px;min-height:120px;transition:border-color .15s}
   .lane.drop{border-color:var(--aqua);background:linear-gradient(180deg,#123746,#0d2836)}
   .lane .lh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
   .lane .lh b{font-size:12.5px}.lane .lh .surf{font-size:10.5px;color:var(--faint)}
@@ -94,7 +112,7 @@
   .lane.won{background:linear-gradient(180deg,#123a34,#0e2b28);border-color:#1d5b4f}
   .deal{background:var(--deck2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-bottom:9px;position:relative;cursor:grab}
   .deal:hover{border-color:var(--line2)}
-  .deal.drag{opacity:.4}
+  .deal.dragging{opacity:.4}
   .deal .nm{font-weight:750;font-size:13.5px}
   .deal .co{font-size:11px;color:var(--dim);margin-top:1px}
   .deal .mt{font-size:11px;color:var(--faint);margin-top:5px;line-height:1.4}
@@ -108,13 +126,12 @@
   .fu.due{background:#3a2f16;color:var(--sand);border-color:#5e4c22}
   .fu.over{background:#3a1a18;color:var(--coral);border-color:#5e2a26}
 
-  /* alert banner */
   .alert{display:flex;align-items:center;gap:10px;background:#3a2f16;border:1px solid #5e4c22;color:var(--sand);
     border-radius:12px;padding:11px 14px;margin-top:16px;font-size:13px;font-weight:650;cursor:pointer}
   .alert:hover{filter:brightness(1.06)}
   .alert .go{margin-left:auto;font-weight:800}
 
-  /* Lost / cold shelf */
+  /* lost shelf */
   .lostsec{margin-top:16px;background:var(--deck);border:1px solid var(--line);border-radius:14px;padding:12px 15px}
   .lostsec .lhh{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
   .lostsec h3{margin:0;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--dim)}
@@ -129,7 +146,7 @@
   .lostcard .mt{font-size:11px;color:var(--faint);margin-top:5px;line-height:1.4}
   .lostcard .ctl{display:flex;gap:5px;margin-top:9px}
 
-  /* ---------- Clients ---------- */
+  /* clients */
   .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
   .client{background:linear-gradient(150deg,var(--deck2),#0f2133);border:1px solid var(--line);border-radius:15px;padding:14px;position:relative;overflow:hidden}
   .client .rib{position:absolute;top:0;right:0;font-size:9.5px;font-weight:800;letter-spacing:.7px;padding:3px 10px;border-bottom-left-radius:11px;text-transform:uppercase}
@@ -142,17 +159,17 @@
   .client .cm{font-size:16px;font-weight:800;color:var(--green);margin-top:4px}
   .client .cx{display:flex;gap:5px;margin-top:10px}
 
-  /* ---------- Milestones ---------- */
+  /* milestones */
   .miles{display:flex;gap:11px;overflow-x:auto;padding-bottom:8px}
-  .mile{flex:0 0 156px;background:var(--deck);border:1px solid var(--line);border-radius:13px;padding:12px;text-align:center}
+  .mile{flex:0 0 158px;background:var(--deck);border:1px solid var(--line);border-radius:13px;padding:12px;text-align:center}
   .mile.off{opacity:.32;filter:grayscale(.6)}
   .mile .mi{font-size:23px}.mile .mn{font-weight:750;font-size:12px;margin-top:5px}.mile .md{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.3}
 
-  /* ---------- Money ---------- */
+  /* money */
   .panel{background:var(--deck);border:1px solid var(--line);border-radius:15px;padding:16px 18px}
   .chart{display:flex;align-items:flex-end;gap:10px;height:150px;margin-top:6px}
   .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
-  .bar .col{width:100%;max-width:34px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--aqua),#1f8fb0);transition:.2s}
+  .bar .col{width:100%;max-width:34px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--aqua),#1f8fb0)}
   .bar:hover .col{filter:brightness(1.15)}
   .bar .bm{font-size:10px;color:var(--faint)} .bar .bv{font-size:10px;color:var(--dim);font-weight:700}
   table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
@@ -164,19 +181,33 @@
   .twocol{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:14px}
 
   /* buttons */
-  .btn{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#04231f;border:none;border-radius:10px;padding:8px 14px;font-weight:750;cursor:pointer;font-size:12.5px;transition:.15s}
+  .btn{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#04231f;border:none;border-radius:10px;padding:8px 14px;font-weight:750;cursor:pointer;font-size:12.5px;transition:filter .15s}
   .btn:hover{filter:brightness(1.07)}
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
   .btn.sm{padding:5px 11px;font-size:12px}
   .btn.danger{background:transparent;border:1px solid #6a2a2a;color:var(--coral)}
 
   /* modal */
-  #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(5,12,20,.72);padding:18px}
-  #modal .m{width:100%;max-width:440px;background:var(--deck);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+  #modal{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(5,12,20,.72);padding:18px;overflow:auto}
+  #modal .m{width:100%;max-width:440px;background:var(--deck);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);margin:auto}
   #modal h3{margin:0 0 12px} label{display:block;font-size:11.5px;color:var(--dim);margin:10px 0 4px;letter-spacing:.3px}
   input,select,textarea{width:100%;background:#081521;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 11px;font-size:14px;font-family:inherit}
   .row2{display:flex;gap:10px}.row2>div{flex:1}
-  .mact{display:flex;gap:9px;margin-top:16px;align-items:center}
+  .mact{display:flex;gap:9px;margin-top:16px;align-items:center;flex-wrap:wrap}
+
+  /* mini calendar */
+  .cal{background:#0b1a29;border:1px solid var(--line);border-radius:12px;padding:10px}
+  .calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .calh b{font-size:13px}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .calgrid .dow{font-size:9.5px;color:var(--faint);text-align:center;padding:2px 0}
+  .calgrid .day{aspect-ratio:1;display:grid;place-items:center;font-size:12.5px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+  .calgrid .day:hover{background:#16324a}
+  .calgrid .day.today{border-color:var(--line2)}
+  .calgrid .day.sel{background:linear-gradient(135deg,var(--aqua),#1f9fd6);color:#04231f;font-weight:800}
+  .calfoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .calsel{font-size:11.5px;color:var(--aqua2);font-weight:700}
+  .calclear{font-size:11px;color:var(--sky);cursor:pointer}
 
   #toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .toast{background:#0f2536;border:1px solid var(--aqua);border-radius:12px;padding:10px 14px;font-weight:700;font-size:13px;box-shadow:var(--shadow);animation:tin .3s}
@@ -192,13 +223,11 @@
 
   .foot{color:var(--faint);font-size:11px;text-align:center;margin-top:34px;line-height:1.7}
 
-  .kpis.four{grid-template-columns:repeat(4,1fr)}
   @media(max-width:900px){
     .kpis,.kpis.four{grid-template-columns:repeat(2,1fr)}
-    .sets{grid-template-columns:1fr}
+    .sets,.goals{grid-template-columns:1fr}
     .twocol{grid-template-columns:1fr}
     .clock{display:none}
-    .head{flex-wrap:wrap}
   }
 </style>
 </head>
@@ -208,33 +237,30 @@
   <div class="hbar">
     <div class="brand"><div class="logo">🌊</div>
       <div><h1>RET&nbsp;MEDIA</h1><div class="sub">Command&nbsp;Deck</div></div></div>
-    <div class="clock"><div id="clockDate">—</div><div id="clockFocus" class="faint" style="margin-top:2px"></div></div>
+    <div class="clock"><div id="clockDate"></div><div id="clockFocus" class="faint" style="margin-top:2px"></div></div>
   </div>
   <div class="hbar" style="padding-top:0">
-    <div class="tabs" id="tabs">
-      <button class="tab active" data-v="overview">Overview</button>
-      <button class="tab" data-v="pipeline">Pipeline <span class="b" id="tabPipe">0</span></button>
-      <button class="tab" data-v="clients">Clients <span class="b" id="tabCli">0</span></button>
-      <button class="tab" data-v="tasks">Tasks <span class="b" id="tabTask">0</span></button>
-      <button class="tab" data-v="money">Money</button>
-    </div>
+    <div class="tabs" id="tabs"></div>
   </div>
 </header>
 
 <div class="wrap">
 
-  <!-- ========= OVERVIEW ========= -->
+  <!-- OVERVIEW -->
   <section class="view on" id="v-overview">
     <div id="fuAlert"></div>
     <div class="kpis">
-      <div class="kpi money"><div class="edge"></div><div class="k">Recurring / mo</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
+      <div class="kpi money"><div class="edge"></div><div class="k">Monthly Rev (est)</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
       <div class="kpi win"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="ytd">$0</div><div class="s" id="ytdSub"></div></div>
       <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="ar">$0</div><div class="s" id="arSub"></div></div>
       <div class="kpi pipe"><div class="edge"></div><div class="k">Open Pipeline</div><div class="v num" id="pipe">$0</div><div class="s" id="pipeSub"></div></div>
       <div class="kpi clients"><div class="edge"></div><div class="k">Active Clients</div><div class="v num" id="cli">0</div><div class="s">on the roster</div></div>
     </div>
 
-    <div class="head"><h2>Today's Sets</h2><span class="tag">what to ride today</span>
+    <div class="head"><h2>Goals</h2><span class="tag">where you're headed</span></div>
+    <div class="goals" id="goals"></div>
+
+    <div class="head"><h2>Today's Sets</h2><span class="tag">next few, by date</span>
       <div class="rt"><button class="btn sm ghost" onclick="setTab('tasks')">See all →</button></div></div>
     <div class="sets" id="setsMini"></div>
 
@@ -242,42 +268,44 @@
       <div class="rt"><button class="btn sm ghost" onclick="setTab('pipeline')">Open board →</button></div></div>
     <div class="kpis" id="pipeSnap" style="margin-top:0"></div>
 
-    <div class="head"><h2>Milestones</h2><span class="tag">banked wins</span>
+    <div class="head"><h2>Milestones</h2><span class="tag">banked wins &amp; stretch goals</span>
       <div class="rt"><button class="btn sm ghost" onclick="rideTheWave('the stoke')">🏄 Ride again</button></div></div>
     <div class="miles" id="miles"></div>
   </section>
 
-  <!-- ========= PIPELINE ========= -->
+  <!-- PIPELINE -->
   <section class="view" id="v-pipeline">
-    <div class="head"><h2>The Pipeline</h2><span class="tag">drag between lanes · or use ◀ ▶ · tap ✎ to edit</span>
+    <div class="head"><h2>The Pipeline</h2><span class="tag">drag between lanes, or use the arrows</span>
       <div class="rt"><button class="btn sm" onclick="editDeal()">＋ New lead</button></div></div>
     <div class="hint">💡 <b>Drag a card</b> to any lane, tap <b>◀ ▶</b> to nudge a stage, or tap <b>✎</b> to edit, set a <b>follow-up date</b>, or mark it <b>Lost</b>. Land one in <b>Won</b> and catch the wave 🤙</div>
     <div class="boardscroll"><div class="board" id="board"></div></div>
     <div id="lostWrap"></div>
   </section>
 
-  <!-- ========= CLIENTS ========= -->
+  <!-- CLIENTS -->
   <section class="view" id="v-clients">
     <div class="head"><h2>Your Roster</h2><span class="tag" id="rosterSub"></span>
       <div class="rt"><button class="btn sm" onclick="editClient()">＋ Add client</button></div></div>
     <div class="cgrid" id="roster"></div>
   </section>
 
-  <!-- ========= TASKS ========= -->
+  <!-- TASKS -->
   <section class="view" id="v-tasks">
     <div class="head"><h2>Today's Sets</h2><span class="tag" id="taskSub"></span>
-      <div class="rt"><button class="btn sm" onclick="editSet()">＋ Add a set</button>
+      <div class="rt"><button class="btn sm" onclick="editSet()">＋ Add a task</button>
+      <button class="btn sm ghost" onclick="sortSetsByDate()">Sort by date</button>
       <button class="btn sm ghost" onclick="clearDone()">Clear finished</button></div></div>
+    <div class="hint">💡 <b>Drag</b> a task by the ⠿ handle, or use <b>↑ ↓</b>, to set your own order. Tap <b>✎</b> to edit the task or its due date on a mini calendar.</div>
     <div class="sets" id="sets"></div>
   </section>
 
-  <!-- ========= MONEY ========= -->
+  <!-- MONEY -->
   <section class="view" id="v-money">
     <div class="kpis four">
       <div class="kpi win"><div class="edge"></div><div class="k">Collected 2026</div><div class="v num" id="mCollected">$0</div><div class="s">paid to date</div></div>
-      <div class="kpi money"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="mInvoiced">$0</div><div class="s">Jan–Aug</div></div>
+      <div class="kpi money"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="mInvoiced">$0</div><div class="s">Jan to Aug</div></div>
       <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="mAr">$0</div><div class="s">unpaid now</div></div>
-      <div class="kpi pipe"><div class="edge"></div><div class="k">Recurring / mo</div><div class="v num" id="mMrr">$0</div><div class="s">auto-billing</div></div>
+      <div class="kpi pipe"><div class="edge"></div><div class="k">Auto-billing / mo</div><div class="v num" id="mRecur">$0</div><div class="s">Paulo + Tara</div></div>
     </div>
 
     <div class="head"><h2>Monthly Invoiced</h2><span class="tag">RET MEDIA LLC · 2026</span></div>
@@ -302,7 +330,7 @@
   </section>
 
   <div class="foot">
-    RET MEDIA LLC · seeded from Notion CRM + QuickBooks + Calendar/Gmail on 2026-08-13.<br>
+    RET MEDIA LLC · seeded from Notion CRM, QuickBooks, Calendar and Gmail on 2026-08-13.<br>
     Every move saves in this browser. Say "refresh my CRM data" to Claude to re-pull live numbers.
   </div>
 </div>
@@ -319,37 +347,36 @@
    ============================================================ */
 const SEED = {
   clients:[
-    {name:"Blair Conklin", em:"🏄", tier:"anchor",   svc:"TikTok · FB Reels · YouTube shorts", deal:"35% revenue split", mrr:2400, variable:true},
+    {name:"Blair Conklin", em:"🏄", tier:"anchor",   svc:"TikTok, FB Reels, YouTube shorts", deal:"35% revenue split", mrr:2400, variable:true},
     {name:"Shane Dorian",  em:"🌊", tier:"anchor",   svc:"Skool community + surf-fitness course", deal:"$5k + 18% split + $100/mo", mrr:2600, variable:true},
     {name:"Foreign Waters",em:"🥤", tier:"growth",   svc:"TikTok Shop + UGC creator army (Gianni)", deal:"Contract + rev share", mrr:1500, variable:true},
-    {name:"Xander Budnick",em:"🎣", tier:"growth",   svc:"Clips / repurposing channel", deal:"30-day trial → 3–5k/mo", mrr:0, variable:true},
-    {name:"Paulo Prietto", em:"🏡", tier:"retainer", svc:"Instagram management 2x/week", deal:"$900/mo · recurring", mrr:900},
-    {name:"Tara Bunker",   em:"🔑", tier:"retainer", svc:"Instagram management + website", deal:"$900/mo · recurring", mrr:900},
+    {name:"Xander Budnick",em:"🎣", tier:"growth",   svc:"Clips and repurposing channel", deal:"30-day trial, then 3 to 5k/mo", mrr:0, variable:true},
+    {name:"Paulo Prietto", em:"🏡", tier:"retainer", svc:"Instagram management 2x/week", deal:"$900/mo recurring", mrr:900},
+    {name:"Tara Bunker",   em:"🔑", tier:"retainer", svc:"Instagram management + website", deal:"$900/mo recurring", mrr:900},
   ],
   deals:[
-    {name:"Chosen Advisory", co:"", stage:"lineup",  value:5000, whale:true, fu:"2026-08-15", note:"BIG WHALE — top priority"},
+    {name:"Chosen Advisory", co:"", stage:"lineup",  value:5000, whale:true, fu:"2026-08-15", note:"BIG WHALE, top priority"},
     {name:"ADAS Globus",     co:"Smit Shah", stage:"dropin", value:2500, fu:"2026-08-14", note:"Marketing + consulting arrangement"},
-    {name:"Mario Kalpou",    co:"Man Eats Wild", stage:"paddle", value:1500, fu:"2026-08-17", note:"Shane referral · TV host building brand"},
-    {name:"Kill Tony",       co:"", stage:"lost", value:3000, note:"Went cold — agent never emailed back"},
+    {name:"Mario Kalpou",    co:"Man Eats Wild", stage:"paddle", value:1500, fu:"2026-08-17", note:"Shane referral, TV host building brand"},
+    {name:"Kill Tony",       co:"", stage:"lost", value:3000, note:"Went cold, agent never emailed back"},
     {name:"Steve Ruff",      co:"Mason Ho", stage:"paddle", value:1500, fu:"2026-08-18", note:"Athlete social management"},
-    {name:"Dylan Graves",    co:"", stage:"lineup", value:1200, note:"YT Shorts / TikTok repurposing"},
+    {name:"Dylan Graves",    co:"", stage:"lineup", value:1200, note:"YouTube Shorts and TikTok repurposing"},
     {name:"Recall Masters",  co:"", stage:"lineup", value:1500, note:""},
-    {name:"Larry",           co:"", stage:"lineup", value:900,  fu:"2026-08-15", note:"Tara Bunker referral — waiting on text"},
+    {name:"Larry",           co:"", stage:"lineup", value:900,  fu:"2026-08-15", note:"Tara Bunker referral, waiting on text"},
     {name:"Tom",             co:"", stage:"set", value:1000, fu:"2026-08-19", note:"Wants to talk soon"},
     {name:"1Rod1ReelFishing",co:"", stage:"lineup", value:1000, note:""},
     {name:"Predictive History",co:"",stage:"lineup", value:1000, note:""},
   ],
   sets:[
-    {t:"Call ADAS Globus — Smit Shah", d:"5:30pm Warsaw · commercial arrangement", due:"2026-08-14"},
-    {t:"Review social-media-manager applicants", d:"10+ replies in inbox from the LinkedIn post", due:"2026-08-14"},
-    {t:"Chase the whale — Chosen Advisory", d:"Highest-value deal in the pipe", due:"2026-08-15"},
-    {t:"Collect $4,900 outstanding", d:"Foreign Waters · Shane 0092 (paying now) · Paulo", due:"2026-08-15"},
+    {t:"Call ADAS Globus (Smit Shah)", d:"5:30pm Warsaw, commercial arrangement", due:"2026-08-14"},
+    {t:"Review social media manager applicants", d:"10+ replies from the LinkedIn post", due:"2026-08-14"},
+    {t:"Chase the whale: Chosen Advisory", d:"Highest-value deal in the pipe", due:"2026-08-15"},
+    {t:"Collect $4,900 outstanding", d:"Foreign Waters, Shane 0092 (paying now), Paulo", due:"2026-08-15"},
     {t:"Post rest of Blair's FB schedule", d:"Open task in Notion", due:"2026-08-16"},
-    {t:"Prep call with Mario Kalpou", d:"Man Eats Wild · Shane referral", due:"2026-08-17"},
+    {t:"Prep call with Mario Kalpou", d:"Man Eats Wild, Shane referral", due:"2026-08-17"},
     {t:"Finish Foreign Waters onboarding", d:"Euka + TikTok Shop access with Gianni", due:"2026-08-18"},
-    {t:"Work the 80-creator cold outreach", d:"Blast sent 8/11 · reply to any bites", due:"2026-08-20"},
+    {t:"Work the 80-creator cold outreach", d:"Blast sent 8/11, reply to any bites", due:"2026-08-20"},
   ],
-  // real QuickBooks invoices (2026)
   invoices:[
     {n:"0093", c:"Foreign Waters", d:"Aug 13", amt:1500, paid:false},
     {n:"0092", c:"Shane Dorian",   d:"Aug 10", amt:2500, paid:false},
@@ -370,7 +397,7 @@ const SEED = {
   monthly:[["Jan",5061],["Feb",2696],["Mar",1867],["Apr",3888],["May",2705],["Jun",5796],["Jul",2199],["Aug",6270]],
   recurring:[
     {c:"Paulo Prietto", amt:900, when:"8th monthly"},
-    {c:"Tara Bunker",   amt:900, when:"8th monthly · next 9/8"},
+    {c:"Tara Bunker",   amt:900, when:"8th monthly, next 9/8"},
   ],
 };
 
@@ -381,81 +408,132 @@ const STAGES=[
   {id:"dropin", label:"Negotiating", surf:"dropping in"},
   {id:"won",    label:"Won",         surf:"barreled 🤙"},
 ];
-const MILES=[
-  {ic:"🩸",n:"First Client",d:"Signed your first",on:()=>true},
-  {ic:"🤝",n:"Full Crew",d:"6 active clients",on:()=>S.clients.length>=6},
-  {ic:"💰",n:"$30K Year",d:"$30k invoiced 2026",on:()=>invoiced()>=30000},
-  {ic:"🔁",n:"Recurring Rev",d:"2 auto-billing retainers",on:()=>true},
-  {ic:"🐋",n:"Whale Hooked",d:"5-figure deal in pipe",on:()=>S.deals.some(d=>d.whale&&d.stage!=="won")},
-  {ic:"🌊",n:"First Barrel",d:"Close a deal here",on:()=>wonCount()>0},
-  {ic:"⭐️",n:"Big Month",d:"3 deals closed here",on:()=>wonCount()>=3},
+
+const TABS={
+  overview:{label:"Overview"},
+  pipeline:{label:"Pipeline", badge:()=>S.deals.filter(isActive).length},
+  clients :{label:"Clients",  badge:()=>S.clients.length},
+  tasks   :{label:"Tasks",    badge:()=>S.sets.filter(s=>!s.done).length},
+  money   :{label:"Money"},
+};
+const DEFAULT_TABORDER=["overview","pipeline","clients","tasks","money"];
+
+/* Goals tuned to current standing (targets ahead of where you are) */
+const GOALS=[
+  {n:"Grow to 10 clients",            cur:()=>S.clients.length, tgt:10, count:"clients"},
+  {n:"$12K per month revenue",        cur:()=>mrr(),            tgt:12000, money:true},
+  {n:"$50K invoiced in 2026",         cur:()=>invoiced(),       tgt:50000, money:true},
+  {n:"$3K per month auto-billing",    cur:()=>recurringTotal(), tgt:3000, money:true},
+  {n:"Close 3 deals on the board",    cur:()=>wonCount(),       tgt:3, count:"won"},
+  {n:"Keep $15K+ working in pipeline", cur:()=>pipeVal(),       tgt:15000, money:true},
 ];
 
-/* ---------- state (editable) ---------- */
-const LS="retmedia_deck_v5";
+/* Milestones: earned badges + stretch goals, all driven by live data */
+const MILES=[
+  {ic:"🩸",n:"First Client",     d:"Signed your first",           on:()=>S.clients.length>=1},
+  {ic:"🤝",n:"Six-Client Crew",  d:"6 active clients",            on:()=>S.clients.length>=6},
+  {ic:"🐋",n:"Whale in Sights",  d:"5-figure deal in the pipe",   on:()=>S.deals.some(d=>d.whale&&isActive(d))},
+  {ic:"🔁",n:"Recurring Revenue",d:"Auto-billing retainers live", on:()=>recurringTotal()>0},
+  {ic:"💰",n:"$30K Year",        d:"$30k invoiced in 2026",       on:()=>invoiced()>=30000},
+  {ic:"🌊",n:"First Barrel",     d:"Close a deal on the board",   on:()=>wonCount()>=1},
+  {ic:"🚀",n:"$50K Year",        d:"$50k invoiced in a year",     on:()=>invoiced()>=50000},
+  {ic:"👑",n:"$10K Month",       d:"$10k monthly revenue",        on:()=>mrr()>=10000},
+  {ic:"⭐",n:"Perfect Ten",      d:"10 clients on the roster",    on:()=>S.clients.length>=10},
+];
+
+/* ---------- state ---------- */
+const LS="retmedia_deck_v6";
 function seed(){return{
   clients:SEED.clients.map((c,i)=>({...c,id:"c"+i})),
   deals:SEED.deals.map((d,i)=>({...d,id:"d"+i})),
   sets:SEED.sets.map((s,i)=>({...s,id:"s"+i,done:false})),
-  tab:"overview",
+  tab:"overview", tabOrder:[...DEFAULT_TABORDER],
 };}
 let S=load();
-let lostOpen=false;
-function load(){try{const r=JSON.parse(localStorage.getItem(LS));if(r&&r.deals&&r.clients&&r.sets)return r;}catch(e){}return seed();}
+let lostOpen=false, CAL={y:2026,m:7,sel:""};
+function load(){try{const r=JSON.parse(localStorage.getItem(LS));
+  if(r&&r.deals&&r.clients&&r.sets){if(!r.tabOrder)r.tabOrder=[...DEFAULT_TABORDER];return r;}}catch(e){}
+  return seed();}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
-function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();render();}}
+function hardReset(){if(confirm("Reset the deck back to the seeded data?")){localStorage.removeItem(LS);S=load();renderTabs();render();}}
 
 /* ---------- derived ---------- */
 function wonCount(){return S.deals.filter(d=>d.stage==="won").length;}
 function isActive(d){return d.stage!=="won"&&d.stage!=="lost";}
 function mrr(){return S.clients.reduce((a,c)=>a+(+c.mrr||0),0);}
 function pipeVal(){return S.deals.filter(isActive).reduce((a,d)=>a+(+d.value||0),0);}
-function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-function fuMeta(fu){
-  if(!fu)return null;
-  const t=todayISO();
-  const cls=fu<t?"over":(fu===t?"due":"");
-  const [y,m,dd]=fu.split("-").map(Number);
-  const lab=new Date(y,m-1,dd).toLocaleDateString("en-US",{month:"short",day:"numeric"});
-  return {cls,lab,word:cls==="over"?"overdue":(cls==="due"?"today":lab)};
-}
-function dueFollowups(){const t=todayISO();return S.deals.filter(d=>isActive(d)&&d.fu&&d.fu<=t);}
 function invoiced(){return SEED.invoices.reduce((a,i)=>a+i.amt,0);}
 function collected(){return SEED.invoices.filter(i=>i.paid).reduce((a,i)=>a+i.amt,0);}
 function outstanding(){return SEED.invoices.filter(i=>!i.paid).reduce((a,i)=>a+i.amt,0);}
+function recurringTotal(){return SEED.recurring.reduce((a,r)=>a+(+r.amt||0),0);}
+function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function fuMeta(fu){if(!fu)return null;const t=todayISO();const cls=fu<t?"over":(fu===t?"due":"");
+  const [y,m,dd]=fu.split("-").map(Number);const lab=new Date(y,m-1,dd).toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  return {cls,lab,word:cls==="over"?"overdue":(cls==="due"?"today":lab)};}
+function dueFollowups(){const t=todayISO();return S.deals.filter(d=>isActive(d)&&d.fu&&d.fu<=t);}
 function fmt(n){return "$"+Math.round(n).toLocaleString();}
 function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function v(id){return (document.getElementById(id).value||"").trim();}
 
-/* ---------- tabs ---------- */
+/* ---------- tabs (clickable + drag to reorder) ---------- */
+function renderTabs(){
+  const host=document.getElementById("tabs");
+  host.innerHTML=S.tabOrder.map(id=>{const t=TABS[id];const b=t.badge?t.badge():null;
+    return `<button class="tab ${S.tab===id?"active":""}" draggable="true" data-v="${id}"
+      onclick="setTab('${id}')"
+      ondragstart="tabDragStart(event,'${id}')" ondragend="tabDragEnd(event)"
+      ondragover="event.preventDefault();this.classList.add('tabdrop')" ondragleave="this.classList.remove('tabdrop')"
+      ondrop="this.classList.remove('tabdrop');tabDrop(event,'${id}')">${t.label}${b!=null?`<span class="b">${b}</span>`:""}</button>`;
+  }).join("");
+}
+let tabDragId=null;
+function tabDragStart(e,id){tabDragId=id;e.dataTransfer.effectAllowed="move";e.currentTarget.classList.add("dragging");}
+function tabDragEnd(e){e.currentTarget.classList.remove("dragging");}
+function tabDrop(e,toId){e.preventDefault();if(!tabDragId||tabDragId===toId){tabDragId=null;return;}
+  const a=S.tabOrder;a.splice(a.indexOf(tabDragId),1);a.splice(a.indexOf(toId),0,tabDragId);
+  tabDragId=null;save();renderTabs();}
 function setTab(t){S.tab=t;save();
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.v===t));
   document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+t));
   window.scrollTo({top:0,behavior:"smooth"});}
-document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b)setTab(b.dataset.v);});
 
 /* ---------- clock ---------- */
 function tickClock(){
   const now=new Date();
-  const opts={weekday:"long",month:"short",day:"numeric",year:"numeric"};
-  document.getElementById("clockDate").innerHTML=now.toLocaleDateString("en-US",opts).replace(/, (\d{4})/," · <b>$1</b>");
-  const upcoming=S.sets.filter(s=>!s.done&&s.due).sort((a,b)=>a.due<b.due?-1:1)[0];
-  document.getElementById("clockFocus").textContent=upcoming?"Next up: "+upcoming.t+" ("+fuMeta(upcoming.due).word+")":"All caught up 🤙";
+  document.getElementById("clockDate").innerHTML=now.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric",year:"numeric"}).replace(/, (\d{4})/," · <b>$1</b>");
+  const up=S.sets.filter(s=>!s.done&&s.due).sort((a,b)=>a.due<b.due?-1:1)[0];
+  document.getElementById("clockFocus").textContent=up?"Next up: "+up.t+" ("+fuMeta(up.due).word+")":"All caught up 🤙";
 }
 
-/* ---------- toast ---------- */
+/* ---------- toast + modal ---------- */
 function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;
   document.getElementById("toasts").appendChild(t);
   setTimeout(()=>{t.style.transition=".4s";t.style.opacity=0;t.style.transform="translateY(8px)";},1600);
   setTimeout(()=>t.remove(),2100);}
-
-/* ---------- modal ---------- */
 function openModal(h){document.getElementById("modalBody").innerHTML=h;document.getElementById("modal").style.display="grid";}
 function closeModal(){document.getElementById("modal").style.display="none";}
 document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
-/* ---------- DEALS: add / edit / delete / move ---------- */
+/* ---------- mini calendar (used by task + deal date pickers) ---------- */
+function openCal(iso){const b=iso?new Date(iso+"T00:00:00"):new Date();CAL={y:b.getFullYear(),m:b.getMonth(),sel:iso||""};renderCal();}
+function calNav(d){let m=CAL.m+d,y=CAL.y;if(m<0){m=11;y--;}if(m>11){m=0;y++;}CAL.m=m;CAL.y=y;renderCal();}
+function calPick(iso){CAL.sel=iso;const el=document.getElementById("x_date");if(el)el.value=iso;renderCal();}
+function renderCal(){
+  const box=document.getElementById("calBox");if(!box)return;
+  const {y,m,sel}=CAL, first=new Date(y,m,1), start=first.getDay(), days=new Date(y,m+1,0).getDate(), t=todayISO();
+  let cells="";for(let i=0;i<start;i++)cells+="<div></div>";
+  for(let d=1;d<=days;d++){const iso=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    cells+=`<div class="day ${iso===sel?"sel":""} ${iso===t?"today":""}" onclick="calPick('${iso}')">${d}</div>`;}
+  const selLab=sel?new Date(sel+"T00:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):"No date set";
+  box.innerHTML=`<div class="calh"><button type="button" class="ic" onclick="calNav(-1)">◀</button>
+      <b>${first.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</b>
+      <button type="button" class="ic" onclick="calNav(1)">▶</button></div>
+    <div class="calgrid">${["S","M","T","W","T","F","S"].map(x=>`<div class="dow">${x}</div>`).join("")}${cells}</div>
+    <div class="calfoot"><span class="calsel">${selLab}</span><span class="calclear" onclick="calPick('')">Clear</span></div>`;
+}
+
+/* ---------- DEALS ---------- */
 function editDeal(id){
   const d=id?S.deals.find(x=>x.id===id):{name:"",co:"",value:"",stage:"lineup",note:"",fu:""};
   const opts=STAGES.concat([{id:"lost",label:"Lost",surf:"went cold"}]);
@@ -463,61 +541,62 @@ function editDeal(id){
     <label>Name</label><input id="x_n" value="${esc(d.name)}" placeholder="Person or business">
     <div class="row2"><div><label>Company</label><input id="x_c" value="${esc(d.co||"")}"></div>
     <div><label>Deal value ($)</label><input id="x_v" type="number" value="${d.value||""}" placeholder="1500"></div></div>
-    <div class="row2"><div><label>Stage</label><select id="x_s">${opts.map(s=>`<option value="${s.id}" ${d.stage===s.id?"selected":""}>${s.label} · ${s.surf}</option>`).join("")}</select></div>
-    <div><label>Follow-up date</label><input id="x_fu" type="date" value="${d.fu||""}"></div></div>
-    <label>Note</label><input id="x_no" value="${esc(d.note||"")}" placeholder="context / next step">
+    <label>Stage</label><select id="x_s">${opts.map(s=>`<option value="${s.id}" ${d.stage===s.id?"selected":""}>${s.label} · ${s.surf}</option>`).join("")}</select>
+    <label>Note</label><input id="x_no" value="${esc(d.note||"")}" placeholder="context or next step">
+    <label>Follow-up date</label><input type="hidden" id="x_date" value="${d.fu||""}"><div class="cal" id="calBox"></div>
     <div class="mact"><button class="btn" onclick="saveDeal('${id||""}')">${id?"Save":"Add to lineup"}</button>
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
     ${id?`<button class="btn danger" style="margin-left:auto" onclick="delDeal('${id}')">Delete</button>`:""}</div>`);
-  setTimeout(()=>document.getElementById("x_n").focus(),50);
+  openCal(d.fu||"");setTimeout(()=>document.getElementById("x_n").focus(),50);
 }
-function saveDeal(id){
-  const n=v("x_n");if(!n){toast("Name required");return;}
-  const data={name:n,co:v("x_c"),value:+v("x_v")||0,stage:v("x_s"),note:v("x_no"),fu:v("x_fu")};
+function saveDeal(id){const n=v("x_n");if(!n){toast("Name required");return;}
+  const data={name:n,co:v("x_c"),value:+v("x_v")||0,stage:v("x_s"),note:v("x_no"),fu:v("x_date")};
   if(id){const d=S.deals.find(x=>x.id===id);const wasWon=d.stage==="won";Object.assign(d,data);closeModal();save();render();
     if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.stage==="lost"?n+" moved to Lost":"Saved");}
   else{S.deals.unshift({id:"d"+Date.now(),whale:false,...data});closeModal();save();render();
-    if(data.stage==="won")rideTheWave(n);else toast("Added "+n);}
-}
+    if(data.stage==="won")rideTheWave(n);else toast("Added "+n);}}
 function delDeal(id){S.deals=S.deals.filter(x=>x.id!==id);closeModal();save();render();toast("Deleted");}
 function reviveDeal(id){const d=S.deals.find(x=>x.id===id);if(!d)return;d.stage="lineup";save();render();toast(d.name+" back in the lineup");}
-function moveDeal(id,dir){
-  const d=S.deals.find(x=>x.id===id);if(!d)return;
-  const i=STAGES.findIndex(s=>s.id===d.stage)+dir;
-  if(i<0||i>=STAGES.length)return;
+function moveDeal(id,dir){const d=S.deals.find(x=>x.id===id);if(!d)return;
+  const i=STAGES.findIndex(s=>s.id===d.stage)+dir;if(i<0||i>=STAGES.length)return;
   const wasWon=d.stage==="won";d.stage=STAGES[i].id;save();render();
-  if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES[i].label);
-}
-function dropDeal(id,stage){
-  const d=S.deals.find(x=>x.id===id);if(!d||d.stage===stage)return;
+  if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES[i].label);}
+function dropDeal(id,stage){const d=S.deals.find(x=>x.id===id);if(!d||d.stage===stage)return;
   const wasWon=d.stage==="won";d.stage=stage;save();render();
-  if(stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES.find(s=>s.id===stage).label);
-}
+  if(stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES.find(s=>s.id===stage).label);}
 
-/* ---------- SETS ---------- */
+/* ---------- SETS (tasks): edit, reorder ---------- */
 function toggleSet(id){const s=S.sets.find(x=>x.id===id);if(!s)return;s.done=!s.done;save();render();}
 function editSet(id){
   const s=id?S.sets.find(x=>x.id===id):{t:"",d:"",due:""};
   openModal(`<h3>${id?"Edit task":"Add a task"}</h3>
-    <label>Task</label><input id="x_t" value="${esc(s.t)}" placeholder="Follow up with…">
-    <label>Detail</label><input id="x_d" value="${esc(s.d||"")}" placeholder="context / next step">
-    <label>Due date</label><input id="x_due" type="date" value="${s.due||""}">
+    <label>Task</label><input id="x_t" value="${esc(s.t)}" placeholder="Follow up with...">
+    <label>Detail</label><input id="x_d" value="${esc(s.d||"")}" placeholder="context or next step">
+    <label>Due date</label><input type="hidden" id="x_date" value="${s.due||""}"><div class="cal" id="calBox"></div>
     <div class="mact"><button class="btn" onclick="saveSet('${id||""}')">${id?"Save":"Add"}</button>
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
     ${id?`<button class="btn danger" style="margin-left:auto" onclick="delSet('${id}')">Delete</button>`:""}</div>`);
-  setTimeout(()=>document.getElementById("x_t").focus(),50);
+  openCal(s.due||"");setTimeout(()=>document.getElementById("x_t").focus(),50);
 }
 function saveSet(id){const t=v("x_t");if(!t){toast("Task required");return;}
-  const data={t,d:v("x_d"),due:v("x_due")};
+  const data={t,d:v("x_d"),due:v("x_date")};
   if(id)Object.assign(S.sets.find(x=>x.id===id),data);
   else S.sets.push({id:"s"+Date.now(),done:false,...data});
   closeModal();save();render();}
 function delSet(id){S.sets=S.sets.filter(x=>x.id!==id);closeModal();save();render();toast("Deleted");}
 function clearDone(){S.sets=S.sets.filter(s=>!s.done);save();render();}
+function sortSetsByDate(){S.sets.sort((a,b)=>(a.due||"9999-99-99")<(b.due||"9999-99-99")?-1:1);save();render();toast("Sorted by date");}
+function moveSet(id,dir){const a=S.sets,i=a.findIndex(x=>x.id===id),j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];save();render();}
+let setDragId=null;
+function setDragStart(e,id){setDragId=id;e.dataTransfer.effectAllowed="move";e.currentTarget.classList.add("dragging");}
+function setDragEnd(e){e.currentTarget.classList.remove("dragging");}
+function setDrop(e,toId){e.preventDefault();if(!setDragId||setDragId===toId){setDragId=null;return;}
+  const a=S.sets;const it=a.splice(a.findIndex(x=>x.id===setDragId),1)[0];a.splice(a.findIndex(x=>x.id===toId),0,it);
+  setDragId=null;save();render();}
 
 /* ---------- CLIENTS ---------- */
 function editClient(id){
-  const c=id?S.clients.find(x=>x.id===id):{name:"",em:"⭐️",tier:"retainer",svc:"",deal:"",mrr:""};
+  const c=id?S.clients.find(x=>x.id===id):{name:"",em:"⭐",tier:"retainer",svc:"",deal:"",mrr:""};
   openModal(`<h3>${id?"Edit client":"Add client"}</h3>
     <div class="row2"><div><label>Emoji</label><input id="x_em" value="${esc(c.em)}" maxlength="4"></div>
     <div style="flex:3"><label>Name</label><input id="x_n" value="${esc(c.name)}"></div></div>
@@ -525,14 +604,14 @@ function editClient(id){
     <label>Deal terms</label><input id="x_deal" value="${esc(c.deal||"")}">
     <div class="row2"><div><label>Tier</label><select id="x_t">
       ${["anchor","retainer","growth"].map(t=>`<option value="${t}" ${c.tier===t?"selected":""}>${t}</option>`).join("")}</select></div>
-    <div><label>MRR ($)</label><input id="x_m" type="number" value="${c.mrr||""}"></div></div>
+    <div><label>Monthly value ($)</label><input id="x_m" type="number" value="${c.mrr||""}"></div></div>
     <div class="mact"><button class="btn" onclick="saveClient('${id||""}')">${id?"Save":"Add"}</button>
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
     ${id?`<button class="btn danger" style="margin-left:auto" onclick="delClient('${id}')">Delete</button>`:""}</div>`);
   setTimeout(()=>document.getElementById("x_n").focus(),50);
 }
 function saveClient(id){const n=v("x_n");if(!n){toast("Name required");return;}
-  const data={name:n,em:v("x_em")||"⭐️",svc:v("x_svc"),deal:v("x_deal"),tier:v("x_t"),mrr:+v("x_m")||0};
+  const data={name:n,em:v("x_em")||"⭐",svc:v("x_svc"),deal:v("x_deal"),tier:v("x_t"),mrr:+v("x_m")||0};
   if(id)Object.assign(S.clients.find(x=>x.id===id),data);
   else S.clients.push({id:"c"+Date.now(),...data});
   closeModal();save();render();}
@@ -542,7 +621,7 @@ function delClient(id){S.clients=S.clients.filter(x=>x.id!==id);closeModal();sav
 function render(){
   // KPIs
   document.getElementById("mrr").textContent=fmt(mrr());
-  document.getElementById("mrrSub").textContent=S.clients.length+" clients · some rev-split";
+  document.getElementById("mrrSub").textContent=S.clients.length+" clients · "+fmt(recurringTotal())+" auto-billed";
   document.getElementById("ytd").textContent=fmt(invoiced());
   document.getElementById("ytdSub").textContent=fmt(collected())+" collected";
   document.getElementById("ar").textContent=fmt(outstanding());
@@ -551,83 +630,94 @@ function render(){
   document.getElementById("pipeSub").textContent=S.deals.filter(isActive).length+" open · "+wonCount()+" won";
   document.getElementById("cli").textContent=S.clients.length;
 
-  // follow-up alert (overview)
+  // tab badges
+  renderTabs();
+
+  // follow-up alert
   const due=dueFollowups();
   document.getElementById("fuAlert").innerHTML=due.length
     ?`<div class="alert" onclick="setTab('pipeline')">⏰ ${due.length} follow-up${due.length>1?"s":""} due: ${due.map(d=>esc(d.name)).join(", ")}<span class="go">Open pipeline →</span></div>`:"";
 
-  // tab badges
-  document.getElementById("tabPipe").textContent=S.deals.filter(isActive).length;
-  document.getElementById("tabCli").textContent=S.clients.length;
-  document.getElementById("tabTask").textContent=S.sets.filter(s=>!s.done).length;
+  // goals
+  document.getElementById("goals").innerHTML=GOALS.map(g=>{
+    const c=g.cur(),pct=Math.min(100,Math.round(c/g.tgt*100)),done=c>=g.tgt;
+    const cur=g.money?fmt(c):c,tgt=g.money?fmt(g.tgt):g.tgt+(g.count?" "+g.count:"");
+    return `<div class="goal ${done?"done":""}">
+      <div class="gt"><span>${done?"✅ ":""}${esc(g.n)}</span><span class="gv">${cur} / ${tgt}</span></div>
+      <div class="gbar"><i style="width:${pct}%"></i></div>
+      <div class="gs">${done?"Goal hit, set a bigger one 🤙":pct+"% there"}</div></div>`;
+  }).join("");
 
-  // sets — scheduled by date: overdue → today → soonest, undated last, done at bottom
-  const sorted=[...S.sets].sort((a,b)=>{
-    if(a.done!==b.done)return a.done?1:-1;
-    return (a.due||"9999-99-99")<(b.due||"9999-99-99")?-1:(a.due||"9999-99-99")>(b.due||"9999-99-99")?1:0;});
+  // tasks
   const setHTML=s=>{const f=fuMeta(s.due);
-    const chip=f?`<span class="pill ${f.cls==="over"?"over":f.cls==="due"?"due":"upc"}">${f.cls==="over"?"⏰ Overdue · "+f.lab:f.cls==="due"?"⏰ Due today":"📅 "+f.lab}</span>`:`<span class="pill none">No date</span>`;
-    return `<div class="set ${s.done?"done":""}">
+    const chip=s.done?"":(f?`<span class="pill ${f.cls==="over"?"over":f.cls==="due"?"due":"upc"}">${f.cls==="over"?"⏰ Overdue · "+f.lab:f.cls==="due"?"⏰ Due today":"📅 "+f.lab}</span>`:`<span class="pill none">No date</span>`);
+    return `<div class="set ${s.done?"done":""}" draggable="true"
+        ondragstart="setDragStart(event,'${s.id}')" ondragend="setDragEnd(event)"
+        ondragover="event.preventDefault();this.classList.add('setdrop')" ondragleave="this.classList.remove('setdrop')"
+        ondrop="this.classList.remove('setdrop');setDrop(event,'${s.id}')">
+      <span class="grip" title="Drag to reorder">⠿</span>
       <div class="box" role="checkbox" aria-checked="${s.done}" tabindex="0" onclick="toggleSet('${s.id}')" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleSet('${s.id}')}">✓</div>
-      <div style="flex:1"><div class="t">${esc(s.t)}${s.done?"":" "+chip}</div>
-      <div class="d">${esc(s.d||"")}</div></div>
-      <div class="sx"><button class="ic" title="Edit" onclick="editSet('${s.id}')">✎</button></div></div>`;};
-  document.getElementById("sets").innerHTML=sorted.map(setHTML).join("")||emptyState("No tasks — add a set.");
-  document.getElementById("setsMini").innerHTML=sorted.filter(s=>!s.done).slice(0,4).map(setHTML).join("")||emptyState("All caught up 🤙");
+      <div style="flex:1"><div class="t">${esc(s.t)}${chip}</div><div class="d">${esc(s.d||"")}</div></div>
+      <div class="sx">
+        <button class="ic" title="Move up" onclick="moveSet('${s.id}',-1)">↑</button>
+        <button class="ic" title="Move down" onclick="moveSet('${s.id}',1)">↓</button>
+        <button class="ic" title="Edit" onclick="editSet('${s.id}')">✎</button></div></div>`;};
+  document.getElementById("sets").innerHTML=S.sets.map(setHTML).join("")||emptyState("No tasks yet, add one.");
+  const miniHTML=s=>{const f=fuMeta(s.due);const chip=f?`<span class="pill ${f.cls==="over"?"over":f.cls==="due"?"due":"upc"}">${f.cls==="over"?"⏰ Overdue":f.cls==="due"?"⏰ Today":"📅 "+f.lab}</span>`:"";
+    return `<div class="set"><div class="box" role="checkbox" aria-checked="false" tabindex="0" onclick="toggleSet('${s.id}')" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleSet('${s.id}')}">✓</div>
+      <div style="flex:1"><div class="t">${esc(s.t)}${chip}</div><div class="d">${esc(s.d||"")}</div></div></div>`;};
+  const upcoming=S.sets.filter(s=>!s.done).slice().sort((a,b)=>(a.due||"9999")<(b.due||"9999")?-1:1).slice(0,4);
+  document.getElementById("setsMini").innerHTML=upcoming.map(miniHTML).join("")||emptyState("All caught up 🤙");
   document.getElementById("taskSub").textContent=S.sets.filter(s=>s.done).length+" / "+S.sets.length+" done";
 
-  // board — cards sorted so soonest / overdue follow-ups float to the top
+  // board
   const byFu=(a,b)=>{if(!!a.fu!==!!b.fu)return a.fu?-1:1;if(a.fu&&b.fu)return a.fu<b.fu?-1:1;return 0;};
   document.getElementById("board").innerHTML=STAGES.map(st=>{
-    const items=S.deals.filter(d=>d.stage===st.id).sort(byFu);const i=STAGES.indexOf(st);
+    const items=S.deals.filter(d=>d.stage===st.id).sort(byFu);const idx=STAGES.indexOf(st);
     return `<div class="lane ${st.id==="won"?"won":""}" data-stage="${st.id}"
         ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')"
         ondrop="this.classList.remove('drop');dropDeal(event.dataTransfer.getData('id'),'${st.id}')">
       <div class="lh"><div><b>${st.label}</b> <span class="surf">· ${st.surf}</span></div><span class="cnt">${items.length}</span></div>
       ${items.map(d=>{const f=fuMeta(d.fu);return `
-        <div class="deal ${d.whale?"whale":""}" draggable="true" ondragstart="event.dataTransfer.setData('id','${d.id}');this.classList.add('drag')" ondragend="this.classList.remove('drag')">
+        <div class="deal ${d.whale?"whale":""}" draggable="true" ondragstart="event.dataTransfer.setData('id','${d.id}');this.classList.add('dragging')" ondragend="this.classList.remove('dragging')">
           <div class="nm">${d.whale?"🐋 ":""}${esc(d.name)}</div>
           ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
-          ${d.value?`<div class="mt"><span class="val">${fmt(d.value)}</span>${st.id==="won"?" · signed":"/mo est"}</div>`:""}
-          ${f&&st.id!=="won"?`<div class="fu ${f.cls}">⏰ ${f.cls==="over"?"Overdue · "+f.lab:(f.cls==="due"?"Follow up today":"Follow up "+f.lab)}</div>`:""}
+          ${d.value?`<div class="mt"><span class="val">${fmt(d.value)}</span>${st.id==="won"?" · signed":" est."}</div>`:""}
+          ${f&&st.id!=="won"?`<div class="fu ${f.cls}">⏰ ${f.cls==="over"?"Overdue · "+f.lab:f.cls==="due"?"Follow up today":"Follow up "+f.lab}</div>`:""}
           ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
           <div class="ctl">
-            <button class="ic" title="Back a stage" ${i===0?"disabled style=opacity:.3":""} onclick="moveDeal('${d.id}',-1)">◀</button>
-            <button class="ic" title="Edit / follow-up / lost" onclick="editDeal('${d.id}')">✎</button>
+            <button class="ic" title="Back a stage" ${idx===0?"disabled":""} onclick="moveDeal('${d.id}',-1)">◀</button>
+            <button class="ic" title="Edit, follow-up, lost" onclick="editDeal('${d.id}')">✎</button>
             <span class="sp"></span>
             ${st.id==="won"?'<span class="stag">🤙 landed</span>':`<button class="ic" title="Forward a stage" onclick="moveDeal('${d.id}',1)">▶</button>`}
           </div>
-        </div>`;}).join("")||`<div class="faint" style="font-size:11px;padding:6px 2px">—</div>`}
+        </div>`;}).join("")||`<div class="faint" style="font-size:11px;padding:6px 2px">Drop a deal here</div>`}
     </div>`;
   }).join("");
 
-  // Lost / cold shelf (kept off the board)
+  // lost shelf
   const lost=S.deals.filter(d=>d.stage==="lost");
-  const lw=document.getElementById("lostWrap");
-  if(lw){
-    lw.innerHTML=lost.length?`
-      <div class="lostsec ${lostOpen?"open":""}">
-        <div class="lhh" onclick="lostOpen=!lostOpen;render()"><h3>Lost / Cold</h3><span class="cnt">${lost.length}</span><span class="chev">▾</span></div>
-        <div class="lostlist">${lost.map(d=>`
-          <div class="lostcard"><div class="nm">${esc(d.name)}</div>
-            ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
-            ${d.value?`<div class="mt">${fmt(d.value)} · lost</div>`:""}
-            ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
-            <div class="ctl"><button class="ic" title="Revive" onclick="reviveDeal('${d.id}')">↩</button>
-              <button class="ic" title="Edit" onclick="editDeal('${d.id}')">✎</button>
-              <button class="ic" title="Delete" onclick="delDeal('${d.id}')">🗑</button></div></div>`).join("")}</div>
-      </div>`:"";
-  }
+  document.getElementById("lostWrap").innerHTML=lost.length?`
+    <div class="lostsec ${lostOpen?"open":""}">
+      <div class="lhh" onclick="lostOpen=!lostOpen;render()"><h3>Lost / Cold</h3><span class="cnt">${lost.length}</span><span class="chev">▾</span></div>
+      <div class="lostlist">${lost.map(d=>`
+        <div class="lostcard"><div class="nm">${esc(d.name)}</div>
+          ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
+          ${d.value?`<div class="mt">${fmt(d.value)} · lost</div>`:""}
+          ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
+          <div class="ctl"><button class="ic" title="Revive" onclick="reviveDeal('${d.id}')">↩</button>
+            <button class="ic" title="Edit" onclick="editDeal('${d.id}')">✎</button>
+            <button class="ic" title="Delete" onclick="delDeal('${d.id}')">🗑</button></div></div>`).join("")}</div>
+    </div>`:"";
 
   // pipeline snapshot
   document.getElementById("pipeSnap").innerHTML=STAGES.map(st=>{
-    const items=S.deals.filter(d=>d.stage===st.id);
-    const val=items.reduce((a,d)=>a+(+d.value||0),0);
-    return `<div class="kpi"><div class="k">${st.label}</div><div class="v num" style="font-size:20px">${items.length}</div><div class="s">${val?fmt(val):"—"}</div></div>`;
+    const items=S.deals.filter(d=>d.stage===st.id);const val=items.reduce((a,d)=>a+(+d.value||0),0);
+    return `<div class="kpi"><div class="k">${st.label}</div><div class="v num" style="font-size:20px">${items.length}</div><div class="s">${val?fmt(val):"$0"}</div></div>`;
   }).join("");
 
   // roster
-  document.getElementById("rosterSub").textContent=fmt(mrr())+"/mo recurring · "+S.clients.length+" clients";
+  document.getElementById("rosterSub").textContent=fmt(mrr())+"/mo estimated · "+S.clients.length+" clients";
   document.getElementById("roster").innerHTML=S.clients.map(c=>`
     <div class="client">
       <div class="rib ${c.tier}">${esc(c.tier)}</div>
@@ -642,8 +732,7 @@ function render(){
   document.getElementById("miles").innerHTML=MILES.map(m=>{const on=m.on();
     return `<div class="mile ${on?"":"off"}"><div class="mi">${on?m.ic:"🔒"}</div><div class="mn">${esc(m.n)}</div><div class="md">${esc(m.d)}</div></div>`;}).join("");
 
-  renderMoney();
-  tickClock();
+  renderMoney();tickClock();
 }
 function emptyState(msg){return `<div class="faint" style="padding:14px;font-size:13px">${esc(msg)}</div>`;}
 
@@ -651,7 +740,7 @@ function renderMoney(){
   document.getElementById("mCollected").textContent=fmt(collected());
   document.getElementById("mInvoiced").textContent=fmt(invoiced());
   document.getElementById("mAr").textContent=fmt(outstanding());
-  document.getElementById("mMrr").textContent=fmt(mrr());
+  document.getElementById("mRecur").textContent=fmt(recurringTotal());
   const max=Math.max(...SEED.monthly.map(m=>m[1]));
   document.getElementById("chart").innerHTML=SEED.monthly.map(([m,val])=>`
     <div class="bar" title="${m}: ${fmt(val)}"><div class="bv">${(val/1000).toFixed(1)}k</div>
@@ -671,7 +760,7 @@ function renderMoney(){
 }
 
 /* ============================================================
-   THE REWARD — catch a wave (sound + surfer)
+   THE REWARD, catch a wave (sound + surfer)
    ============================================================ */
 function playStoke(){try{
   const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();const now=ac.currentTime;
@@ -685,7 +774,6 @@ function playStoke(){try{
   const ng=ac.createGain();ng.gain.setValueAtTime(.0001,now);ng.gain.linearRampToValueAtTime(.5,now+.15);ng.gain.exponentialRampToValueAtTime(.001,now+dur);
   src.connect(bp).connect(ng).connect(ac.destination);src.start(now);src.stop(now+dur);setTimeout(()=>ac.close(),2000);
 }catch(e){}}
-
 function rideTheWave(name){
   const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.getElementById("wbig").textContent="BARRELED! 🤙";
@@ -717,6 +805,7 @@ function rideTheWave(name){
 }
 
 /* ---------- boot ---------- */
+renderTabs();
 setTab(S.tab||"overview");
 render();save();
 setInterval(tickClock,60000);
