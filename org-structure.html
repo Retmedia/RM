@@ -8,6 +8,7 @@
     --red-wash: rgba(196,69,59,0.10); --amber-wash: rgba(181,115,26,0.12);
     --green-wash: rgba(46,139,107,0.12); --accent-wash: rgba(14,124,134,0.10);
     --shadow: 0 1px 2px rgba(12,26,33,0.06), 0 8px 24px rgba(12,26,33,0.05);
+    --edit: #12A3B0;
     --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
@@ -19,7 +20,7 @@
       --red: #E4695E; --amber: #E0A64A; --green: #4FBF95;
       --red-wash: rgba(228,105,94,0.14); --amber-wash: rgba(224,166,74,0.14);
       --green-wash: rgba(79,191,149,0.14); --accent-wash: rgba(47,182,196,0.14);
-      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.35);
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.35); --edit: #46D2DF;
     }
   }
   :root[data-theme="dark"] {
@@ -29,7 +30,7 @@
     --red: #E4695E; --amber: #E0A64A; --green: #4FBF95;
     --red-wash: rgba(228,105,94,0.14); --amber-wash: rgba(224,166,74,0.14);
     --green-wash: rgba(79,191,149,0.14); --accent-wash: rgba(47,182,196,0.14);
-    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.35);
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.35); --edit: #46D2DF;
   }
 
   * { box-sizing: border-box; }
@@ -39,29 +40,52 @@
 
   .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; font-weight: 600; }
   h2 { font-size: clamp(20px, 2.4vw, 26px); letter-spacing: -0.01em; margin: 0 0 4px; text-wrap: balance; }
-  section > .sec-note { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 22px; max-width: 64ch; }
+  .sec-note { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 22px; max-width: 66ch; }
   section { margin-top: 60px; }
 
-  header { padding: 46px 0 30px; border-bottom: 1px solid var(--line); }
-  .brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  /* control bar */
+  .ctrl { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--ground) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); margin: 0 -24px 0; padding: 12px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ctrl .spacer { flex: 1; }
+  .ctrl .mode-hint { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+  .btn { font-family: var(--mono); font-size: 12px; letter-spacing: 0.02em; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 7px; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: var(--accent-bright); border-color: var(--accent-bright); color: #fff; }
+  .btn.ghost { border-style: dashed; }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--ground); font-family: var(--mono); font-size: 12.5px; padding: 10px 16px; border-radius: 10px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 100; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  header { padding: 34px 0 30px; border-bottom: 1px solid var(--line); }
+  .brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
   .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--accent-bright); box-shadow: 0 0 0 4px var(--accent-wash); }
   .brandline .name { font-family: var(--mono); font-weight: 600; letter-spacing: 0.04em; font-size: 14px; }
   .brandline .meta { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); margin-left: auto; }
   h1 { font-size: clamp(28px, 5vw, 50px); line-height: 1.04; letter-spacing: -0.025em; margin: 0 0 16px; font-weight: 800; text-wrap: balance; }
-  h1 .thin { color: var(--ink-faint); font-weight: 300; }
   .lede { font-size: clamp(15px, 2vw, 18px); color: var(--ink-soft); max-width: 68ch; margin: 0; }
-  .live-tag { display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--green); background:var(--green-wash); padding:5px 11px; border-radius:20px; margin-bottom:20px; }
-  .live-tag .pulse { width:7px; height:7px; border-radius:50%; background:var(--green); }
-
   .metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 28px; }
-  .metric { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); transition: border-color .2s, background .2s; }
+  .metric { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
   .metric .k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); }
   .metric .v { font-family: var(--mono); font-weight: 700; font-size: 24px; letter-spacing: -0.02em; margin-top: 8px; font-variant-numeric: tabular-nums; }
   .metric .s { font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
-  .metric.flag { border-color: var(--red); background: var(--red-wash); }
-  .metric.flag .v { color: var(--red); }
-  .metric.good { border-color: var(--green); background: var(--green-wash); }
-  .metric.good .v { color: var(--green); }
+  .metric.flag { border-color: var(--red); background: var(--red-wash); } .metric.flag .v { color: var(--red); }
+  .metric.good { border-color: var(--green); background: var(--green-wash); } .metric.good .v { color: var(--green); }
+
+  /* editable primitives */
+  [data-ep] { border-radius: 5px; transition: box-shadow .12s, background .12s; }
+  body.editing [data-ep] { box-shadow: inset 0 0 0 1px var(--line); background: color-mix(in srgb, var(--edit) 5%, transparent); padding: 1px 5px; margin: -1px -5px; cursor: text; }
+  body.editing [data-ep]:hover { box-shadow: inset 0 0 0 1px var(--edit); }
+  body.editing [data-ep]:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--edit); background: var(--surface); }
+  [data-ep]:empty::before { content: attr(data-ph); color: var(--ink-faint); }
+
+  .editonly { display: none; }
+  body.editing .editonly { display: inline-flex; }
+  body.editing .editonly.block { display: block; }
+
+  .addbtn { font-family: var(--mono); font-size: 11.5px; padding: 7px 12px; border-radius: 8px; border: 1px dashed var(--line); background: transparent; color: var(--ink-soft); cursor: pointer; margin-top: 12px; }
+  .addbtn:hover { border-color: var(--edit); color: var(--edit); }
+  .del { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border: none; border-radius: 6px; background: var(--surface-2); color: var(--ink-faint); cursor: pointer; font-size: 14px; line-height: 1; display: none; align-items: center; justify-content: center; }
+  body.editing .del { display: flex; }
+  .del:hover { background: var(--red-wash); color: var(--red); }
 
   /* editable tables */
   .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
@@ -73,49 +97,34 @@
   table.edit tbody tr:hover { background: var(--surface-2); }
   tfoot td { padding: 13px 12px; font-family: var(--mono); font-weight: 700; font-variant-numeric: tabular-nums; border-top: 2px solid var(--line); }
   .derived { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600; }
+  .delcol { width: 34px; }
+  body:not(.editing) .delcol, body:not(.editing) .delcell { display: none; }
 
-  input.in, select.in {
-    font-family: var(--mono); font-size: 13px; color: var(--ink);
-    background: transparent; border: 1px solid transparent; border-radius: 6px;
-    padding: 5px 7px; width: 100%; transition: border-color .15s, background .15s;
-  }
-  input.in:hover, select.in:hover { border-color: var(--line); }
-  input.in:focus, select.in:focus { outline: none; border-color: var(--accent); background: var(--ground); }
+  input.in, select.in { font-family: var(--mono); font-size: 13px; color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 5px 7px; width: 100%; transition: border-color .15s, background .15s; }
+  body.editing input.in:hover, body.editing select.in:hover { border-color: var(--line); }
+  input.in:focus, select.in:focus { outline: none; border-color: var(--edit); background: var(--ground); }
+  body:not(.editing) input.in, body:not(.editing) select.in { pointer-events: none; -webkit-appearance: none; appearance: none; }
   input.num { text-align: right; font-variant-numeric: tabular-nums; width: 92px; }
-  input.txt { width: 100%; min-width: 90px; }
-  input.txt.wide { min-width: 150px; }
+  input.txt { width: 100%; min-width: 90px; } input.txt.wide { min-width: 150px; }
   select.in { width: auto; min-width: 96px; }
-  .in-prefix { display:inline-flex; align-items:center; }
-  .in-prefix > span { color: var(--ink-faint); font-family: var(--mono); font-size: 13px; }
-
+  .in-prefix { display:inline-flex; align-items:center; } .in-prefix > span { color: var(--ink-faint); font-family: var(--mono); font-size: 13px; }
   .rowbtn { background: transparent; border: none; color: var(--ink-faint); cursor: pointer; font-size: 16px; line-height: 1; padding: 4px 6px; border-radius: 6px; }
   .rowbtn:hover { color: var(--red); background: var(--red-wash); }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 14px 12px; }
-  .btn { font-family: var(--mono); font-size: 12px; letter-spacing: 0.03em; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; transition: all .15s; }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .btn.primary:hover { background: var(--accent-bright); border-color: var(--accent-bright); color: #fff; }
-  .btn.ghost { border-style: dashed; }
 
-  .pill { font-family: var(--mono); font-size: 10.5px; padding: 3px 9px; border-radius: 20px; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; }
-  .pill.active { background: var(--green-wash); color: var(--green); }
-  .pill.trial { background: var(--amber-wash); color: var(--amber); }
-  .pill.owned { background: var(--accent-wash); color: var(--accent); }
+  .ceiling-edit { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin-bottom: 20px; }
+  .ceiling-edit input { width: 56px; text-align: right; font-family: var(--mono); font-size: 13px; background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; color: var(--ink); }
 
   /* concentration bars */
   .bars { margin-top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); }
   .bar-row { display: grid; grid-template-columns: 170px 1fr 96px; align-items: center; gap: 14px; padding: 6px 0; }
-  .bar-row .lbl { font-size: 13.5px; font-weight: 600; }
-  .bar-row .lbl small { display: block; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); font-weight: 400; letter-spacing: 0.03em; text-transform: uppercase; }
+  .bar-row .lbl { font-size: 13.5px; font-weight: 600; } .bar-row .lbl small { display: block; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); font-weight: 400; letter-spacing: 0.03em; text-transform: uppercase; }
   .track { height: 20px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
   .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent-bright)); transition: width .45s cubic-bezier(.22,.61,.36,1); }
   .fill.risk { background: linear-gradient(90deg, var(--red), #d9645b); }
-  .bar-row .amt { font-family: var(--mono); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
-  .bar-row .amt b { display:block; }
-  .bar-row .amt span { color: var(--ink-faint); font-size: 11px; }
+  .bar-row .amt { font-family: var(--mono); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; } .bar-row .amt b { display:block; } .bar-row .amt span { color: var(--ink-faint); font-size: 11px; }
   .bars-foot { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); font-size: 13.5px; color: var(--ink-soft); }
 
-  /* guardrails */
   .guards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .guard { background: var(--surface); border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
   .guard .g-k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
@@ -125,274 +134,207 @@
   .guard.fail { border-left-color: var(--red); } .guard.fail .g-v { color: var(--red); }
   .guard.warn { border-left-color: var(--amber); } .guard.warn .g-v { color: var(--amber); }
 
-  /* structural (static) */
+  /* org */
   .org { display: flex; flex-direction: column; align-items: center; }
   .tier-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 6px; }
-  .node { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 20px; text-align: center; box-shadow: var(--shadow); min-width: 220px; }
-  .node .role { font-weight: 700; font-size: 16px; }
-  .node .who { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 2px; }
-  .node .desc { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
-  .node.ceo { border-color: var(--accent); border-width: 1.5px; }
-  .node.recruit { border-style: dashed; }
+  .node { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 20px; text-align: center; box-shadow: var(--shadow); min-width: 220px; }
+  .node .role { font-weight: 700; font-size: 16px; } .node .who { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 2px; } .node .desc { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+  .node.ceo { border-color: var(--accent); border-width: 1.5px; } .node.recruit { border-style: dashed; }
   .connector { width: 2px; height: 24px; background: var(--line); }
-  .fanout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; width: 100%; }
-  .fanout .node { min-width: 0; }
-  .org-row { display: flex; align-items: center; gap: 14px; width: 100%; justify-content: center; }
-  .fn-node { background: var(--surface-2); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; }
-  .fn-node .role { font-weight: 600; font-size: 13px; }
-  .fn-node .sop { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); margin-top: 2px; }
+  .fanout { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; width: 100%; }
+  .org-row { display: flex; align-items: center; gap: 14px; width: 100%; justify-content: center; flex-wrap: wrap; }
+  .fn-node { position: relative; background: var(--surface-2); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; } .fn-node .role { font-weight: 600; font-size: 13px; } .fn-node .sop { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); margin-top: 2px; }
   .side-fn { display: flex; flex-direction: column; gap: 10px; }
 
   .pipe { display: flex; overflow-x: auto; padding-bottom: 6px; }
-  .step { flex: 1 1 0; min-width: 150px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 15px; position: relative; box-shadow: var(--shadow); }
-  .step + .step { margin-left: 26px; }
-  .step + .step::before { content: "→"; position: absolute; left: -22px; top: 50%; transform: translateY(-50%); color: var(--accent); font-family: var(--mono); font-size: 18px; }
-  .step .n { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
-  .step .t { font-weight: 700; font-size: 15px; margin: 4px 0 5px; }
-  .step .o { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
-  .step .d { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+  .step { position: relative; flex: 1 1 0; min-width: 150px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 15px; box-shadow: var(--shadow); }
+  .step + .step { margin-left: 26px; } .step + .step::before { content: "→"; position: absolute; left: -22px; top: 50%; transform: translateY(-50%); color: var(--accent); font-family: var(--mono); font-size: 18px; }
+  .step .n { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); } .step .t { font-weight: 700; font-size: 15px; margin: 4px 0 5px; } .step .o { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); } .step .d { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+
+  .grid { display: grid; gap: 14px; } .g3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); } .g2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+  .card h3 { margin: 0 0 4px; font-size: 15px; } .card h3 .who { font-family: var(--mono); font-size: 11.5px; color: var(--accent); font-weight: 500; }
+  .kpis { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .kpis li { font-size: 12.5px; color: var(--ink-soft); padding-left: 15px; position: relative; } .kpis li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); font-size: 10px; top: 2px; }
+  .kpis li .kdel { display:none; margin-left:6px; color:var(--ink-faint); cursor:pointer; } body.editing .kpis li .kdel { display:inline; } .kpis li .kdel:hover { color: var(--red); }
+
+  .engine { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+  .engine .num-tag { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; } .engine h3 { margin: 6px 0 6px; font-size: 15.5px; } .engine p { margin: 0; font-size: 13px; color: var(--ink-soft); } .engine .own { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-top: 10px; }
+
+  .rec { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .rec-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .rec-n { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent); } .rec-t { font-weight: 700; font-size: 15px; flex: 1; min-width: 200px; }
+  .rec-b { font-size: 13px; color: var(--ink-soft); margin-top: 8px; line-height: 1.6; } .rec-b b { color: var(--ink); }
+  .chip { font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; border: none; }
+  .chip.now { background: var(--red-wash); color: var(--red); } .chip.soon { background: var(--amber-wash); color: var(--amber); } .chip.later { background: var(--accent-wash); color: var(--accent); }
+  select.chip { cursor: pointer; } body:not(.editing) select.chip { -webkit-appearance: none; appearance: none; pointer-events: none; }
 
   .risk { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-left-width: 3px; border-radius: 10px; padding: 14px 18px; box-shadow: var(--shadow); }
   .risk.high { border-left-color: var(--red); } .risk.med { border-left-color: var(--amber); } .risk.low { border-left-color: var(--green); }
-  .risk .r-title { font-weight: 700; font-size: 14px; }
-  .risk .r-fix { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; grid-column: 1 / -1; }
-  .sev { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; height: fit-content; white-space: nowrap; }
-  .sev.high { background: var(--red-wash); color: var(--red); } .sev.med { background: var(--amber-wash); color: var(--amber); } .sev.low { background: var(--green-wash); color: var(--green); }
-
-  .grid { display: grid; gap: 14px; }
-  .g3 { grid-template-columns: repeat(3, 1fr); } .g2 { grid-template-columns: repeat(2, 1fr); }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
-  .card h3 { margin: 0 0 4px; font-size: 15px; }
-  .card h3 .who { font-family: var(--mono); font-size: 11.5px; color: var(--accent); font-weight: 500; }
-  .kpis { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
-  .kpis li { font-size: 12.5px; color: var(--ink-soft); padding-left: 15px; position: relative; }
-  .kpis li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); font-size: 10px; top: 2px; }
-
-  .rec { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
-  .rec-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .rec-n { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent); }
-  .rec-t { font-weight: 700; font-size: 15px; flex: 1; min-width: 200px; }
-  .rec-b { font-size: 13px; color: var(--ink-soft); margin-top: 8px; line-height: 1.6; }
-  .rec-b b { color: var(--ink); }
-  .rec-b code { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color: var(--accent); }
-  .chip { font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
-  .chip.now { background: var(--red-wash); color: var(--red); }
-  .chip.soon { background: var(--amber-wash); color: var(--amber); }
-  .chip.later { background: var(--accent-wash); color: var(--accent); }
+  .risk .r-title { font-weight: 700; font-size: 14px; } .risk .r-fix { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; grid-column: 1 / -1; }
+  .sev { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; height: fit-content; white-space: nowrap; } .sev.high { background: var(--red-wash); color: var(--red); } .sev.med { background: var(--amber-wash); color: var(--amber); } .sev.low { background: var(--green-wash); color: var(--green); }
 
   footer { margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--ink-faint); display: flex; flex-wrap: wrap; gap: 6px 18px; }
 
   @media (max-width: 820px) {
-    .metrics { grid-template-columns: repeat(2, 1fr); }
-    .guards { grid-template-columns: 1fr; }
-    .g3, .g2 { grid-template-columns: 1fr; }
-    .fanout { grid-template-columns: 1fr; }
-    .org-row { flex-direction: column; }
-    .bar-row { grid-template-columns: 120px 1fr 74px; }
+    .metrics { grid-template-columns: repeat(2, 1fr); } .guards { grid-template-columns: 1fr; }
+    .org-row { flex-direction: column; } .bar-row { grid-template-columns: 120px 1fr 74px; }
   }
 </style>
 
 <div class="wrap">
+  <div class="ctrl">
+    <button class="btn primary" id="toggle-edit">✎ Editing on</button>
+    <span class="mode-hint" id="mode-hint">Click any text or number to change it</span>
+    <span class="spacer"></span>
+    <button class="btn ghost" id="copy-json">⧉ Copy snapshot</button>
+    <button class="btn ghost" id="reset">↺ Reset to defaults</button>
+  </div>
+
   <header>
     <div class="brandline">
       <span class="dot"></span>
       <span class="name">RET MEDIA LLC</span>
-      <span class="meta">NAICS 541613 · interactive model</span>
+      <span class="meta">interactive · fully editable</span>
     </div>
-    <span class="live-tag"><span class="pulse"></span>Live model — edit any number</span>
-    <h1>An org built so the founder does <span class="thin">only</span> two things.</h1>
-    <p class="lede">Change comp in the Team table or revenue in the Clients table — run-rate, recurring floor, revenue concentration, guardrails, and the risk register all recompute instantly. One number, one place, everything downstream follows.</p>
+    <h1 data-ep="copy.h1" data-ph="Headline…"></h1>
+    <p class="lede" data-ep="copy.lede" data-ph="Intro…"></p>
     <div class="metrics" id="metrics"></div>
   </header>
 
   <section>
     <p class="eyebrow">Single source of truth for comp</p>
-    <h2>Team &amp; costs</h2>
-    <p class="sec-note">Monthly cost = rate × qty. Edit the rate, the quantity, or who a person is assigned to — the run-rate and every derived figure update live. (Default reflects interns now at $150 each for Blair's 30 videos/mo.)</p>
+    <h2 data-ep="copy.teamTitle"></h2>
+    <p class="sec-note" data-ep="copy.teamNote"></p>
     <div class="panel">
       <div class="panel-scroll">
         <table class="edit">
-          <thead>
-            <tr>
-              <th style="width:34px"></th><th>Role</th><th>Who</th><th>Serves</th>
-              <th class="r">Rate $</th><th class="r">Qty</th><th>Unit</th><th class="r">$ / month</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th class="delcol"></th><th>Role</th><th>Who</th><th>Serves</th>
+            <th class="r">Rate $</th><th class="r">Qty</th><th>Unit</th><th class="r">$ / month</th>
+          </tr></thead>
           <tbody id="team-body"></tbody>
-          <tfoot>
-            <tr><td colspan="7" style="text-align:right;color:var(--ink-faint);font-family:var(--mono);text-transform:uppercase;font-size:11px;letter-spacing:.06em">Monthly team run-rate</td><td class="r derived" id="team-total"></td></tr>
-          </tfoot>
+          <tfoot><tr><td colspan="7" style="text-align:right;color:var(--ink-faint);font-family:var(--mono);text-transform:uppercase;font-size:11px;letter-spacing:.06em">Monthly team run-rate</td><td class="r derived" id="team-total"></td></tr></tfoot>
         </table>
       </div>
-      <div class="toolbar"><button class="btn ghost" id="add-team">+ Add team member</button></div>
+      <div class="toolbar editonly"><button class="addbtn" id="add-team">+ Add team member</button></div>
     </div>
   </section>
 
   <section>
     <p class="eyebrow">Single source of truth for revenue</p>
-    <h2>Clients &amp; revenue</h2>
-    <p class="sec-note">Recurring $/mo feeds the monthly floor; YTD $ drives the concentration analysis below. Change a client's status, model, or numbers and watch the bars and guardrails react.</p>
+    <h2 data-ep="copy.clientTitle"></h2>
+    <p class="sec-note" data-ep="copy.clientNote"></p>
     <div class="panel">
       <div class="panel-scroll">
         <table class="edit">
-          <thead>
-            <tr>
-              <th style="width:34px"></th><th>Client</th><th>Status</th><th>Model</th>
-              <th class="r">$/mo</th><th class="r">Rev-share %</th><th class="r">YTD $</th><th class="r">% of YTD</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th class="delcol"></th><th>Client</th><th>Status</th><th>Model</th>
+            <th class="r">$/mo</th><th class="r">Rev-share %</th><th class="r">YTD $</th><th class="r">% of YTD</th>
+          </tr></thead>
           <tbody id="client-body"></tbody>
-          <tfoot>
-            <tr><td colspan="4" style="text-align:right;color:var(--ink-faint);font-family:var(--mono);text-transform:uppercase;font-size:11px;letter-spacing:.06em">Totals</td>
-              <td class="r derived" id="mrr-total"></td><td></td><td class="r derived" id="ytd-total"></td><td class="r derived">100%</td></tr>
-          </tfoot>
+          <tfoot><tr><td colspan="4" style="text-align:right;color:var(--ink-faint);font-family:var(--mono);text-transform:uppercase;font-size:11px;letter-spacing:.06em">Totals</td>
+            <td class="r derived" id="mrr-total"></td><td></td><td class="r derived" id="ytd-total"></td><td class="r derived">100%</td></tr></tfoot>
         </table>
       </div>
-      <div class="toolbar"><button class="btn ghost" id="add-client">+ Add client</button></div>
+      <div class="toolbar editonly"><button class="addbtn" id="add-client">+ Add client</button></div>
     </div>
-
-    <div class="bars">
-      <div id="bars-body"></div>
-      <p class="bars-foot" id="bars-foot"></p>
-    </div>
+    <div class="bars"><div id="bars-body"></div><p class="bars-foot" id="bars-foot"></p></div>
   </section>
 
   <section>
     <p class="eyebrow">Derived checks — recompute on every edit</p>
     <h2>Guardrails</h2>
-    <p class="sec-note">The rules the org holds itself to. Green = healthy, red = breached. Adjust the concentration ceiling to match your risk tolerance.</p>
+    <div class="ceiling-edit">Concentration ceiling: no single client above
+      <input type="number" min="1" max="100" id="ceiling-input"> %</div>
     <div class="guards" id="guards"></div>
   </section>
 
   <section>
-    <p class="eyebrow">Who reports to whom · structure is fixed, dollars live above</p>
-    <h2>The structure</h2>
-    <p class="sec-note">A deliberately lean pyramid. The Social Media Manager is the unlock hire that removes QC, scheduling, and access management from the founder.</p>
-    <div class="org">
-      <div class="org-row">
-        <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center;">
-          <span class="tier-label">Tier 1 · Ownership</span>
-          <div class="node ceo"><div class="role">CEO / Founder</div><div class="who">Garrett Abdulla</div><div class="desc">Strategy · creative direction · sales</div></div>
-        </div>
-        <div class="side-fn">
-          <div class="fn-node"><div class="role">Sales / Pipeline</div><div class="sop">held by Garrett · skill: rm-sales</div></div>
-          <div class="fn-node"><div class="role">Accounting / Billing</div><div class="sop">held by Garrett · skill: ret-media-accountant</div></div>
-        </div>
-      </div>
-      <div class="connector"></div>
-      <span class="tier-label">Tier 2 · Operations</span>
-      <div class="node recruit"><div class="role">Social Media Manager</div><div class="who">recruiting · the unlock hire</div><div class="desc">QC every video · scheduling · RM Drive · access hygiene</div></div>
-      <div class="connector"></div>
-      <span class="tier-label" style="margin-bottom:8px">Tier 3 · Production</span>
-      <div class="fanout">
-        <div class="node"><div class="role">Editor</div><div class="who">Victor</div><div class="desc">~30 shorts + 1 midform/wk</div></div>
-        <div class="node"><div class="role">Intern Editor 1</div><div class="who">Blair's 30/mo</div><div class="desc">Short-form cuts → RM/Intern review</div></div>
-        <div class="node"><div class="role">Intern Editor 2</div><div class="who">Blair's 30/mo</div><div class="desc">Short-form cuts → RM/Intern review</div></div>
-      </div>
-    </div>
+    <p class="eyebrow">Who reports to whom</p>
+    <h2 data-ep="copy.structTitle"></h2>
+    <p class="sec-note" data-ep="copy.structNote"></p>
+    <div class="org" id="org"></div>
   </section>
 
   <section>
     <p class="eyebrow">Footage in → published out</p>
-    <h2>The production pipeline</h2>
-    <p class="sec-note">One canonical flow for every client. The founder's touch on QC and publish drops away once the SMM earns publishing trust.</p>
-    <div class="pipe">
-      <div class="step"><div class="n">01</div><div class="t">Footage In</div><div class="o">Client · R</div><div class="d">Shared cloud folder, auto-upload on.</div></div>
-      <div class="step"><div class="n">02</div><div class="t">Edit</div><div class="o">Victor + Interns · R</div><div class="d">Cut to the client's style guide.</div></div>
-      <div class="step"><div class="n">03</div><div class="t">QC + Caption</div><div class="o">SMM · R/A</div><div class="d">Review, apply on-brand captions.</div></div>
-      <div class="step"><div class="n">04</div><div class="t">Publish</div><div class="o">SMM · R/A</div><div class="d">Schedule via agency-owned access.</div></div>
-      <div class="step"><div class="n">05</div><div class="t">Strategy</div><div class="o">Garrett · R/A</div><div class="d">Read results, adjust, sell.</div></div>
-    </div>
+    <h2 data-ep="copy.pipeTitle"></h2>
+    <p class="sec-note" data-ep="copy.pipeNote"></p>
+    <div class="pipe" id="pipe"></div>
+    <div class="editonly block"><button class="addbtn" id="add-step">+ Add step</button></div>
   </section>
 
   <section>
     <p class="eyebrow">Scored on outcomes, not hours</p>
-    <h2>Role scorecards</h2>
-    <p class="sec-note">Each role is defined by measurable KPIs and a clear "definition of done." Compensation lives in the Team table above — this is what each role is judged on.</p>
-    <div class="grid g3">
-      <div class="card"><h3>CEO / Founder <span class="who">Garrett</span></h3><ul class="kpis"><li>New paying clients / MRR</li><li>Podcast guests → Ekko pipeline</li><li>Ekko deliverables sold</li><li>NOT: editing, scheduling, invoicing</li></ul></div>
-      <div class="card"><h3>Social Media Mgr <span class="who">recruiting</span></h3><ul class="kpis"><li>On-time publishing cadence</li><li>Zero lost files</li><li>QC pass rate</li><li>Videos shipped / week</li><li>Access hygiene — 0 personal-login deps</li></ul></div>
-      <div class="card"><h3>Editor <span class="who">Victor</span></h3><ul class="kpis"><li>Volume delivered on time</li><li>Style-guide adherence</li><li>First-pass QC acceptance %</li></ul></div>
-      <div class="card"><h3>Intern Editors <span class="who">×2</span></h3><ul class="kpis"><li>Batch completion rate</li><li>Quality after one feedback loop</li></ul></div>
-      <div class="card"><h3>Sales <span class="who">rm-sales</span></h3><ul class="kpis"><li>Prospects moved New → Won</li><li>One thoughtful pitch / week</li><li>Clean access handoff on close</li></ul></div>
-      <div class="card"><h3>Accounting <span class="who">ret-media-accountant</span></h3><ul class="kpis"><li>Invoices out on schedule</li><li>A/R &gt; 30 days chased</li><li>Rev-share splits reconciled</li></ul></div>
-    </div>
+    <h2 data-ep="copy.scoreTitle"></h2>
+    <p class="sec-note" data-ep="copy.scoreNote"></p>
+    <div class="grid g3" id="scorecards"></div>
+    <div class="editonly block"><button class="addbtn" id="add-score">+ Add role</button></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Four ways the business makes money</p>
+    <h2 data-ep="copy.engineTitle"></h2>
+    <p class="sec-note" data-ep="copy.engineNote"></p>
+    <div class="grid g2" id="engines"></div>
+    <div class="editonly block"><button class="addbtn" id="add-engine">+ Add engine</button></div>
   </section>
 
   <section>
     <p class="eyebrow">What could break it → what we do about it</p>
     <h2>Risk register</h2>
+    <p class="sec-note">Auto-generated from your live numbers — the top line tracks whoever your biggest client is.</p>
     <div class="grid" style="gap:12px" id="risks"></div>
   </section>
 
   <section>
     <p class="eyebrow">Full audit → what to do next</p>
-    <h2>Recommendations</h2>
-    <p class="sec-note">Findings from auditing everything — QuickBooks revenue &amp; A/R, the Notion CRM, recurring billing, access hygiene, team economics, and this model itself. Ordered by priority.</p>
-    <div class="grid" style="gap:12px">
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">01</span><span class="rec-t">Break the Blair dependency before it breaks you</span><span class="chip now">Do now</span></div>
-        <div class="rec-b"><b>Audit:</b> Blair is 65.5% of YTD revenue; top two clients are 82%. If Blair pauses, ~two-thirds of cash vanishes in a month. <b>Move:</b> close 2–3 retainers at $900–1,500/mo and push Ekko/podcast (engines 3 &amp; 4) so no client tops 40%. This is the #1 structural fix — the concentration bar turns green only when you widen the base.</div>
-      </div>
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">02</span><span class="rec-t">Collect Paulo's overdue $900 today</span><span class="chip now">Do now</span></div>
-        <div class="rec-b"><b>Audit:</b> A/R shows Paulo $900 in the 1–30 day bucket; Foresight $2,500 current. <b>Move:</b> fire the <code>ret-media-accountant</code> reminder on Paulo now, and turn on QuickBooks auto-pay for both recurring clients so this never recurs. Set a standing rule: anything past 30 days gets chased automatically.</div>
-      </div>
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">03</span><span class="rec-t">Move all account access off your personal Gmail</span><span class="chip now">Do now</span></div>
-        <div class="rec-b"><b>Audit:</b> delegation is blocked because logins live on Garrett's personal Google account — the SMM literally can't be handed the keys safely. <b>Move:</b> stand up a Meta Business Portfolio owned by <code>info@retmediaagency.com</code>, add YouTube managers to the same, and grant task-level (not admin) roles. This unlocks the entire Tier-2 hire.</div>
-      </div>
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">04</span><span class="rec-t">Decide Xander by end of August with a number, not a vibe</span><span class="chip soon">This month</span></div>
-        <div class="rec-b"><b>Audit:</b> Xander is on a free 30-day trial and isn't in QuickBooks — yet Victor's raise to $800–1,000/mo is contingent on it. That's an unfunded liability. <b>Move:</b> set a conversion price now (e.g. rev-share or a monthly floor) and re-eval on a fixed date. If it converts, Victor's raise is funded; if not, hold comp. Don't overhire ahead of the close.</div>
-      </div>
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">05</span><span class="rec-t">Bill your owned properties like clients</span><span class="chip soon">This month</span></div>
-        <div class="rec-b"><b>Audit:</b> Modern Marketing ($997/mo Premium) and the Ekko 3-tier offer ($799 / $3,497) show $0 in the QuickBooks customer report — owned revenue is invisible. <b>Move:</b> run Modern Marketing seats and every Ekko deliverable through QuickBooks so engines 2–4 show up in the same P&amp;L as retainers. You can't manage concentration you can't see.</div>
-      </div>
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">06</span><span class="rec-t">Fund the SMM from new MRR, then hand off publishing</span><span class="chip soon">This quarter</span></div>
-        <div class="rec-b"><b>Audit:</b> the SMM is the unlock hire but currently $0 (unpaid intern). Your recurring floor is $1,800/mo against a ~$700–1,000 team run-rate — there's room, but it's thin. <b>Move:</b> convert the SMM to paid ($800–1,200) only once one or two new retainers land, then transfer QC + publishing rights so Garrett drops out of the daily pipeline entirely.</div>
-      </div>
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">07</span><span class="rec-t">Wire the CRM to the money</span><span class="chip later">Ongoing</span></div>
-        <div class="rec-b"><b>Audit:</b> the Notion CRM (New→Won pipeline + Tasks) and the 90-Day Focus scorecard are strong, but disconnected from QuickBooks — "Won" doesn't automatically become an invoice. <b>Move:</b> when a prospect flips to Won, trigger the invoice/recurring setup from <code>ret-media-accountant</code>, and keep the weekly 3-number scorecard (paying clients · guests booked · Ekko sold) as the single accountability layer.</div>
-      </div>
-
-      <div class="rec">
-        <div class="rec-head"><span class="rec-n">08</span><span class="rec-t">Keep this model as your live cap-table for the org</span><span class="chip later">Ongoing</span></div>
-        <div class="rec-b"><b>Audit:</b> comp and revenue now have a single source of truth here. <b>Move:</b> re-run the numbers whenever a rate, client, or deal changes — before you make a hire, check the coverage ratio and net floor guardrails go green. Quarterly, reconcile this against the live QuickBooks report so the defaults never drift from reality.</div>
-      </div>
-
-    </div>
+    <h2 data-ep="copy.recTitle"></h2>
+    <p class="sec-note" data-ep="copy.recNote"></p>
+    <div class="grid" style="gap:12px" id="recs"></div>
+    <div class="editonly block"><button class="addbtn" id="add-rec">+ Add recommendation</button></div>
   </section>
 
   <footer>
-    <span>RET MEDIA LLC · Interactive Operating System</span>
+    <span>RET MEDIA LLC · Editable Operating System</span>
     <span>Seeded from QuickBooks + Notion CRM · 2026-08-13</span>
     <span id="save-note">Edits saved in this browser</span>
   </footer>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
 (function () {
   "use strict";
-  var KEY = "retmedia-org-model-v1";
+  var KEY = "retmedia-org-model-v2";
 
   var DEFAULTS = {
+    editing: true,
     ceiling: 40,
+    copy: {
+      h1: "An org built so the founder does only two things.",
+      lede: "Everything here is editable — click any text or number. Change comp or revenue and the run-rate, recurring floor, concentration, guardrails, and risk register all recompute instantly.",
+      teamTitle: "Team & costs",
+      teamNote: "Monthly cost = rate × qty. Edit the rate, quantity, or assignment — the run-rate and every derived figure update live. (Interns default to $150 each for Blair's 30 videos/mo.)",
+      clientTitle: "Clients & revenue",
+      clientNote: "Recurring $/mo feeds the monthly floor; YTD $ drives the concentration analysis below.",
+      structTitle: "The structure",
+      structNote: "A deliberately lean pyramid. The Social Media Manager is the unlock hire that removes QC, scheduling, and access from the founder.",
+      pipeTitle: "The production pipeline",
+      pipeNote: "One canonical flow for every client. The founder's touch on QC and publish drops away once the SMM earns publishing trust.",
+      scoreTitle: "Role scorecards",
+      scoreNote: "Each role is defined by measurable KPIs. Compensation lives in the Team table above — this is what each role is judged on.",
+      engineTitle: "Revenue engines",
+      engineNote: "The org serves four distinct engines. Engines 3 & 4 are the deliberate hedge against client concentration.",
+      recTitle: "Recommendations",
+      recNote: "Findings from auditing everything — QuickBooks revenue & A/R, the Notion CRM, billing, access, and team economics. Edit, reorder, or add your own."
+    },
     team: [
-      { id: "victor",  role: "Editor",                who: "Victor",     serves: "Xander", rate: 400, qty: 1, unit: "/mo" },
-      { id: "intern1", role: "Intern Editor 1",       who: "",           serves: "Blair",  rate: 150, qty: 1, unit: "Blair 30/mo" },
-      { id: "intern2", role: "Intern Editor 2",       who: "",           serves: "Blair",  rate: 150, qty: 1, unit: "Blair 30/mo" },
-      { id: "smm",     role: "Social Media Manager",  who: "recruiting", serves: "All",    rate: 0,   qty: 1, unit: "unpaid → 800–1200" }
+      { id: "victor",  role: "Editor",               who: "Victor",     serves: "Xander", rate: 400, qty: 1, unit: "/mo" },
+      { id: "intern1", role: "Intern Editor 1",      who: "",           serves: "Blair",  rate: 150, qty: 1, unit: "Blair 30/mo" },
+      { id: "intern2", role: "Intern Editor 2",      who: "",           serves: "Blair",  rate: 150, qty: 1, unit: "Blair 30/mo" },
+      { id: "smm",     role: "Social Media Manager", who: "recruiting", serves: "All",    rate: 0,   qty: 1, unit: "unpaid → 800–1200" }
     ],
     clients: [
       { id: "blair",  name: "Blair Conklin",   status: "Active",  model: "Rev-share", mrr: 0,   share: 35, ytd: 19984 },
@@ -401,212 +343,307 @@
       { id: "fw",     name: "Foreign Waters",  status: "Active",  model: "Project",   mrr: 0,   share: 0,  ytd: 1500 },
       { id: "tara",   name: "Tara Bunker",     status: "Sep 1",   model: "Recurring", mrr: 900, share: 0,  ytd: 1299 },
       { id: "nathan", name: "Nathan Florence", status: "One-off", model: "Project",   mrr: 0,   share: 0,  ytd: 28 }
+    ],
+    org: {
+      ceo: { role: "CEO / Founder", who: "Garrett Abdulla", desc: "Strategy · creative direction · sales" },
+      functions: [
+        { id: "fn1", role: "Sales / Pipeline", sop: "held by Garrett · skill: rm-sales" },
+        { id: "fn2", role: "Accounting / Billing", sop: "held by Garrett · skill: ret-media-accountant" }
+      ],
+      smm: { role: "Social Media Manager", who: "recruiting · the unlock hire", desc: "QC every video · scheduling · RM Drive · access hygiene" },
+      tier3: [
+        { id: "n1", role: "Editor", who: "Victor", desc: "~30 shorts + 1 midform/wk" },
+        { id: "n2", role: "Intern Editor 1", who: "Blair's 30/mo", desc: "Short-form cuts → RM/Intern review" },
+        { id: "n3", role: "Intern Editor 2", who: "Blair's 30/mo", desc: "Short-form cuts → RM/Intern review" }
+      ]
+    },
+    pipeline: [
+      { id: "s1", n: "01", t: "Footage In", o: "Client · R", d: "Shared cloud folder, auto-upload on." },
+      { id: "s2", n: "02", t: "Edit", o: "Victor + Interns · R", d: "Cut to the client's style guide." },
+      { id: "s3", n: "03", t: "QC + Caption", o: "SMM · R/A", d: "Review, apply on-brand captions." },
+      { id: "s4", n: "04", t: "Publish", o: "SMM · R/A", d: "Schedule via agency-owned access." },
+      { id: "s5", n: "05", t: "Strategy", o: "Garrett · R/A", d: "Read results, adjust, sell." }
+    ],
+    scorecards: [
+      { id: "sc1", role: "CEO / Founder", who: "Garrett", kpis: ["New paying clients / MRR", "Podcast guests → Ekko pipeline", "Ekko deliverables sold", "NOT: editing, scheduling, invoicing"] },
+      { id: "sc2", role: "Social Media Mgr", who: "recruiting", kpis: ["On-time publishing cadence", "Zero lost files", "QC pass rate", "Videos shipped / week", "Access hygiene — 0 personal-login deps"] },
+      { id: "sc3", role: "Editor", who: "Victor", kpis: ["Volume delivered on time", "Style-guide adherence", "First-pass QC acceptance %"] },
+      { id: "sc4", role: "Intern Editors", who: "×2", kpis: ["Batch completion rate", "Quality after one feedback loop"] },
+      { id: "sc5", role: "Sales", who: "rm-sales", kpis: ["Prospects moved New → Won", "One thoughtful pitch / week", "Clean access handoff on close"] },
+      { id: "sc6", role: "Accounting", who: "ret-media-accountant", kpis: ["Invoices out on schedule", "A/R > 30 days chased", "Rev-share splits reconciled"] }
+    ],
+    engines: [
+      { id: "e1", tag: "Engine 01", title: "Client retainers & rev-share", body: "Done-for-you social for creators & agents. The current core.", own: "SMM (delivery) · Garrett (strategy) · per-client skills" },
+      { id: "e2", tag: "Engine 02", title: "Owned audience", body: "Modern Marketing (Skool, $997 Premium) + the founder's personal brand.", own: "Garrett · modern-marketing, garrett-pb" },
+      { id: "e3", tag: "Engine 03", title: "Ekko Archive — productized", body: "Voice Map (free) → $799 Content Engine Report → $3,497 Blueprint.", own: "Garrett · 90-Day Focus System" },
+      { id: "e4", tag: "Engine 04", title: "Yeah You podcast", body: "A sales engine, not a content business — every outro is a Voice Map CTA into Ekko.", own: "Garrett · 90-Day Focus System" }
+    ],
+    recs: [
+      { id: "r1", chip: "now", label: "Do now", title: "Break the Blair dependency before it breaks you", body: "Audit: Blair is ~66% of YTD revenue; top two are 82%. If Blair pauses, two-thirds of cash vanishes. Move: close 2–3 retainers and push Ekko/podcast so no client tops the ceiling." },
+      { id: "r2", chip: "now", label: "Do now", title: "Collect Paulo's overdue $900 today", body: "Audit: A/R shows Paulo $900 in the 1–30 day bucket. Move: fire the ret-media-accountant reminder and turn on QuickBooks auto-pay for both recurring clients." },
+      { id: "r3", chip: "now", label: "Do now", title: "Move account access off your personal Gmail", body: "Audit: delegation is blocked because logins live on Garrett's personal account. Move: stand up a Meta Business Portfolio owned by info@retmediaagency.com; grant task-level, not admin. Unlocks the SMM hire." },
+      { id: "r4", chip: "soon", label: "This month", title: "Decide Xander by end of August with a number", body: "Audit: Xander is on a free trial, not in QuickBooks — yet Victor's raise is contingent on it. Move: set a conversion price and a fixed re-eval date. Don't overhire ahead of the close." },
+      { id: "r5", chip: "soon", label: "This month", title: "Bill your owned properties like clients", body: "Audit: Modern Marketing ($997/mo) and Ekko show $0 in QuickBooks. Move: run them through QuickBooks so engines 2–4 appear in the same P&L. You can't manage concentration you can't see." },
+      { id: "r6", chip: "soon", label: "This quarter", title: "Fund the SMM from new MRR, then hand off publishing", body: "Audit: the SMM is the unlock hire but currently unpaid. Move: convert to paid ($800–1,200) once a new retainer lands, then transfer QC + publishing so Garrett exits the daily pipeline." },
+      { id: "r7", chip: "later", label: "Ongoing", title: "Wire the CRM to the money", body: "Audit: the Notion CRM and 90-Day scorecard are strong but disconnected from QuickBooks. Move: when a prospect flips to Won, trigger the invoice from ret-media-accountant." },
+      { id: "r8", chip: "later", label: "Ongoing", title: "Keep this model as your live cap-table", body: "Audit: comp and revenue now have one source of truth. Move: before every hire, check the coverage ratio and net floor go green. Quarterly, reconcile against live QuickBooks." }
     ]
   };
 
   var STATUSES = ["Active", "Sep 1", "Trial", "One-off", "Owned", "Paused"];
   var MODELS = ["Recurring", "Rev-share", "Project", "Owned"];
+  var CHIPS = [["now", "Do now"], ["soon", "This month"], ["later", "Ongoing"]];
 
   var state = load();
+  if (typeof state.editing !== "boolean") state.editing = true;
 
-  function load() {
-    try {
-      var raw = localStorage.getItem(KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return clone(DEFAULTS);
+  function load() { try { var r = localStorage.getItem(KEY); if (r) return migrate(JSON.parse(r)); } catch (e) {} return clone(DEFAULTS); }
+  function migrate(s) { // fill any missing top-level keys from defaults
+    var d = clone(DEFAULTS);
+    for (var k in d) if (!(k in s)) s[k] = d[k];
+    if (!s.copy) s.copy = d.copy; else for (var c in d.copy) if (!(c in s.copy)) s.copy[c] = d.copy[c];
+    return s;
   }
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); }
-    catch (e) { document.getElementById("save-note").textContent = "Edits not persisted (storage blocked)"; }
-  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { document.getElementById("save-note").textContent = "Edits not persisted (storage blocked)"; } }
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function money(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
   function pct(n) { return (Math.round(n * 10) / 10).toFixed(1) + "%"; }
-  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-  function statusClass(s) {
-    if (s === "Active") return "active";
-    if (s === "Owned") return "owned";
-    return "trial";
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function getPath(o, p) { return p.split(".").reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
+  function setPath(o, p, v) { var ks = p.split("."), last = ks.pop(); var t = ks.reduce(function (a, k) { return a[k]; }, o); t[last] = v; }
+
+  /* ---------- editable text: bind all [data-ep] from state.copy etc ---------- */
+  function fillText() {
+    document.querySelectorAll("[data-ep]").forEach(function (el) {
+      var v = getPath(state, el.getAttribute("data-ep"));
+      if (v != null) el.textContent = v;
+    });
   }
 
-  /* ---------- build editable rows (only on structural change, to preserve focus) ---------- */
+  /* ---------- team & clients ---------- */
   function buildTeam() {
-    var b = document.getElementById("team-body");
-    b.innerHTML = state.team.map(function (m) {
-      return '<tr data-id="' + m.id + '">' +
-        '<td><button class="rowbtn" data-act="del-team" data-id="' + m.id + '" title="Remove">×</button></td>' +
+    document.getElementById("team-body").innerHTML = state.team.map(function (m) {
+      return '<tr><td class="delcell"><button class="rowbtn" data-act="del-team" data-id="' + m.id + '">×</button></td>' +
         '<td><input class="in txt wide" data-sec="team" data-id="' + m.id + '" data-f="role" value="' + esc(m.role) + '"></td>' +
         '<td><input class="in txt" data-sec="team" data-id="' + m.id + '" data-f="who" value="' + esc(m.who) + '" placeholder="—"></td>' +
         '<td><input class="in txt" data-sec="team" data-id="' + m.id + '" data-f="serves" value="' + esc(m.serves) + '" placeholder="—"></td>' +
         '<td class="r"><span class="in-prefix"><span>$</span><input class="in num" type="number" min="0" step="10" data-sec="team" data-id="' + m.id + '" data-f="rate" value="' + m.rate + '"></span></td>' +
         '<td class="r"><input class="in num" style="width:64px" type="number" min="0" step="1" data-sec="team" data-id="' + m.id + '" data-f="qty" value="' + m.qty + '"></td>' +
-        '<td><input class="in txt" data-sec="team" data-id="' + m.id + '" data-f="unit" value="' + esc(m.unit) + '" placeholder="/mo"></td>' +
-        '<td class="r derived" data-mo="' + m.id + '"></td>' +
-      '</tr>';
+        '<td><input class="in txt" data-sec="team" data-id="' + m.id + '" data-f="unit" value="' + esc(m.unit) + '"></td>' +
+        '<td class="r derived" data-mo="' + m.id + '"></td></tr>';
     }).join("");
   }
-
   function buildClients() {
-    var b = document.getElementById("client-body");
-    b.innerHTML = state.clients.map(function (c) {
-      return '<tr data-id="' + c.id + '">' +
-        '<td><button class="rowbtn" data-act="del-client" data-id="' + c.id + '" title="Remove">×</button></td>' +
+    document.getElementById("client-body").innerHTML = state.clients.map(function (c) {
+      return '<tr><td class="delcell"><button class="rowbtn" data-act="del-client" data-id="' + c.id + '">×</button></td>' +
         '<td><input class="in txt wide" data-sec="clients" data-id="' + c.id + '" data-f="name" value="' + esc(c.name) + '"></td>' +
-        '<td>' + select(c.id, "status", STATUSES, c.status) + '</td>' +
-        '<td>' + select(c.id, "model", MODELS, c.model) + '</td>' +
+        '<td>' + sel(c.id, "status", STATUSES, c.status) + '</td><td>' + sel(c.id, "model", MODELS, c.model) + '</td>' +
         '<td class="r"><span class="in-prefix"><span>$</span><input class="in num" type="number" min="0" step="50" data-sec="clients" data-id="' + c.id + '" data-f="mrr" value="' + c.mrr + '"></span></td>' +
-        '<td class="r"><input class="in num" style="width:64px" type="number" min="0" max="100" step="1" data-sec="clients" data-id="' + c.id + '" data-f="share" value="' + c.share + '"></td>' +
+        '<td class="r"><input class="in num" style="width:64px" type="number" min="0" max="100" data-sec="clients" data-id="' + c.id + '" data-f="share" value="' + c.share + '"></td>' +
         '<td class="r"><span class="in-prefix"><span>$</span><input class="in num" type="number" min="0" step="100" data-sec="clients" data-id="' + c.id + '" data-f="ytd" value="' + c.ytd + '"></span></td>' +
-        '<td class="r derived" data-shareout="' + c.id + '"></td>' +
-      '</tr>';
+        '<td class="r derived" data-shareout="' + c.id + '"></td></tr>';
+    }).join("");
+  }
+  function sel(id, field, opts, val) {
+    return '<select class="in" data-sec="clients" data-id="' + id + '" data-f="' + field + '">' +
+      opts.map(function (o) { return '<option' + (o === val ? " selected" : "") + '>' + esc(o) + '</option>'; }).join("") + '</select>';
+  }
+
+  /* ---------- org ---------- */
+  function buildOrg() {
+    var o = state.org;
+    var fns = o.functions.map(function (f, i) {
+      return '<div class="fn-node"><button class="del" data-act="del-fn" data-id="' + f.id + '">×</button>' +
+        '<div class="role" data-ep="org.functions.' + i + '.role"></div><div class="sop" data-ep="org.functions.' + i + '.sop"></div></div>';
+    }).join("") + '<button class="addbtn editonly" data-act="add-fn" style="margin-top:0">+ function</button>';
+    var t3 = state.org.tier3.map(function (n, i) {
+      return '<div class="node"><button class="del" data-act="del-node" data-id="' + n.id + '">×</button>' +
+        '<div class="role" data-ep="org.tier3.' + i + '.role"></div><div class="who" data-ep="org.tier3.' + i + '.who"></div><div class="desc" data-ep="org.tier3.' + i + '.desc"></div></div>';
+    }).join("");
+    document.getElementById("org").innerHTML =
+      '<div class="org-row"><div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center">' +
+        '<span class="tier-label">Tier 1 · Ownership</span>' +
+        '<div class="node ceo"><div class="role" data-ep="org.ceo.role"></div><div class="who" data-ep="org.ceo.who"></div><div class="desc" data-ep="org.ceo.desc"></div></div>' +
+      '</div><div class="side-fn">' + fns + '</div></div>' +
+      '<div class="connector"></div><span class="tier-label">Tier 2 · Operations</span>' +
+      '<div class="node recruit"><div class="role" data-ep="org.smm.role"></div><div class="who" data-ep="org.smm.who"></div><div class="desc" data-ep="org.smm.desc"></div></div>' +
+      '<div class="connector"></div><span class="tier-label" style="margin-bottom:8px">Tier 3 · Production</span>' +
+      '<div class="fanout">' + t3 + '</div>' +
+      '<button class="addbtn editonly" data-act="add-node">+ Add production seat</button>';
+  }
+
+  /* ---------- pipeline / scorecards / engines / recs ---------- */
+  function buildPipe() {
+    document.getElementById("pipe").innerHTML = state.pipeline.map(function (s, i) {
+      return '<div class="step"><button class="del" data-act="del-step" data-id="' + s.id + '">×</button>' +
+        '<div class="n" data-ep="pipeline.' + i + '.n"></div><div class="t" data-ep="pipeline.' + i + '.t"></div>' +
+        '<div class="o" data-ep="pipeline.' + i + '.o"></div><div class="d" data-ep="pipeline.' + i + '.d"></div></div>';
+    }).join("");
+  }
+  function buildScores() {
+    document.getElementById("scorecards").innerHTML = state.scorecards.map(function (sc, i) {
+      var kp = sc.kpis.map(function (k, j) {
+        return '<li><span data-ep="scorecards.' + i + '.kpis.' + j + '"></span><span class="kdel" data-act="del-kpi" data-id="' + sc.id + '" data-j="' + j + '">×</span></li>';
+      }).join("");
+      return '<div class="card"><button class="del" data-act="del-score" data-id="' + sc.id + '">×</button>' +
+        '<h3><span data-ep="scorecards.' + i + '.role"></span> <span class="who" data-ep="scorecards.' + i + '.who"></span></h3>' +
+        '<ul class="kpis">' + kp + '</ul>' +
+        '<button class="addbtn editonly" data-act="add-kpi" data-id="' + sc.id + '" style="margin-top:8px;font-size:10.5px;padding:4px 9px">+ KPI</button></div>';
+    }).join("");
+  }
+  function buildEngines() {
+    document.getElementById("engines").innerHTML = state.engines.map(function (e, i) {
+      return '<div class="engine"><button class="del" data-act="del-engine" data-id="' + e.id + '">×</button>' +
+        '<div class="num-tag" data-ep="engines.' + i + '.tag"></div><h3 data-ep="engines.' + i + '.title"></h3>' +
+        '<p data-ep="engines.' + i + '.body"></p><div class="own" data-ep="engines.' + i + '.own"></div></div>';
+    }).join("");
+  }
+  function buildRecs() {
+    document.getElementById("recs").innerHTML = state.recs.map(function (r, i) {
+      var chip = '<select class="chip ' + r.chip + '" data-act="chip" data-id="' + r.id + '">' +
+        CHIPS.map(function (c) { return '<option value="' + c[0] + '"' + (c[0] === r.chip ? " selected" : "") + '>' + c[1] + '</option>'; }).join("") + '</select>';
+      return '<div class="rec"><button class="del" data-act="del-rec" data-id="' + r.id + '">×</button>' +
+        '<div class="rec-head"><span class="rec-n">' + String(i + 1).padStart(2, "0") + '</span>' +
+        '<span class="rec-t" data-ep="recs.' + i + '.title"></span>' + chip + '</div>' +
+        '<div class="rec-b" data-ep="recs.' + i + '.body"></div></div>';
     }).join("");
   }
 
-  function select(id, field, opts, val) {
-    return '<select class="in" data-sec="clients" data-id="' + id + '" data-f="' + field + '">' +
-      opts.map(function (o) { return '<option' + (o === val ? " selected" : "") + '>' + esc(o) + '</option>'; }).join("") +
-      '</select>';
-  }
-
-  /* ---------- recompute all derived outputs (no rebuild → focus safe) ---------- */
+  /* ---------- derived recompute (display only) ---------- */
   function recalc() {
-    var teamMonthly = state.team.reduce(function (s, m) { return s + (Number(m.rate) || 0) * (Number(m.qty) || 0); }, 0);
-    state.team.forEach(function (m) {
-      var el = document.querySelector('[data-mo="' + m.id + '"]');
-      if (el) el.textContent = money((Number(m.rate) || 0) * (Number(m.qty) || 0));
-    });
+    var teamMonthly = state.team.reduce(function (s, m) { return s + (+m.rate || 0) * (+m.qty || 0); }, 0);
+    state.team.forEach(function (m) { var el = document.querySelector('[data-mo="' + m.id + '"]'); if (el) el.textContent = money((+m.rate || 0) * (+m.qty || 0)); });
     document.getElementById("team-total").textContent = money(teamMonthly);
 
-    var mrr = state.clients.reduce(function (s, c) { return s + (Number(c.mrr) || 0); }, 0);
-    var ytdTotal = state.clients.reduce(function (s, c) { return s + (Number(c.ytd) || 0); }, 0);
+    var mrr = state.clients.reduce(function (s, c) { return s + (+c.mrr || 0); }, 0);
+    var ytdTotal = state.clients.reduce(function (s, c) { return s + (+c.ytd || 0); }, 0);
     document.getElementById("mrr-total").textContent = money(mrr);
     document.getElementById("ytd-total").textContent = money(ytdTotal);
+    state.clients.forEach(function (c) { var el = document.querySelector('[data-shareout="' + c.id + '"]'); if (el) el.textContent = ytdTotal ? pct((+c.ytd || 0) / ytdTotal * 100) : "—"; });
 
-    state.clients.forEach(function (c) {
-      var el = document.querySelector('[data-shareout="' + c.id + '"]');
-      if (el) el.textContent = ytdTotal ? pct((Number(c.ytd) || 0) / ytdTotal * 100) : "—";
-    });
-
-    // concentration
-    var sorted = state.clients.slice().filter(function (c) { return (Number(c.ytd) || 0) > 0; })
-      .sort(function (a, b) { return b.ytd - a.ytd; });
+    var sorted = state.clients.slice().filter(function (c) { return (+c.ytd || 0) > 0; }).sort(function (a, b) { return b.ytd - a.ytd; });
     var maxYtd = sorted.length ? sorted[0].ytd : 0;
-    var topShare = ytdTotal ? sorted[0].ytd / ytdTotal * 100 : 0;
+    var topShare = ytdTotal && sorted.length ? sorted[0].ytd / ytdTotal * 100 : 0;
     var top2 = ytdTotal ? ((sorted[0] ? sorted[0].ytd : 0) + (sorted[1] ? sorted[1].ytd : 0)) / ytdTotal * 100 : 0;
-    var ceiling = Number(state.ceiling) || 40;
+    var ceiling = +state.ceiling || 40;
 
     document.getElementById("bars-body").innerHTML = sorted.map(function (c) {
-      var share = c.ytd / ytdTotal * 100;
-      var w = maxYtd ? (c.ytd / maxYtd * 100) : 0;
-      var isRisk = share > ceiling;
+      var share = c.ytd / ytdTotal * 100, w = maxYtd ? c.ytd / maxYtd * 100 : 0, risk = share > ceiling;
       return '<div class="bar-row"><div class="lbl">' + esc(c.name) + ' <small>' + esc(c.model) + '</small></div>' +
-        '<div class="track"><div class="fill' + (isRisk ? ' risk' : '') + '" style="width:' + w.toFixed(1) + '%"></div></div>' +
+        '<div class="track"><div class="fill' + (risk ? ' risk' : '') + '" style="width:' + w.toFixed(1) + '%"></div></div>' +
         '<div class="amt"><b>' + money(c.ytd) + '</b><span>' + pct(share) + '</span></div></div>';
     }).join("") || '<p style="color:var(--ink-faint);font-size:13px">Add YTD revenue to a client to see concentration.</p>';
+    document.getElementById("bars-foot").innerHTML = sorted.length ?
+      'Top client = <b style="color:' + (topShare > ceiling ? "var(--red)" : "var(--green)") + '">' + pct(topShare) + '</b> of revenue · top two = <b>' + pct(top2) + '</b>. Ceiling: ' + ceiling + '%.' : "";
 
-    document.getElementById("bars-foot").innerHTML = sorted.length
-      ? 'Top client = <b style="color:' + (topShare > ceiling ? 'var(--red)' : 'var(--green)') + '">' + pct(topShare) +
-        '</b> of revenue · top two = <b>' + pct(top2) + '</b>. Ceiling: no single client above ' + ceiling + '%.'
-      : '';
-
-    // metric cards
     var net = mrr - teamMonthly;
-    var metrics = [
+    document.getElementById("metrics").innerHTML = [
       { k: "Revenue YTD", v: money(ytdTotal), s: state.clients.length + " clients tracked" },
       { k: "Recurring floor", v: money(mrr) + "<span style='font-size:13px;color:var(--ink-faint)'>/mo</span>", s: "sum of recurring $/mo" },
       { k: "Team run-rate", v: money(teamMonthly) + "<span style='font-size:13px;color:var(--ink-faint)'>/mo</span>", s: state.team.length + " people" },
       { k: "Net recurring floor", v: money(net) + "<span style='font-size:13px;color:var(--ink-faint)'>/mo</span>", s: "recurring − team", cls: net >= 0 ? "good" : "flag" },
       { k: "Top-client share", v: pct(topShare), s: topShare > ceiling ? "over " + ceiling + "% ceiling" : "within ceiling", cls: topShare > ceiling ? "flag" : "good" }
-    ];
-    document.getElementById("metrics").innerHTML = metrics.map(function (m) {
-      return '<div class="metric ' + (m.cls || "") + '"><div class="k">' + m.k + '</div><div class="v">' + m.v + '</div><div class="s">' + m.s + '</div></div>';
-    }).join("");
+    ].map(function (m) { return '<div class="metric ' + (m.cls || "") + '"><div class="k">' + m.k + '</div><div class="v">' + m.v + '</div><div class="s">' + m.s + '</div></div>'; }).join("");
 
-    // guardrails
-    var guards = [
-      {
-        k: "Client concentration", v: pct(topShare),
-        s: topShare > ceiling ? "Breached — diversify the base" : "Healthy — under the ceiling",
-        cls: topShare > ceiling ? "fail" : "pass"
-      },
-      {
-        k: "Recurring vs. team cost", v: money(net) + "/mo",
-        s: net >= 0 ? "Recurring covers the team" : "Team exceeds recurring — needs rev-share/projects",
-        cls: net >= 0 ? "pass" : "fail"
-      },
-      {
-        k: "Coverage ratio", v: (teamMonthly ? (mrr / teamMonthly).toFixed(2) : "∞") + "×",
-        s: "Recurring revenue ÷ team run-rate",
-        cls: !teamMonthly || mrr / teamMonthly >= 1.5 ? "pass" : (mrr >= teamMonthly ? "warn" : "fail")
-      }
-    ];
-    document.getElementById("guards").innerHTML = guards.map(function (g) {
-      return '<div class="guard ' + g.cls + '"><div class="g-k">' + g.k + '</div><div class="g-v">' + g.v + '</div><div class="g-s">' + g.s + '</div></div>';
-    }).join("");
+    document.getElementById("guards").innerHTML = [
+      { k: "Client concentration", v: pct(topShare), s: topShare > ceiling ? "Breached — diversify the base" : "Healthy — under the ceiling", cls: topShare > ceiling ? "fail" : "pass" },
+      { k: "Recurring vs. team cost", v: money(net) + "/mo", s: net >= 0 ? "Recurring covers the team" : "Team exceeds recurring", cls: net >= 0 ? "pass" : "fail" },
+      { k: "Coverage ratio", v: (teamMonthly ? (mrr / teamMonthly).toFixed(2) : "∞") + "×", s: "Recurring ÷ team run-rate", cls: !teamMonthly || mrr / teamMonthly >= 1.5 ? "pass" : (mrr >= teamMonthly ? "warn" : "fail") }
+    ].map(function (g) { return '<div class="guard ' + g.cls + '"><div class="g-k">' + g.k + '</div><div class="g-v">' + g.v + '</div><div class="g-s">' + g.s + '</div></div>'; }).join("");
 
-    // risk register (top line derived)
     var topName = sorted.length ? sorted[0].name : "—";
-    var risks = [
-      { sev: topShare > ceiling ? "high" : "low", t: topName + " = " + pct(topShare) + " of revenue",
-        fix: topShare > ceiling ? "Over the " + ceiling + "% ceiling. Land more retainers; grow Ekko + podcast engines to diversify." : "Within the ceiling — keep it there as you add clients." },
-      { sev: "high", t: "Access lives on the founder's personal Gmail",
-        fix: "Migrate to a Meta Business Portfolio owned by info@retmediaagency.com; SMM gets task-level, not admin." },
-      { sev: "med", t: "No SMM = founder is the bottleneck",
-        fix: "Close the SMM hire; grant trusted publishing rights once QC is proven." },
-      { sev: net >= 0 ? "low" : "high", t: "Team cost vs. recurring floor",
-        fix: net >= 0 ? "Recurring covers the team by " + money(net) + "/mo. Fund new hires from new contracted MRR." : "Team run-rate exceeds recurring by " + money(-net) + "/mo — cover it with rev-share/projects or trim." },
-      { sev: "low", t: "Shiny-object churn",
-        fix: "90-Day Focus System — Parking Lot + Paused list keep focus on what's in motion." }
-    ];
-    document.getElementById("risks").innerHTML = risks.map(function (r) {
-      return '<div class="risk ' + r.sev + '"><div class="r-title">' + esc(r.t) + '</div><span class="sev ' + r.sev + '">' + r.sev + '</span><div class="r-fix">' + esc(r.fix) + '</div></div>';
-    }).join("");
-
+    document.getElementById("risks").innerHTML = [
+      { sev: topShare > ceiling ? "high" : "low", t: topName + " = " + pct(topShare) + " of revenue", fix: topShare > ceiling ? "Over the " + ceiling + "% ceiling. Land more retainers; grow Ekko + podcast to diversify." : "Within the ceiling — keep it there as you add clients." },
+      { sev: "high", t: "Access lives on the founder's personal Gmail", fix: "Migrate to a Meta Business Portfolio owned by info@retmediaagency.com; SMM gets task-level, not admin." },
+      { sev: "med", t: "No SMM = founder is the bottleneck", fix: "Close the SMM hire; grant trusted publishing rights once QC is proven." },
+      { sev: net >= 0 ? "low" : "high", t: "Team cost vs. recurring floor", fix: net >= 0 ? "Recurring covers the team by " + money(net) + "/mo. Fund new hires from new MRR." : "Team exceeds recurring by " + money(-net) + "/mo — cover with rev-share/projects or trim." },
+      { sev: "low", t: "Shiny-object churn", fix: "90-Day Focus System — Parking Lot + Paused list keep focus on what's in motion." }
+    ].map(function (r) { return '<div class="risk ' + r.sev + '"><div class="r-title">' + esc(r.t) + '</div><span class="sev ' + r.sev + '">' + r.sev + '</span><div class="r-fix">' + esc(r.fix) + '</div></div>'; }).join("");
     save();
   }
 
-  /* ---------- events (delegated) ---------- */
-  function find(sec, id) {
-    var arr = state[sec];
-    for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return arr[i];
-    return null;
+  /* ---------- edit state ---------- */
+  function applyEdit() {
+    document.body.classList.toggle("editing", state.editing);
+    document.querySelectorAll("[data-ep]").forEach(function (el) { el.contentEditable = state.editing ? "true" : "false"; });
+    document.querySelectorAll("input.in, select.in").forEach(function (el) {
+      if (el.tagName === "INPUT") el.readOnly = !state.editing; else el.disabled = !state.editing;
+    });
+    document.querySelectorAll("select.chip").forEach(function (el) { el.disabled = !state.editing; });
+    var b = document.getElementById("toggle-edit");
+    b.textContent = state.editing ? "✎ Editing on" : "👁 Preview";
+    b.classList.toggle("primary", state.editing);
+    document.getElementById("mode-hint").textContent = state.editing ? "Click any text or number to change it" : "Read-only preview — toggle to edit";
   }
 
+  function rebuildAll() {
+    fillText(); buildTeam(); buildClients(); buildOrg(); buildPipe(); buildScores(); buildEngines(); buildRecs();
+    applyEdit(); recalc();
+  }
+  function findRow(sec, id) { var a = state[sec]; for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 1600); }
+
+  /* ---------- events ---------- */
+  // editable text (contenteditable)
   document.addEventListener("input", function (e) {
-    var t = e.target;
-    if (!t.dataset || !t.dataset.sec) return;
-    var item = find(t.dataset.sec, t.dataset.id);
-    if (!item) return;
-    var f = t.dataset.f;
-    item[f] = (t.type === "number") ? (t.value === "" ? 0 : Number(t.value)) : t.value;
-    recalc();
-  });
-  document.addEventListener("change", function (e) {
-    var t = e.target;
-    if (t.tagName === "SELECT" && t.dataset && t.dataset.sec) {
-      var item = find(t.dataset.sec, t.dataset.id);
-      if (item) { item[t.dataset.f] = t.value; recalc(); }
+    var el = e.target;
+    if (el.hasAttribute && el.hasAttribute("data-ep")) { setPath(state, el.getAttribute("data-ep"), el.textContent); save(); return; }
+    if (el.dataset && el.dataset.sec) {
+      var item = findRow(el.dataset.sec, el.dataset.id); if (!item) return;
+      item[el.dataset.f] = (el.type === "number") ? (el.value === "" ? 0 : +el.value) : el.value; recalc();
     }
   });
+  document.addEventListener("change", function (e) {
+    var el = e.target;
+    if (el.tagName === "SELECT" && el.dataset.act === "chip") {
+      var r = findRow("recs", el.dataset.id); if (r) { r.chip = el.value; var lbl = CHIPS.filter(function (c) { return c[0] === el.value; })[0]; r.label = lbl ? lbl[1] : r.label; el.className = "chip " + el.value; save(); }
+      return;
+    }
+    if (el.tagName === "SELECT" && el.dataset.sec) { var it = findRow(el.dataset.sec, el.dataset.id); if (it) { it[el.dataset.f] = el.value; recalc(); } }
+  });
+  document.getElementById("ceiling-input").addEventListener("input", function () { state.ceiling = this.value === "" ? 0 : +this.value; recalc(); });
+
+  // add / delete
   document.addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest("[data-act]") : null;
-    if (!b) return;
+    var b = e.target.closest ? e.target.closest("[data-act]") : null; if (!b) return;
     var act = b.dataset.act, id = b.dataset.id;
-    if (act === "del-team") { state.team = state.team.filter(function (m) { return m.id !== id; }); buildTeam(); recalc(); }
-    if (act === "del-client") { state.clients = state.clients.filter(function (c) { return c.id !== id; }); buildClients(); recalc(); }
+    if (act === "del-team") { state.team = state.team.filter(function (m) { return m.id !== id; }); buildTeam(); applyEdit(); recalc(); }
+    else if (act === "del-client") { state.clients = state.clients.filter(function (c) { return c.id !== id; }); buildClients(); applyEdit(); recalc(); }
+    else if (act === "del-fn") { state.org.functions = state.org.functions.filter(function (f) { return f.id !== id; }); buildOrg(); fillText(); applyEdit(); }
+    else if (act === "add-fn") { state.org.functions.push({ id: "fn" + Date.now(), role: "New function", sop: "owner · skill" }); buildOrg(); fillText(); applyEdit(); save(); }
+    else if (act === "del-node") { state.org.tier3 = state.org.tier3.filter(function (n) { return n.id !== id; }); buildOrg(); fillText(); applyEdit(); }
+    else if (act === "add-node") { state.org.tier3.push({ id: "n" + Date.now(), role: "New seat", who: "", desc: "" }); buildOrg(); fillText(); applyEdit(); save(); }
+    else if (act === "del-step") { state.pipeline = state.pipeline.filter(function (s) { return s.id !== id; }); buildPipe(); fillText(); applyEdit(); }
+    else if (act === "del-score") { state.scorecards = state.scorecards.filter(function (s) { return s.id !== id; }); buildScores(); fillText(); applyEdit(); }
+    else if (act === "add-kpi") { var sc = findRow("scorecards", id); if (sc) { sc.kpis.push("New KPI"); buildScores(); fillText(); applyEdit(); save(); } }
+    else if (act === "del-kpi") { var s2 = findRow("scorecards", id); if (s2) { s2.kpis.splice(+b.dataset.j, 1); buildScores(); fillText(); applyEdit(); save(); } }
+    else if (act === "del-engine") { state.engines = state.engines.filter(function (x) { return x.id !== id; }); buildEngines(); fillText(); applyEdit(); }
+    else if (act === "del-rec") { state.recs = state.recs.filter(function (r) { return r.id !== id; }); buildRecs(); fillText(); applyEdit(); }
+    if (["del-fn","del-node","del-step","del-score","del-engine","del-rec"].indexOf(act) >= 0) save();
   });
-  document.getElementById("add-team").addEventListener("click", function () {
-    state.team.push({ id: "t" + Date.now(), role: "New role", who: "", serves: "", rate: 0, qty: 1, unit: "/mo" });
-    buildTeam(); recalc();
+  document.getElementById("add-team").addEventListener("click", function () { state.team.push({ id: "t" + Date.now(), role: "New role", who: "", serves: "", rate: 0, qty: 1, unit: "/mo" }); buildTeam(); applyEdit(); recalc(); });
+  document.getElementById("add-client").addEventListener("click", function () { state.clients.push({ id: "c" + Date.now(), name: "New client", status: "Trial", model: "Recurring", mrr: 0, share: 0, ytd: 0 }); buildClients(); applyEdit(); recalc(); });
+  document.getElementById("add-step").addEventListener("click", function () { state.pipeline.push({ id: "s" + Date.now(), n: String(state.pipeline.length + 1).padStart(2, "0"), t: "New step", o: "Owner · R", d: "" }); buildPipe(); fillText(); applyEdit(); save(); });
+  document.getElementById("add-score").addEventListener("click", function () { state.scorecards.push({ id: "sc" + Date.now(), role: "New role", who: "", kpis: ["New KPI"] }); buildScores(); fillText(); applyEdit(); save(); });
+  document.getElementById("add-engine").addEventListener("click", function () { state.engines.push({ id: "e" + Date.now(), tag: "Engine", title: "New engine", body: "", own: "" }); buildEngines(); fillText(); applyEdit(); save(); });
+  document.getElementById("add-rec").addEventListener("click", function () { state.recs.push({ id: "r" + Date.now(), chip: "soon", label: "This month", title: "New recommendation", body: "" }); buildRecs(); fillText(); applyEdit(); save(); });
+
+  // controls
+  document.getElementById("toggle-edit").addEventListener("click", function () { state.editing = !state.editing; applyEdit(); save(); });
+  var resetArmed = false;
+  document.getElementById("reset").addEventListener("click", function () {
+    if (!resetArmed) { resetArmed = true; this.textContent = "↺ Click again to confirm"; toast("Click Reset again to confirm"); var self = this; setTimeout(function () { resetArmed = false; self.textContent = "↺ Reset to defaults"; }, 3000); return; }
+    resetArmed = false; this.textContent = "↺ Reset to defaults";
+    state = clone(DEFAULTS); document.getElementById("ceiling-input").value = state.ceiling; rebuildAll(); toast("Reset to defaults");
   });
-  document.getElementById("add-client").addEventListener("click", function () {
-    state.clients.push({ id: "c" + Date.now(), name: "New client", status: "Trial", model: "Recurring", mrr: 0, share: 0, ytd: 0 });
-    buildClients(); recalc();
+  document.getElementById("copy-json").addEventListener("click", function () {
+    var txt = JSON.stringify(state, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { toast("Snapshot copied to clipboard"); }, function () { toast("Copy blocked — select all in console"); });
+    else toast("Clipboard unavailable");
   });
 
-  buildTeam();
-  buildClients();
-  recalc();
+  // init
+  document.getElementById("ceiling-input").value = state.ceiling;
+  rebuildAll();
 })();
 </script>
