@@ -191,10 +191,13 @@
 
   .foot{color:var(--faint);font-size:11px;text-align:center;margin-top:34px;line-height:1.7}
 
+  .kpis.four{grid-template-columns:repeat(4,1fr)}
   @media(max-width:900px){
-    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpis,.kpis.four{grid-template-columns:repeat(2,1fr)}
     .sets{grid-template-columns:1fr}
     .twocol{grid-template-columns:1fr}
+    .clock{display:none}
+    .head{flex-wrap:wrap}
   }
 </style>
 </head>
@@ -236,7 +239,7 @@
 
     <div class="head"><h2>Pipeline at a glance</h2><span class="tag">tap to open the board</span>
       <div class="rt"><button class="btn sm ghost" onclick="setTab('pipeline')">Open board →</button></div></div>
-    <div class="kpis" id="pipeSnap" style="grid-template-columns:repeat(5,1fr);margin-top:0"></div>
+    <div class="kpis" id="pipeSnap" style="margin-top:0"></div>
 
     <div class="head"><h2>Milestones</h2><span class="tag">banked wins</span>
       <div class="rt"><button class="btn sm ghost" onclick="rideTheWave('the stoke')">🏄 Ride again</button></div></div>
@@ -269,7 +272,7 @@
 
   <!-- ========= MONEY ========= -->
   <section class="view" id="v-money">
-    <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpis four">
       <div class="kpi win"><div class="edge"></div><div class="k">Collected 2026</div><div class="v num" id="mCollected">$0</div><div class="s">paid to date</div></div>
       <div class="kpi money"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="mInvoiced">$0</div><div class="s">Jan–Aug</div></div>
       <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="mAr">$0</div><div class="s">unpaid now</div></div>
