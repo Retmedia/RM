@@ -67,14 +67,15 @@
   .set.done .box{background:var(--green);border-color:var(--green);color:#04180f}
   .set .t{font-weight:650;font-size:13.5px} .set.done .t{text-decoration:line-through}
   .set .d{font-size:11.5px;color:var(--faint);margin-top:2px}
-  .set .sx{margin-left:auto;display:flex;gap:4px;opacity:0;transition:.15s}
-  .set:hover .sx{opacity:1}
+  .set .sx{margin-left:auto;display:flex;gap:4px;opacity:.5;transition:.15s}
+  .set:hover .sx,.set:focus-within .sx{opacity:1}
   .ic{background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;width:26px;height:26px;cursor:pointer;font-size:12px;display:grid;place-items:center;flex:none}
   .ic:hover{color:var(--ink);border-color:var(--line2)}
-  .pill{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:7px;vertical-align:middle}
-  .pill.hot{background:#3a1a18;color:var(--coral);border:1px solid #5e2a26}
-  .pill.warm{background:#3a2f16;color:var(--sand);border:1px solid #5e4c22}
-  .pill.today{background:#132f2c;color:var(--aqua2);border:1px solid #1f5049}
+  .pill{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:700;margin-left:7px;vertical-align:middle;white-space:nowrap}
+  .pill.over{background:#3a1a18;color:var(--coral);border:1px solid #5e2a26}
+  .pill.due{background:#3a2f16;color:var(--sand);border:1px solid #5e4c22}
+  .pill.upc{background:#132f2c;color:var(--aqua2);border:1px solid #1f5049}
+  .pill.none{background:#182a3a;color:var(--faint);border:1px solid var(--line)}
 
   /* ---------- Pipeline ---------- */
   .hint{font-size:12px;color:var(--faint);background:var(--deck);border:1px dashed var(--line2);border-radius:10px;padding:9px 13px;margin-bottom:12px}
@@ -334,15 +335,14 @@ const SEED = {
     {name:"Predictive History",co:"",stage:"lineup", value:1000, note:""},
   ],
   sets:[
-    {t:"Call ADAS Globus — Smit Shah", d:"Thu 8/14, 5:30pm Warsaw · commercial arrangement", heat:"today"},
-    {t:"Chase the whale — Chosen Advisory", d:"Highest-value deal in the pipe", heat:"hot"},
-    {t:"Prep call with Mario Kalpou", d:"Man Eats Wild · Mon 8/17 · Shane referral", heat:"warm"},
-    {t:"Follow up Kill Tony's team", d:"Podcast repurposing · they owe an email", heat:"hot"},
-    {t:"Collect $4,900 outstanding", d:"Foreign Waters · Shane 0092 (paying now) · Paulo", heat:"warm"},
-    {t:"Finish Foreign Waters onboarding", d:"Euka + TikTok Shop access with Gianni", heat:"warm"},
-    {t:"Post rest of Blair's FB schedule", d:"Open task in Notion", heat:""},
-    {t:"Review social-media-manager applicants", d:"10+ replies in inbox from the LinkedIn post", heat:""},
-    {t:"Work the 80-creator cold outreach", d:"Blast sent 8/11 · reply to any bites", heat:""},
+    {t:"Call ADAS Globus — Smit Shah", d:"5:30pm Warsaw · commercial arrangement", due:"2026-08-14"},
+    {t:"Review social-media-manager applicants", d:"10+ replies in inbox from the LinkedIn post", due:"2026-08-14"},
+    {t:"Chase the whale — Chosen Advisory", d:"Highest-value deal in the pipe", due:"2026-08-15"},
+    {t:"Collect $4,900 outstanding", d:"Foreign Waters · Shane 0092 (paying now) · Paulo", due:"2026-08-15"},
+    {t:"Post rest of Blair's FB schedule", d:"Open task in Notion", due:"2026-08-16"},
+    {t:"Prep call with Mario Kalpou", d:"Man Eats Wild · Shane referral", due:"2026-08-17"},
+    {t:"Finish Foreign Waters onboarding", d:"Euka + TikTok Shop access with Gianni", due:"2026-08-18"},
+    {t:"Work the 80-creator cold outreach", d:"Blast sent 8/11 · reply to any bites", due:"2026-08-20"},
   ],
   // real QuickBooks invoices (2026)
   invoices:[
@@ -387,7 +387,7 @@ const MILES=[
 ];
 
 /* ---------- state (editable) ---------- */
-const LS="retmedia_deck_v4";
+const LS="retmedia_deck_v5";
 function seed(){return{
   clients:SEED.clients.map((c,i)=>({...c,id:"c"+i})),
   deals:SEED.deals.map((d,i)=>({...d,id:"d"+i})),
@@ -434,8 +434,8 @@ function tickClock(){
   const now=new Date();
   const opts={weekday:"long",month:"short",day:"numeric",year:"numeric"};
   document.getElementById("clockDate").innerHTML=now.toLocaleDateString("en-US",opts).replace(/, (\d{4})/," · <b>$1</b>");
-  const nextHot=S.sets.find(s=>!s.done&&(s.heat==="today"||s.heat==="hot"));
-  document.getElementById("clockFocus").textContent=nextHot?"Next up: "+nextHot.t:"All caught up 🤙";
+  const upcoming=S.sets.filter(s=>!s.done&&s.due).sort((a,b)=>a.due<b.due?-1:1)[0];
+  document.getElementById("clockFocus").textContent=upcoming?"Next up: "+upcoming.t+" ("+fuMeta(upcoming.due).word+")":"All caught up 🤙";
 }
 
 /* ---------- toast ---------- */
@@ -492,19 +492,18 @@ function dropDeal(id,stage){
 /* ---------- SETS ---------- */
 function toggleSet(id){const s=S.sets.find(x=>x.id===id);if(!s)return;s.done=!s.done;save();render();}
 function editSet(id){
-  const s=id?S.sets.find(x=>x.id===id):{t:"",d:"",heat:""};
-  openModal(`<h3>${id?"Edit set":"Add a set"}</h3>
+  const s=id?S.sets.find(x=>x.id===id):{t:"",d:"",due:""};
+  openModal(`<h3>${id?"Edit task":"Add a task"}</h3>
     <label>Task</label><input id="x_t" value="${esc(s.t)}" placeholder="Follow up with…">
     <label>Detail</label><input id="x_d" value="${esc(s.d||"")}" placeholder="context / next step">
-    <label>Heat</label><select id="x_h">
-      ${["","today","warm","hot"].map(h=>`<option value="${h}" ${s.heat===h?"selected":""}>${h||"normal"}</option>`).join("")}</select>
+    <label>Due date</label><input id="x_due" type="date" value="${s.due||""}">
     <div class="mact"><button class="btn" onclick="saveSet('${id||""}')">${id?"Save":"Add"}</button>
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
     ${id?`<button class="btn danger" style="margin-left:auto" onclick="delSet('${id}')">Delete</button>`:""}</div>`);
   setTimeout(()=>document.getElementById("x_t").focus(),50);
 }
 function saveSet(id){const t=v("x_t");if(!t){toast("Task required");return;}
-  const data={t,d:v("x_d"),heat:v("x_h")};
+  const data={t,d:v("x_d"),due:v("x_due")};
   if(id)Object.assign(S.sets.find(x=>x.id===id),data);
   else S.sets.push({id:"s"+Date.now(),done:false,...data});
   closeModal();save();render();}
@@ -557,14 +556,17 @@ function render(){
   document.getElementById("tabCli").textContent=S.clients.length;
   document.getElementById("tabTask").textContent=S.sets.filter(s=>!s.done).length;
 
-  // sets
-  const order={today:0,hot:1,warm:2,"":3};
-  const sorted=[...S.sets].sort((a,b)=>(a.done-b.done)||(order[a.heat]-order[b.heat]));
-  const setHTML=s=>`<div class="set ${s.done?"done":""}">
+  // sets — scheduled by date: overdue → today → soonest, undated last, done at bottom
+  const sorted=[...S.sets].sort((a,b)=>{
+    if(a.done!==b.done)return a.done?1:-1;
+    return (a.due||"9999-99-99")<(b.due||"9999-99-99")?-1:(a.due||"9999-99-99")>(b.due||"9999-99-99")?1:0;});
+  const setHTML=s=>{const f=fuMeta(s.due);
+    const chip=f?`<span class="pill ${f.cls==="over"?"over":f.cls==="due"?"due":"upc"}">${f.cls==="over"?"⏰ Overdue · "+f.lab:f.cls==="due"?"⏰ Due today":"📅 "+f.lab}</span>`:`<span class="pill none">No date</span>`;
+    return `<div class="set ${s.done?"done":""}">
       <div class="box" role="checkbox" aria-checked="${s.done}" tabindex="0" onclick="toggleSet('${s.id}')" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleSet('${s.id}')}">✓</div>
-      <div style="flex:1"><div class="t">${esc(s.t)}${s.heat?`<span class="pill ${s.heat}">${s.heat.toUpperCase()}</span>`:""}</div>
+      <div style="flex:1"><div class="t">${esc(s.t)}${s.done?"":" "+chip}</div>
       <div class="d">${esc(s.d||"")}</div></div>
-      <div class="sx"><button class="ic" title="Edit" onclick="editSet('${s.id}')">✎</button></div></div>`;
+      <div class="sx"><button class="ic" title="Edit" onclick="editSet('${s.id}')">✎</button></div></div>`;};
   document.getElementById("sets").innerHTML=sorted.map(setHTML).join("")||emptyState("No tasks — add a set.");
   document.getElementById("setsMini").innerHTML=sorted.filter(s=>!s.done).slice(0,4).map(setHTML).join("")||emptyState("All caught up 🤙");
   document.getElementById("taskSub").textContent=S.sets.filter(s=>s.done).length+" / "+S.sets.length+" done";
