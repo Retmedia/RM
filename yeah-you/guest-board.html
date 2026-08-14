@@ -1,0 +1,812 @@
+<title>Yeah You Guest Board</title>
+<style>
+  /* ---------- Tokens : light (bare :root) ---------- */
+  :root {
+    --bg:        #F3EEE6;
+    --panel:     #FBF8F2;
+    --panel-2:   #F0E9DD;
+    --ink:       #211C15;
+    --ink-soft:  #5A5044;
+    --ink-faint: #8B8172;
+    --line:      #E0D6C6;
+    --line-2:    #D2C6B2;
+    --accent:    #D8442C;   /* on-air signal red */
+    --accent-ink:#FFFFFF;
+    --amber:     #C6852A;
+    --shadow:    0 1px 2px rgba(40,30,15,.06), 0 6px 20px rgba(40,30,15,.07);
+    --shadow-lift:0 4px 8px rgba(40,30,15,.10), 0 16px 40px rgba(40,30,15,.14);
+
+    --s-idea:      #8A7FB0;
+    --s-outreach:  #C4632F;
+    --s-contacted: #C6852A;
+    --s-scheduled: #2E8C74;
+    --s-recorded:  #3A73B8;
+    --s-published: #6B8F3D;
+
+    --danger:  #C23A2A;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #17140F;
+      --panel:     #211D17;
+      --panel-2:   #2A251D;
+      --ink:       #F1EADD;
+      --ink-soft:  #B7AC99;
+      --ink-faint: #857A68;
+      --line:      #322C22;
+      --line-2:    #423A2C;
+      --accent:    #E8503A;
+      --accent-ink:#1A1006;
+      --amber:     #E0A23C;
+      --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 26px rgba(0,0,0,.44);
+      --shadow-lift:0 6px 14px rgba(0,0,0,.5), 0 22px 50px rgba(0,0,0,.6);
+      --s-idea:      #A99AD6;
+      --s-outreach:  #E68A4E;
+      --s-contacted: #E0A23C;
+      --s-scheduled: #46B896;
+      --s-recorded:  #5C97E0;
+      --s-published: #97C15A;
+      --danger:  #EA6350;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:        #17140F;
+    --panel:     #211D17;
+    --panel-2:   #2A251D;
+    --ink:       #F1EADD;
+    --ink-soft:  #B7AC99;
+    --ink-faint: #857A68;
+    --line:      #322C22;
+    --line-2:    #423A2C;
+    --accent:    #E8503A;
+    --accent-ink:#1A1006;
+    --amber:     #E0A23C;
+    --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 26px rgba(0,0,0,.44);
+    --shadow-lift:0 6px 14px rgba(0,0,0,.5), 0 22px 50px rgba(0,0,0,.6);
+    --s-idea:      #A99AD6;
+    --s-outreach:  #E68A4E;
+    --s-contacted: #E0A23C;
+    --s-scheduled: #46B896;
+    --s-recorded:  #5C97E0;
+    --s-published: #97C15A;
+    --danger:  #EA6350;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.45; -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  header { padding: 22px clamp(16px, 3vw, 34px) 0; max-width: 1560px; margin: 0 auto; }
+  .brandrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 13px; }
+  .oncircle {
+    width: 13px; height: 13px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+    flex: none; animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+    50%     { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 6%, transparent); }
+  }
+  h1 { font-size: clamp(1.35rem, 2.4vw, 1.9rem); letter-spacing: -.02em; margin: 0; font-weight: 800; line-height: 1; }
+  .sub { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); margin-top: 5px; }
+  .head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  button {
+    font-family: var(--sans); cursor: pointer; border: 1px solid var(--line-2);
+    background: var(--panel); color: var(--ink); border-radius: 9px;
+    padding: 9px 13px; font-size: .84rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  }
+  button:hover { border-color: var(--ink-faint); }
+  button:active { transform: translateY(1px); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  button.primary:hover { filter: brightness(1.06); }
+  .icon-btn { padding: 9px 11px; }
+
+  .stats {
+    max-width: 1560px; margin: 20px auto 0; padding: 0 clamp(16px, 3vw, 34px);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px;
+  }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .stat::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--stat-c, var(--ink-faint)); }
+  .stat .n { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .stat .l { font-family: var(--mono); font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); margin-top: 2px; }
+
+  .toolbar { max-width: 1560px; margin: 18px auto 0; padding: 0 clamp(16px, 3vw, 34px); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .search { flex: 1 1 220px; min-width: 170px; position: relative; }
+  .search input { width: 100%; padding: 9px 12px 9px 34px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); font-size: .88rem; font-family: var(--sans); }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); }
+  .toolbar select { padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); font-size: .84rem; font-family: var(--sans); max-width: 190px; }
+
+  .upcoming { max-width: 1560px; margin: 16px auto 0; padding: 0 clamp(16px, 3vw, 34px); }
+  .upcoming-inner { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 15px; box-shadow: var(--shadow); }
+  .upcoming h2 { font-size: .7rem; font-family: var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+  .up-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 3px; }
+  .up-card { flex: none; min-width: 172px; border: 1px solid var(--line-2); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--panel-2); position: relative; cursor: pointer; }
+  .up-card .d { font-family: var(--mono); font-size: .72rem; font-weight: 700; color: var(--s-scheduled); letter-spacing: .02em; }
+  .up-card.overdue .d, .up-card.today .d { color: var(--accent); }
+  .up-card .nm { font-weight: 700; font-size: .92rem; margin-top: 3px; letter-spacing: -.01em; }
+  .up-card .cd { font-size: .74rem; color: var(--ink-faint); margin-top: 1px; }
+  .up-empty { color: var(--ink-faint); font-size: .84rem; padding: 4px 2px; }
+
+  .board-wrap { max-width: 1560px; margin: 18px auto 60px; padding: 0 clamp(16px, 3vw, 34px); }
+  .board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 14px; align-items: flex-start; }
+  .col { flex: 1 0 250px; max-width: 330px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; min-height: 120px; transition: border-color .15s, background .15s; }
+  .col.drag-over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
+  .col-head { padding: 13px 14px 10px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid var(--line); }
+  .dot { width: 9px; height: 9px; border-radius: 3px; background: var(--col-c); flex: none; }
+  .col-head .t { font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: .74rem; }
+  .col-head .count { margin-left: auto; font-family: var(--mono); font-size: .72rem; font-weight: 700; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--ink-soft); border-radius: 20px; min-width: 22px; text-align: center; padding: 1px 7px; }
+  .cards { padding: 10px; display: flex; flex-direction: column; gap: 9px; flex: 1; max-height: 68vh; overflow-y: auto; }
+
+  .card { background: var(--panel-2); border: 1px solid var(--line-2); border-left: 3px solid var(--col-c); border-radius: var(--radius-sm); padding: 11px 12px; box-shadow: var(--shadow); cursor: grab; position: relative; transition: box-shadow .12s, transform .08s; }
+  .card:hover { box-shadow: var(--shadow-lift); }
+  .card.dragging { opacity: .45; cursor: grabbing; }
+  .card .top { display: flex; align-items: flex-start; gap: 8px; }
+  .card .nm { font-weight: 700; font-size: .96rem; letter-spacing: -.01em; line-height: 1.2; }
+  .card .handle { font-size: .76rem; color: var(--ink-faint); font-family: var(--mono); }
+  .prio { margin-left: auto; flex: none; font-size: .58rem; font-family: var(--mono); font-weight: 700; letter-spacing: .08em; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; }
+  .prio.high { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+  .prio.med  { background: color-mix(in srgb, var(--amber) 20%, transparent); color: var(--amber); }
+  .prio.low  { display: none; }
+  .card .topic { font-size: .82rem; color: var(--ink-soft); margin-top: 5px; }
+  .card .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .chip { font-family: var(--mono); font-size: .68rem; padding: 2px 7px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line-2); color: var(--ink-soft); display: inline-flex; align-items: center; gap: 4px; }
+  .chip.cat { text-transform: uppercase; letter-spacing: .05em; font-size: .6rem; font-weight: 700; }
+  .chip.date { color: var(--s-scheduled); border-color: color-mix(in srgb, var(--s-scheduled) 40%, var(--line-2)); }
+  .chip.ep { color: var(--s-recorded); border-color: color-mix(in srgb, var(--s-recorded) 45%, var(--line-2)); font-weight: 700; }
+  .chip.follow { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 40%, var(--line-2)); }
+  .chip.follow.overdue { color: var(--accent); border-color: var(--accent); font-weight: 700; }
+  .card .contact { font-size: .74rem; color: var(--ink-faint); margin-top: 7px; word-break: break-all; }
+  .card .note { font-size: .76rem; color: var(--ink-soft); margin-top: 7px; font-style: italic; }
+  .card-actions { display: flex; gap: 4px; margin-top: 9px; opacity: 0; transition: opacity .12s; }
+  .card:hover .card-actions, .card:focus-within .card-actions { opacity: 1; }
+  .mini { font-size: .7rem; padding: 4px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line-2); flex: none; }
+  .col-empty { color: var(--ink-faint); font-size: .8rem; text-align: center; padding: 16px 8px; font-style: italic; }
+  .add-in-col { margin: 0 10px 10px; border: 1px dashed var(--line-2); background: transparent; color: var(--ink-faint); justify-content: center; font-weight: 600; font-size: .78rem; }
+  .add-in-col:hover { color: var(--accent); border-color: var(--accent); }
+
+  .overlay { position: fixed; inset: 0; background: rgba(15,10,4,.5); backdrop-filter: blur(3px); display: none; align-items: flex-start; justify-content: center; padding: 5vh 16px; z-index: 50; overflow-y: auto; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--panel); border: 1px solid var(--line-2); border-radius: 18px; box-shadow: var(--shadow-lift); width: 100%; max-width: 520px; padding: 22px 22px 20px; }
+  .modal h3 { margin: 0 0 3px; font-size: 1.15rem; letter-spacing: -.01em; }
+  .modal .mh-sub { font-family: var(--mono); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 16px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: .68rem; font-family: var(--mono); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink); font-size: .9rem; font-family: var(--sans); }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 9px; margin-top: 18px; align-items: center; }
+  .modal-actions .spacer { flex: 1; }
+  .del-btn { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--line-2)); }
+  .del-btn:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); border-color: var(--danger); }
+
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: .85rem; font-weight: 600; box-shadow: var(--shadow-lift); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 620px) { .row2 { grid-template-columns: 1fr; } .col { flex: 0 0 82vw; } }
+</style>
+
+<header>
+  <div class="brandrow">
+    <div class="brand">
+      <span class="oncircle" aria-hidden="true"></span>
+      <div>
+        <h1>Yeah You — Guest Board</h1>
+        <div class="sub">Booking pipeline &middot; outreach &middot; 48-episode slate 2026</div>
+      </div>
+    </div>
+    <div class="head-actions">
+      <button id="exportBtn" class="icon-btn" title="Export as JSON">⭳ Export</button>
+      <button id="importBtn" class="icon-btn" title="Import JSON">⭱ Import</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+      <button id="addBtn" class="primary">＋ Add Guest</button>
+    </div>
+  </div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="toolbar">
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+    <input type="text" id="search" placeholder="Search guests, handles, categories…" />
+  </div>
+  <select id="catFilter"><option value="">All categories</option></select>
+  <select id="prioFilter">
+    <option value="">All tiers</option>
+    <option value="high">High tier</option>
+    <option value="med">Mid tier</option>
+    <option value="low">Low tier</option>
+  </select>
+  <select id="sortBy">
+    <option value="manual">Sort: Default</option>
+    <option value="name">Sort: Name</option>
+    <option value="cat">Sort: Category</option>
+    <option value="record">Sort: Record date</option>
+    <option value="follow">Sort: Follow-up</option>
+  </select>
+</div>
+
+<div class="upcoming">
+  <div class="upcoming-inner">
+    <h2>▸ Upcoming &amp; follow-ups</h2>
+    <div class="up-list" id="upcoming"></div>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">Add guest</h3>
+    <div class="mh-sub" id="modalSub">New booking</div>
+    <form id="guestForm">
+      <div class="field">
+        <label for="f-name">Name *</label>
+        <input id="f-name" required maxlength="80" placeholder="Guest name" />
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-handle">Handle / Org</label>
+          <input id="f-handle" maxlength="60" placeholder="@handle or company" />
+        </div>
+        <div class="field">
+          <label for="f-prio">Tier</label>
+          <select id="f-prio">
+            <option value="high">High</option>
+            <option value="med" selected>Mid</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-cat">Category / Sport</label>
+          <input id="f-cat" list="catlist" maxlength="40" placeholder="e.g. Surfing" />
+          <datalist id="catlist"></datalist>
+        </div>
+        <div class="field">
+          <label for="f-stage">Stage</label>
+          <select id="f-stage"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-topic">Topic / angle</label>
+        <input id="f-topic" maxlength="140" placeholder="What would you talk about?" />
+      </div>
+      <div class="field">
+        <label for="f-contact">Contact</label>
+        <input id="f-contact" maxlength="120" placeholder="email, DM, phone…" />
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-record">Record date</label>
+          <input id="f-record" type="date" />
+        </div>
+        <div class="field">
+          <label for="f-follow">Follow-up date</label>
+          <input id="f-follow" type="date" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-notes">Notes</label>
+        <textarea id="f-notes" maxlength="600" placeholder="Prep notes, mutual contacts, episode #…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="del-btn" id="deleteBtn" hidden>Delete</button>
+        <div class="spacer"></div>
+        <button type="button" id="cancelBtn">Cancel</button>
+        <button type="submit" class="primary" id="saveBtn">Save guest</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "yeahyou_guest_board_v1";
+
+  var STAGES = [
+    { id: "idea",      label: "Idea",       c: "var(--s-idea)" },
+    { id: "outreach",  label: "Reach Out",  c: "var(--s-outreach)" },
+    { id: "contacted", label: "Contacted",  c: "var(--s-contacted)" },
+    { id: "scheduled", label: "Booked",     c: "var(--s-scheduled)" },
+    { id: "recorded",  label: "Recorded",   c: "var(--s-recorded)" },
+    { id: "published", label: "Published",  c: "var(--s-published)" }
+  ];
+  var STAGE_IDS = STAGES.map(function (s) { return s.id; });
+
+  var seq = 0;
+  function uid() { return "g" + (Date.now().toString(36)) + "_" + (seq++); }
+
+  /* ---------- Real Yeah You master list ---------- */
+  // Confirmed guests (said yes). Episode-numbered ones are on the 2026 schedule.
+  var EP = { "Austin Keen":1,"Blair Conklin":2,"Tfue":3,"Ryan Sheckler":4,"Jack Robinson":5,
+             "Griffin Colapinto":6,"Crosby Colapinto":7,"Greyson Fletcher":8,"Tanner McDaniel":9,"Tyler Stanaland":10 };
+  var CONFIRMED = {"Austin Keen":1,"Blair Conklin":1,"Paulo Prietto":1,"Amber Torrealba":1,"Jack Robinson":1,
+    "Crosby Colapinto":1,"Griffin Colapinto":1,"Nathan Florence":1,"Kalani Robb":1,"Tyler Stanaland":1,
+    "Ryan Sheckler":1,"Greyson Fletcher":1,"Tanner McDaniel":1,"Chris Monroe":1,"Tfue":1,
+    "Robbie Crawford":1,"Paddy Mack":1,"James Ferrel":1,"Parker Seidel":1,"Evan Rossel":1 };
+  // Pending = outreach sent, awaiting reply
+  var PENDING = { "Tony Hawk":"Dream guest","Kelly Slater":"","John John Florence":"","Conor McGregor":"Huge crossover",
+    "Ilia Topuria":"Hot right now","Connor McDavid":"","Alex Ovechkin":"","Simone Biles":"GOAT crossover",
+    "Noah Lyles":"Very charismatic","Alex Honnold":"Story-driven ep","Bert Kreischer":"","Eileen Gu":"Huge crossover appeal",
+    "Travis Rice":"","Ryan Garcia":"" };
+
+  // [category, name, handle, tier]  — ordered so core action sports win de-dupe
+  var DATA = [
+    ["Skimboarding","Austin Keen","@austinkeen","High"],["Skimboarding","Blair Conklin","@blairconklin","High"],
+    ["Skimboarding","Brad Domke","@braddomke","Mid"],["Skimboarding","Paulo Prietto","@pauloprietto","Mid"],
+    ["Skimboarding","Lucas Fink","@lucasfink","Mid"],["Skimboarding","Adrien Raza","@adrienraza","Mid"],
+    ["Skimboarding","Amber Torrealba","@ambertorrealba","Low"],["Skimboarding","Jack Tenney","@jacktenney","Low"],
+    ["Skimboarding","John Akerman","@johnakerman","Low"],
+
+    ["Surfing","Kelly Slater","@kellyslater","High"],["Surfing","John John Florence","@johnjohnflorence","High"],
+    ["Surfing","Laird Hamilton","@lairdlife","High"],["Surfing","Kai Lenny","@kailenny","High"],
+    ["Surfing","Shane Dorian","@shanedorian","High"],["Surfing","Gabriel Medina","@gabrielmedina","High"],
+    ["Surfing","Filipe Toledo","@filipetoledo","High"],["Surfing","Italo Ferreira","@italoferreira95","High"],
+    ["Surfing","Mick Fanning","@mfanning_","High"],["Surfing","Joel Parkinson","@jparko","High"],
+    ["Surfing","Taj Burrow","@tajburrow","High"],["Surfing","Jack Robinson","@jackrobinson","Mid"],
+    ["Surfing","Crosby Colapinto","@crosbycolapinto","Mid"],["Surfing","Griffin Colapinto","@griffincolapinto","Mid"],
+    ["Surfing","Nathan Florence","@nathanflorence","Mid"],["Surfing","Kalani Robb","@kalanirobb","Mid"],
+    ["Surfing","Mason Ho","@masonho","Mid"],["Surfing","Clark Little","@clarklittle","Mid"],
+    ["Surfing","Bruce Irons","@bruceirons","Mid"],["Surfing","Matt Meola","@mattmeola","Mid"],
+    ["Surfing","Nathan Fletcher","@nathanfletcher","Mid"],["Surfing","Jackson Dorian","@jacksondorian","Mid"],
+    ["Surfing","Dylan Graves","@dylangraves","Mid"],["Surfing","Billy Kemper","@billykemper","Mid"],
+    ["Surfing","Lucas Chumbo","@lucaschumbinho","Mid"],["Surfing","Noah Beschen","@noahbeschen","Mid"],
+    ["Surfing","Barron Mamiya","@barronmamiya","Mid"],["Surfing","Ethan Ewing","@ethanewing","Mid"],
+    ["Surfing","Seth Moniz","@sethmoniz","Mid"],["Surfing","Yago Dora","@yagodora","Mid"],
+    ["Surfing","Craig Anderson","@craigyanderson","Mid"],["Surfing","Nick Von Rupp","@nickvonrupp","Mid"],
+    ["Surfing","Michael February","@michaelfebruary","Mid"],["Surfing","Tyler Stanaland","@tylerstanaland","Low"],
+    ["Surfing","Ben Gravy","@bengravy","Low"],["Surfing","Koa Rothman","@koarothman","Low"],
+    ["Surfing","Sage Burke","@sageburke","Low"],
+
+    ["Skateboarding","Tony Hawk","@tonyhawk","High"],["Skateboarding","Nyjah Huston","@nyjah","High"],
+    ["Skateboarding","Ryan Sheckler","@ryansheckler","High"],["Skateboarding","Shaun White","@shaunwhite","High"],
+    ["Skateboarding","Danny Way","@dannyway","High"],["Skateboarding","Eric Koston","@erickoston","High"],
+    ["Skateboarding","Greyson Fletcher","@greyson_fletcher","Mid"],["Skateboarding","Ivan Florence","@ivanflorence","Mid"],
+    ["Skateboarding","Sky Brown","@skybrown","Mid"],["Skateboarding","Gustavo Ribeiro","@gustaavoribeiro","Mid"],
+    ["Skateboarding","Andy Anderson","@andyanderson","Mid"],["Skateboarding","Zion Wright","@zionwright","Mid"],
+    ["Skateboarding","Lizzie Armanto","@lizziearmanto","Mid"],["Skateboarding","Jay Alvarez","@jayalvarrez","Mid"],
+    ["Skateboarding","Liam Morgan","@liammorgan","Mid"],["Skateboarding","Vince Milou","@vincemilou","Low"],
+    ["Skateboarding","Don Brown","@donbrown","Low"],
+
+    ["Bodyboarding","Mike Stewart","@mikestewart","High"],["Bodyboarding","Tanner McDaniel","@tannermcdaniel","Mid"],
+    ["Bodyboarding","Craig Whetter","@craigwhetter","Mid"],["Bodyboarding","Chris Monroe","@chrismonroe","Low"],
+
+    ["Snowboarding","Travis Rice","@travisrice","High"],["Snowboarding","Chloe Kim","@chloekimsnow","High"],
+    ["Snowboarding","Mark McMorris","@markmcmorris","Mid"],["Snowboarding","Zeb Powell","@zebpowell","Mid"],
+    ["Snowboarding","Seb Toots","@sebtoots","Mid"],["Snowboarding","Red Gerard","@redgerard","Mid"],
+    ["Snowboarding","Scotty James","@scottyjames31","Mid"],["Snowboarding","Casey Willax","@caseywillax","Low"],
+
+    ["Freestyle Skiing","Eileen Gu","@eileengu","High"],["Freestyle Skiing","Nick Goepper","@nickgoepper","High"],
+    ["Freestyle Skiing","Alex Ferreira","@alex_ferreira_freeski","High"],["Freestyle Skiing","Tess Ledeux","@tess_ledeux","Mid"],
+    ["Freestyle Skiing","Colby Stevenson","@colby__stevenson","Mid"],["Freestyle Skiing","Birk Irving","@birkirving","Mid"],
+    ["Freestyle Skiing","Kelly Sildaru","@kellysildaru","Mid"],["Freestyle Skiing","Alex Hall","@alexhall_skis","Mid"],
+    ["Freestyle Skiing","David Wise","@davidwise","Mid"],["Freestyle Skiing","Henrik Harlaut","@henrikharlaut","Low"],
+
+    ["BMX / MTB","Travis Pastrana","@travispastrana199","High"],["BMX / MTB","Kevin Peraza","@kevinperaza","High"],
+    ["BMX / MTB","Nigel Sylvester","@nigelsylvester","High"],["BMX / MTB","Ryan Williams","@ryanocy","High"],
+    ["BMX / MTB","Sam Pilgrim","@sampilgrim","Mid"],["BMX / MTB","Brandon Semenuk","@brandonsemenuk","Mid"],
+    ["BMX / MTB","Logan Martin","@loganmartinbmx","Mid"],["BMX / MTB","Broc Raiford","@brocraiford","Low"],
+
+    ["Motocross / FMX","Ken Roczen","@kenroczen94","High"],["Motocross / FMX","Ryan Dungey","@ryandungey","High"],
+    ["Motocross / FMX","Eli Tomac","@elimotomac","High"],["Motocross / FMX","Cooper Webb","@cooperwebb2","Mid"],
+    ["Motocross / FMX","Jason Anderson","@jasonanderson_36","Mid"],["Motocross / FMX","Tom Pages","@tompages","Mid"],
+    ["Motocross / FMX","Broc Tickle","@broctickle","Low"],
+
+    ["Wakeboarding","Parks Bonifay","@parksbonifay","High"],["Wakeboarding","Shaun Murray","@shaunmurray","Mid"],
+    ["Wakeboarding","Aaron Rathy","@aaronrathy","Low"],
+
+    ["Wingfoil / Kite","Robby Naish","@robbynaish","High"],["Wingfoil / Kite","Airton Cozzolino","@airtoncozzolino","Mid"],
+    ["Wingfoil / Kite","Tom Court","@tomcourt","Mid"],["Wingfoil / Kite","Jake Kelsick","@jakekelsick","Low"],
+
+    ["Freediving / Big Wave","William Trubridge","@williamtrubridge","High"],["Freediving / Big Wave","Mark Healey","@markhealey","High"],
+    ["Freediving / Big Wave","Kimi Werner","@kimisosweet","Mid"],["Freediving / Big Wave","Hanli Prinsloo","@hanliprinsloo","Low"],
+
+    ["Rock Climbing","Alex Honnold","@alexhonnold","High"],["Rock Climbing","Tommy Caldwell","@tommycaldwell","High"],
+    ["Rock Climbing","Adam Ondra","@adam.ondra","High"],["Rock Climbing","Sasha DiGiulian","@sashadigiulian","Mid"],
+    ["Rock Climbing","Brooke Raboutou","@brookeraboutou","Mid"],["Rock Climbing","Nathaniel Coleman","@nathanielcoleman","Mid"],
+    ["Rock Climbing","Emily Harrington","@emilyaharrington","Low"],
+
+    ["Parkour","Ryan Doyle","@ryandoyle_freerunner","High"],["Parkour","Tim Shieff","@timshieff","Mid"],
+    ["Parkour","Storror","@storror","Mid"],
+
+    ["Sailing","Charlie Buckingham","@charliebuckingham","Mid"],["Sailing","Jimmy Spithill","@jimmyspithill","Mid"],
+
+    ["MMA / UFC","Conor McGregor","@thenotoriousmma","High"],["MMA / UFC","Ilia Topuria","@iliatopuria","High"],
+    ["MMA / UFC","Islam Makhachev","@makhachevislam","High"],["MMA / UFC","Khamzat Chimaev","@khamzat_chimaev","High"],
+    ["MMA / UFC","Alex Pereira","@alexpoatanpereira","High"],["MMA / UFC","Israel Adesanya","@stylebender","High"],
+    ["MMA / UFC","Max Holloway","@blessedmma","High"],["MMA / UFC","Sean O'Malley","@sugasean","High"],
+    ["MMA / UFC","Dustin Poirier","@dustinpoirier","High"],["MMA / UFC","Nate Diaz","@natediaz209","High"],
+    ["MMA / UFC","Jorge Masvidal","@gamebredfighter","High"],["MMA / UFC","Charles Oliveira","@charlesdobronxs","High"],
+    ["MMA / UFC","Paddy Pimblett","@thepaddy_pimblett","Mid"],["MMA / UFC","Michael Chandler","@mikechandlermma","Mid"],
+    ["MMA / UFC","Kamaru Usman","@usman84kg","Mid"],["MMA / UFC","Leon Edwards","@leonedwardsmma","Mid"],
+    ["MMA / UFC","Brendan Schaub","@brendanschaub","Mid"],["MMA / UFC","Mike Perry","@platinummikeperry","Mid"],
+    ["MMA / UFC","Jake Shields","@jakeshields","Low"],
+
+    ["NHL / Hockey","Connor McDavid","@cmcdavid97","High"],["NHL / Hockey","Auston Matthews","@austonmatthews","High"],
+    ["NHL / Hockey","Alex Ovechkin","@aleksandrovechkinofficial","High"],["NHL / Hockey","Sidney Crosby","@sidneycrosby","High"],
+    ["NHL / Hockey","Nathan MacKinnon","@nmackinnon29","High"],["NHL / Hockey","Leon Draisaitl","@drat_29","High"],
+    ["NHL / Hockey","Cale Makar","@calemakar8","High"],["NHL / Hockey","David Pastrnak","@pastrnak96","Mid"],
+    ["NHL / Hockey","Nikita Kucherov","@kucherov86","Mid"],["NHL / Hockey","Brady Tkachuk","@bradytkachuk","Mid"],
+    ["NHL / Hockey","Trevor Zegras","@t.zegras","Mid"],["NHL / Hockey","Jack Hughes","@jackhughes","Mid"],
+    ["NHL / Hockey","Tim Stutzle","@tstutzle","Mid"],["NHL / Hockey","P.K. Subban","@subbanator","Mid"],
+    ["NHL / Hockey","Matthew Tkachuk","@matthewtkachuk19","Low"],["NHL / Hockey","Kirill Kaprizov","@kaprizov97","Low"],
+
+    ["Olympics — Swim","Michael Phelps","@m_phelps00","High"],["Olympics — Swim","Katie Ledecky","@katieledecky","High"],
+    ["Olympics — Swim","Caeleb Dressel","@caelebdressel","High"],["Olympics — Swim","Adam Peaty","@adam_peaty","Mid"],
+    ["Olympics — Swim","Ryan Murphy","@ryanmurphy_swimmer","Mid"],["Olympics — Swim","Lilly King","@lillyking","Mid"],
+    ["Olympics — Swim","Emma McKeon","@emmamckeon","Low"],
+
+    ["Olympics — Gym","Simone Biles","@simonebiles","High"],["Olympics — Gym","Jordan Chiles","@jordanchiles","High"],
+    ["Olympics — Gym","Sunisa Lee","@sunisalee_","High"],["Olympics — Gym","Jade Carey","@jadecarey","Mid"],
+    ["Olympics — Gym","Brody Malone","@brodymalone","Mid"],["Olympics — Gym","Fred Richard","@fredrichard_","Low"],
+
+    ["Olympics — Track","Noah Lyles","@noahlyles","High"],["Olympics — Track","Sydney McLaughlin-Levrone","@sydneymclaughlin","High"],
+    ["Olympics — Track","Sha'Carri Richardson","@sharririchardson","High"],["Olympics — Track","Mondo Duplantis","@mondoduplantis","High"],
+    ["Olympics — Track","Grant Holloway","@grantholloway","Mid"],["Olympics — Track","Cole Hocker","@colehocker","Mid"],
+    ["Olympics — Track","Fred Kerley","@fredkerley","Mid"],["Olympics — Track","Allyson Felix","@allysonfelix","Mid"],
+    ["Olympics — Track","Kenny Bednarek","@kbednarek","Low"],
+
+    ["Olympics — Boxing","Ryan Garcia","@kingryan","High"],["Olympics — Boxing","Gervonta Davis","@tankdavis","High"],
+    ["Olympics — Boxing","Devin Haney","@devinhaney","High"],["Olympics — Boxing","Teofimo Lopez","@teofimolopez","Mid"],
+    ["Olympics — Boxing","Keyshawn Davis","@keyshawndavis","Mid"],["Olympics — Boxing","Shakur Stevenson","@shakurstevenson","Low"],
+
+    ["Olympics — Wrestling","Jordan Burroughs","@alliseeisgold","High"],["Olympics — Wrestling","Kyle Dake","@kyle_dake","High"],
+    ["Olympics — Wrestling","David Taylor","@taylorwrestles","Mid"],["Olympics — Wrestling","Helen Maroulis","@helenmaroulis","Mid"],
+    ["Olympics — Wrestling","Aaron Brooks","@abrooks_133","Low"],
+
+    ["Olympics — Surf","Carissa Moore","@carissa","High"],["Olympics — Surf","Caroline Marks","@carolinemarks","Mid"],
+    ["Olympics — Skate","Yuto Horigome","@yutohorigome","Mid"],["Olympics — Skate","Rayssa Leal","@rayssaleal","Mid"],
+    ["Olympics — Skate","Jagger Eaton","@jaggereaton","Low"],
+
+    ["Gaming","Tfue","@tfue","High"],["Gaming","Ninja","@ninja","High"],["Gaming","TimTheTatman","@timthetatman","High"],
+    ["Gaming","Nickmercs","@nickmercs","Mid"],["Gaming","Arkhram","@arkhram1x","Mid"],["Gaming","Cloakzy","@cloakzy","Mid"],
+
+    ["Comedians","Bert Kreischer","@bertkreischer","High"],["Comedians","Steve-O","@steveo","High"],
+    ["Comedians","Chris Pontius","@chrisspontius","Mid"],["Comedians","Ryan O'Flanagan","@ryanoflanagan","Mid"],
+
+    ["Musicians","Pharrell Williams","@pharrell","High"],["Musicians","Jack Johnson","@jackjohnsonmusic","High"],
+    ["Musicians","Neil Frances","@neilfrances","Mid"],["Musicians","Samira Winter","@samirawinter","Low"],
+    ["Musicians","SweepsBeats","@sweepsbeats","Low"],
+
+    ["Influencers","Casey Neistat","@caseyneistat","High"],["Influencers","MrBeast","@mrbeast","High"],
+    ["Influencers","Parker Seidel","@parkerseidel","Mid"],["Influencers","Ivy Miller","@ivymiller","Mid"],
+    ["Influencers","Kazsawyer","@kazsawyer","Mid"],
+
+    ["Media / Film","Chris Burkard","@chrisburkard","High"],["Media / Film","Taylor Steele","@taylorsteelefilms","High"],
+    ["Media / Film","Robbie Crawford","@robbiecrawford","Mid"],["Media / Film","Paddy Mack","@paddymack","Mid"],
+    ["Media / Film","Jon Chema","@jonchema","Mid"],["Media / Film","Pat Scola","@patscola","Mid"],
+    ["Media / Film","Scott Stinnett","@scottstinnett","Mid"],["Media / Film","Connor Brashier","@connorbrashier","Mid"],
+    ["Media / Film","Theo Acworth","@theoacworth","Mid"],["Media / Film","James Ferrel","@jamesferrel","Low"],
+
+    ["Shapers","Rusty Preisendorfer","@rustysurfboards","High"],["Shapers","John Pyzel","@pyzel_surfboards","High"],
+    ["Shapers","Matt Biolos","@mattbiolos","Mid"],["Shapers","Charley Stevens","@ghostshapes","Mid"],
+    ["Shapers","Robbie McInery","@willbo","Low"],
+
+    ["Business","Bob Hurley","@bobhurley","High"],["Business","Jeff Hurley","@jeffhurley","High"],
+    ["Business","Jason Steris","@jasonsteris","High"],["Business","Zach Weisberg","@zachweisberg","Mid"],
+    ["Business","Cheyne Magnusson","@cheynemagnusson","Mid"],["Business","Joey Isea","@joeyisea","Mid"],
+
+    ["Artists","Evan Rossel","@evanrossel","Mid"],["Artists","Lucas Beaufort","@lucasbeaufort","Mid"],
+    ["Artists","Dee Rosse","@deerosse","Low"]
+  ];
+
+  function tierToPrio(t) { return t === "High" ? "high" : (t === "Mid" ? "med" : "low"); }
+
+  function buildSeed() {
+    var seen = {}, out = [];
+    DATA.forEach(function (r) {
+      var cat = r[0], name = r[1], handle = r[2], tier = r[3];
+      if (seen[name]) return; seen[name] = 1;
+      var stage, note = "";
+      if (EP[name] != null) { stage = "scheduled"; note = "Confirmed · Episode " + EP[name]; }
+      else if (CONFIRMED[name]) { stage = "scheduled"; note = "Confirmed · set record date"; }
+      else if (PENDING[name] != null) { stage = "contacted"; note = PENDING[name] ? ("Outreach sent · " + PENDING[name]) : "Outreach sent · awaiting reply"; }
+      else { stage = (tier === "High") ? "outreach" : "idea"; }
+      out.push({ id: uid(), name: name, handle: handle, prio: tierToPrio(tier), cat: cat,
+        topic: "", contact: "", stage: stage, follow: "", record: "", notes: note, ep: EP[name] != null ? EP[name] : "" });
+    });
+    return out;
+  }
+
+  var state = load();
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) { var p = JSON.parse(raw); if (Array.isArray(p)) return p; } } catch (e) {}
+    return buildSeed();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  /* ---------- date helpers ---------- */
+  function today0() { var d = new Date(); d.setHours(0,0,0,0); return d; }
+  function parseD(s) { if (!s) return null; var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function fmtD(s) { var d = parseD(s); if (!d) return ""; return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }); }
+  function relLabel(s) {
+    var d = parseD(s); if (!d) return "";
+    var diff = Math.round((d - today0()) / 86400000);
+    if (diff === 0) return "Today"; if (diff === 1) return "Tomorrow"; if (diff === -1) return "Yesterday";
+    if (diff > 1 && diff <= 14) return "in " + diff + "d"; if (diff < -1 && diff >= -14) return Math.abs(diff) + "d ago";
+    return fmtD(s);
+  }
+  function isOverdue(s) { var d = parseD(s); return d && d < today0(); }
+  function isToday(s) { var d = parseD(s); return d && d.getTime() === today0().getTime(); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]; }); }
+
+  /* ---------- DOM refs ---------- */
+  var board = document.getElementById("board");
+  var statsEl = document.getElementById("stats");
+  var upEl = document.getElementById("upcoming");
+  var searchEl = document.getElementById("search");
+  var catEl = document.getElementById("catFilter");
+  var prioEl = document.getElementById("prioFilter");
+  var sortEl = document.getElementById("sortBy");
+
+  function allCats() {
+    var s = {}; state.forEach(function (g){ if (g.cat) s[g.cat] = 1; });
+    return Object.keys(s).sort();
+  }
+  function refreshCatOptions() {
+    var cur = catEl.value;
+    catEl.innerHTML = '<option value="">All categories</option>';
+    allCats().forEach(function (c){ var o = document.createElement("option"); o.value = c; o.textContent = c; catEl.appendChild(o); });
+    catEl.value = cur;
+    var dl = document.getElementById("catlist"); dl.innerHTML = "";
+    allCats().forEach(function (c){ var o = document.createElement("option"); o.value = c; dl.appendChild(o); });
+  }
+
+  function visibleFor(stageId) {
+    var q = searchEl.value.trim().toLowerCase(), pf = prioEl.value, cf = catEl.value;
+    var list = state.filter(function (g) {
+      if (g.stage !== stageId) return false;
+      if (pf && g.prio !== pf) return false;
+      if (cf && g.cat !== cf) return false;
+      if (q) { var hay = (g.name + " " + (g.handle||"") + " " + (g.cat||"") + " " + (g.topic||"") + " " + (g.notes||"")).toLowerCase(); if (hay.indexOf(q) === -1) return false; }
+      return true;
+    });
+    var sb = sortEl.value;
+    if (sb === "name") list.sort(function (a,b){ return a.name.localeCompare(b.name); });
+    else if (sb === "cat") list.sort(function (a,b){ return (a.cat||"").localeCompare(b.cat||"") || a.name.localeCompare(b.name); });
+    else if (sb === "record") list.sort(byDate("record"));
+    else if (sb === "follow") list.sort(byDate("follow"));
+    return list;
+  }
+  function byDate(field) { return function (a, b) { var da = parseD(a[field]), db = parseD(b[field]); if (!da && !db) return 0; if (!da) return 1; if (!db) return -1; return da - db; }; }
+
+  function render() {
+    var counts = {}; STAGE_IDS.forEach(function (s){ counts[s] = 0; });
+    state.forEach(function (g){ if (counts[g.stage] != null) counts[g.stage]++; });
+    statsEl.innerHTML =
+      statCard(state.length, "Total guests", "var(--ink-faint)") +
+      statCard(counts.scheduled + counts.recorded + counts.published, "Confirmed", "var(--s-scheduled)") +
+      statCard(counts.contacted, "Awaiting reply", "var(--s-contacted)") +
+      statCard(counts.outreach, "Priority targets", "var(--s-outreach)") +
+      statCard(counts.idea, "Backlog", "var(--s-idea)");
+
+    renderUpcoming();
+
+    board.innerHTML = "";
+    STAGES.forEach(function (st) {
+      var col = document.createElement("div");
+      col.className = "col"; col.style.setProperty("--col-c", st.c); col.dataset.stage = st.id;
+      var list = visibleFor(st.id);
+      var total = state.filter(function (g){ return g.stage === st.id; }).length;
+      col.innerHTML =
+        '<div class="col-head"><span class="dot"></span><span class="t">' + st.label + '</span><span class="count">' + total + '</span></div>' +
+        '<div class="cards"></div>' +
+        '<button class="add-in-col" data-stage="' + st.id + '">＋ Add</button>';
+      var cardsEl = col.querySelector(".cards");
+      if (!list.length) cardsEl.innerHTML = '<div class="col-empty">' + (total ? "No matches" : "Empty") + '</div>';
+      else list.forEach(function (g){ cardsEl.appendChild(cardEl(g)); });
+      attachDrop(col);
+      board.appendChild(col);
+    });
+  }
+
+  function statCard(n, label, color) { return '<div class="stat" style="--stat-c:' + color + '"><div class="n">' + n + '</div><div class="l">' + label + '</div></div>'; }
+
+  function renderUpcoming() {
+    var items = state.filter(function (g) { return (g.record || g.follow) && g.stage !== "published"; }).map(function (g) {
+      var r = parseD(g.record), f = parseD(g.follow), when, kind;
+      if (r && f) { if (r <= f) { when = g.record; kind = "record"; } else { when = g.follow; kind = "follow"; } }
+      else if (r) { when = g.record; kind = "record"; } else { when = g.follow; kind = "follow"; }
+      return { g: g, when: when, kind: kind, d: parseD(when) };
+    }).sort(function (a,b){ return a.d - b.d; }).slice(0, 14);
+    if (!items.length) { upEl.innerHTML = '<div class="up-empty">Nothing dated yet. Open a guest and add a record or follow-up date — booked episodes and reminders will line up here.</div>'; return; }
+    upEl.innerHTML = items.map(function (it) {
+      var cls = isOverdue(it.when) ? " overdue" : (isToday(it.when) ? " today" : "");
+      var kindLabel = it.kind === "record" ? "🎙 Record" : "↩ Follow up";
+      return '<div class="up-card' + cls + '" data-id="' + it.g.id + '" tabindex="0" role="button">' +
+        '<div class="d">' + relLabel(it.when) + '</div><div class="nm">' + esc(it.g.name) + '</div><div class="cd">' + kindLabel + '</div></div>';
+    }).join("");
+  }
+
+  function cardEl(g) {
+    var el = document.createElement("div");
+    el.className = "card"; el.draggable = true; el.dataset.id = g.id;
+    var stObj = STAGES.filter(function (s){ return s.id===g.stage; })[0] || STAGES[0];
+    el.style.setProperty("--col-c", stObj.c);
+    var meta = "";
+    if (g.cat) meta += '<span class="chip cat">' + esc(g.cat) + '</span>';
+    if (g.ep) meta += '<span class="chip ep">🎬 Ep ' + esc(g.ep) + '</span>';
+    if (g.record) meta += '<span class="chip date">🎙 ' + esc(relLabel(g.record)) + '</span>';
+    if (g.follow) { var od = isOverdue(g.follow) ? " overdue" : ""; meta += '<span class="chip follow' + od + '">↩ ' + esc(relLabel(g.follow)) + '</span>'; }
+    var prioCls = g.prio === "high" ? "high" : (g.prio === "med" ? "med" : "low");
+    var prioLabel = g.prio === "high" ? "High" : "Mid";
+    el.innerHTML =
+      '<div class="top"><div><div class="nm">' + esc(g.name) + '</div>' + (g.handle ? '<div class="handle">' + esc(g.handle) + '</div>' : '') + '</div>' +
+      (prioCls !== "low" ? '<span class="prio ' + prioCls + '">' + prioLabel + '</span>' : '') + '</div>' +
+      (g.topic ? '<div class="topic">' + esc(g.topic) + '</div>' : '') +
+      (meta ? '<div class="meta">' + meta + '</div>' : '') +
+      (g.contact ? '<div class="contact">✉ ' + esc(g.contact) + '</div>' : '') +
+      (g.notes ? '<div class="note">' + esc(g.notes) + '</div>' : '') +
+      '<div class="card-actions"><button class="mini edit" data-id="' + g.id + '">Edit</button>' + moveButtons(g) + '</div>';
+    return el;
+  }
+
+  function moveButtons(g) {
+    var i = STAGE_IDS.indexOf(g.stage);
+    var out = '<span style="margin-left:auto;display:flex;gap:4px">';
+    if (i > 0) out += '<button class="mini nav" data-id="' + g.id + '" data-dir="-1" title="' + STAGES[i-1].label + '">←</button>';
+    if (i < STAGES.length - 1) out += '<button class="mini nav" data-id="' + g.id + '" data-dir="1" title="' + STAGES[i+1].label + '">→</button>';
+    out += '</span>';
+    return out;
+  }
+
+  /* ---------- drag & drop ---------- */
+  var dragId = null;
+  board.addEventListener("dragstart", function (e) {
+    var card = e.target.closest(".card"); if (!card) return;
+    dragId = card.dataset.id; card.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (x) {}
+  });
+  board.addEventListener("dragend", function (e) {
+    var card = e.target.closest(".card"); if (card) card.classList.remove("dragging"); dragId = null;
+    Array.prototype.forEach.call(document.querySelectorAll(".col.drag-over"), function (c){ c.classList.remove("drag-over"); });
+  });
+  function attachDrop(col) {
+    col.addEventListener("dragover", function (e) { e.preventDefault(); col.classList.add("drag-over"); });
+    col.addEventListener("dragleave", function (e) { if (!col.contains(e.relatedTarget)) col.classList.remove("drag-over"); });
+    col.addEventListener("drop", function (e) {
+      e.preventDefault(); col.classList.remove("drag-over"); if (!dragId) return;
+      var g = byId(dragId);
+      if (g && g.stage !== col.dataset.stage) { g.stage = col.dataset.stage; moveToEnd(g); save(); render(); toast(g.name + " → " + labelFor(col.dataset.stage)); }
+    });
+  }
+  function moveToEnd(g) { var idx = state.indexOf(g); if (idx > -1) { state.splice(idx, 1); state.push(g); } }
+  function byId(id) { return state.filter(function (g){ return g.id === id; })[0]; }
+  function labelFor(id) { var s = STAGES.filter(function (x){ return x.id===id; })[0]; return s ? s.label : id; }
+
+  board.addEventListener("click", function (e) {
+    var edit = e.target.closest(".edit"); if (edit) { openModal(byId(edit.dataset.id)); return; }
+    var nav = e.target.closest(".nav");
+    if (nav) { var g = byId(nav.dataset.id); if (!g) return; var i = STAGE_IDS.indexOf(g.stage) + (+nav.dataset.dir);
+      if (i >= 0 && i < STAGES.length) { g.stage = STAGE_IDS[i]; moveToEnd(g); save(); render(); toast(g.name + " → " + STAGES[i].label); } return; }
+    var add = e.target.closest(".add-in-col"); if (add) { openModal(null, add.dataset.stage); return; }
+    var card = e.target.closest(".card"); if (card && !e.target.closest("button")) openModal(byId(card.dataset.id));
+  });
+  upEl.addEventListener("click", function (e) { var c = e.target.closest(".up-card"); if (c) openModal(byId(c.dataset.id)); });
+  upEl.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { var c = e.target.closest(".up-card"); if (c) { e.preventDefault(); openModal(byId(c.dataset.id)); } } });
+
+  /* ---------- modal ---------- */
+  var overlay = document.getElementById("overlay");
+  var form = document.getElementById("guestForm");
+  var editingId = null;
+  var stageSel = document.getElementById("f-stage");
+  STAGES.forEach(function (s) { var o = document.createElement("option"); o.value = s.id; o.textContent = s.label; stageSel.appendChild(o); });
+
+  function openModal(g, presetStage) {
+    editingId = g ? g.id : null;
+    document.getElementById("modalTitle").textContent = g ? "Edit guest" : "Add guest";
+    document.getElementById("modalSub").textContent = g ? (g.cat || "Update booking") : "New booking";
+    document.getElementById("f-name").value = g ? g.name : "";
+    document.getElementById("f-handle").value = g ? (g.handle||"") : "";
+    document.getElementById("f-prio").value = g ? g.prio : "med";
+    document.getElementById("f-cat").value = g ? (g.cat||"") : (catEl.value || "");
+    document.getElementById("f-topic").value = g ? (g.topic||"") : "";
+    document.getElementById("f-contact").value = g ? (g.contact||"") : "";
+    document.getElementById("f-stage").value = g ? g.stage : (presetStage || "idea");
+    document.getElementById("f-follow").value = g ? (g.follow||"") : "";
+    document.getElementById("f-record").value = g ? (g.record||"") : "";
+    document.getElementById("f-notes").value = g ? (g.notes||"") : "";
+    document.getElementById("deleteBtn").hidden = !g;
+    overlay.classList.add("open");
+    setTimeout(function(){ document.getElementById("f-name").focus(); }, 30);
+  }
+  function closeModal() { overlay.classList.remove("open"); editingId = null; }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var data = {
+      name: document.getElementById("f-name").value.trim(),
+      handle: document.getElementById("f-handle").value.trim(),
+      prio: document.getElementById("f-prio").value,
+      cat: document.getElementById("f-cat").value.trim(),
+      topic: document.getElementById("f-topic").value.trim(),
+      contact: document.getElementById("f-contact").value.trim(),
+      stage: document.getElementById("f-stage").value,
+      follow: document.getElementById("f-follow").value,
+      record: document.getElementById("f-record").value,
+      notes: document.getElementById("f-notes").value.trim()
+    };
+    if (!data.name) return;
+    if (editingId) { var g = byId(editingId); if (g) Object.keys(data).forEach(function (k){ g[k] = data[k]; }); toast("Saved " + data.name); }
+    else { data.id = uid(); data.ep = ""; state.push(data); toast("Added " + data.name); }
+    save(); refreshCatOptions(); render(); closeModal();
+  });
+
+  document.getElementById("cancelBtn").addEventListener("click", closeModal);
+  document.getElementById("deleteBtn").addEventListener("click", function () {
+    if (!editingId) return; var g = byId(editingId);
+    if (g && confirm("Delete " + g.name + "? This can't be undone.")) { state = state.filter(function (x){ return x.id !== editingId; }); save(); refreshCatOptions(); render(); closeModal(); toast("Deleted " + g.name); }
+  });
+  overlay.addEventListener("mousedown", function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+
+  document.getElementById("addBtn").addEventListener("click", function () { openModal(null); });
+  searchEl.addEventListener("input", render);
+  catEl.addEventListener("change", render);
+  prioEl.addEventListener("change", render);
+  sortEl.addEventListener("change", render);
+
+  /* ---------- export / import ---------- */
+  document.getElementById("exportBtn").addEventListener("click", function () {
+    var json = JSON.stringify(state, null, 2);
+    var claude = window.claude;
+    if (claude && typeof claude.use === "function") {
+      claude.use("downloads").then(function (downloads) {
+        if (!downloads) return legacyExport(json);
+        downloads.save({ filename: "yeahyou-guests.json", data: json })
+          .then(function(){ toast("Exported " + state.length + " guests"); })
+          .catch(function (err) {
+            if (err && err.code === "declined") return;
+            toast("Export unavailable here — try again or copy from the board.");
+          });
+      }).catch(function(){ legacyExport(json); });
+    } else { legacyExport(json); }
+  });
+  function legacyExport(json) {
+    var blob = new Blob([json], { type: "application/json" });
+    var url = URL.createObjectURL(blob); var a = document.createElement("a");
+    a.href = url; a.download = "yeahyou-guests.json"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000); toast("Exported " + state.length + " guests");
+  }
+  document.getElementById("importBtn").addEventListener("click", function () { document.getElementById("importFile").click(); });
+  document.getElementById("importFile").addEventListener("change", function (e) {
+    var file = e.target.files[0]; if (!file) return; var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result); if (!Array.isArray(data)) throw new Error("bad");
+        data.forEach(function (g){ if (!g.id) g.id = uid(); if (STAGE_IDS.indexOf(g.stage)===-1) g.stage="idea"; });
+        if (state.length && !confirm("Replace current board with " + data.length + " imported guests?")) { e.target.value=""; return; }
+        state = data; save(); refreshCatOptions(); render(); toast("Imported " + data.length + " guests");
+      } catch (x) { toast("Couldn't read that file — expected a guest JSON export."); }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  var toastEl = document.getElementById("toast"), toastT;
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function(){ toastEl.classList.remove("show"); }, 2200); }
+
+  refreshCatOptions();
+  render();
+})();
+</script>
