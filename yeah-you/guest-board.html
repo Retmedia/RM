@@ -301,9 +301,14 @@
     <h3>Settings</h3>
     <div class="mh-sub">Outreach template &amp; board</div>
     <div class="field">
+      <label for="booking">Booking link (Calendly)</label>
+      <input id="booking" maxlength="200" placeholder="https://calendly.com/…/yeah-you" />
+      <div class="hint">Paste your invite-only Yeah You Calendly link. It powers the <b>Book</b> button on each guest and the <b>{calendly}</b> placeholder below.</div>
+    </div>
+    <div class="field">
       <label for="tmpl">Outreach DM template</label>
       <textarea id="tmpl" maxlength="900" style="min-height:150px"></textarea>
-      <div class="hint">Placeholders: <b>{first}</b> · <b>{name}</b> · <b>{handle}</b> · <b>{cat}</b>. The <b>Copy DM</b> button on each guest fills these in.</div>
+      <div class="hint">Placeholders: <b>{first}</b> · <b>{name}</b> · <b>{handle}</b> · <b>{cat}</b> · <b>{calendly}</b>. The <b>Copy DM</b> button on each guest fills these in.</div>
     </div>
     <div class="modal-actions">
       <button type="button" class="del-btn" id="resetBoardBtn">Reset board to master list</button>
@@ -320,7 +325,7 @@
 (function () {
   "use strict";
   var KEY = "yeayou_guest_board_v2";
-  var K_THEME = "yy_theme", K_VIEW = "yy_view", K_TMPL = "yy_tmpl", K_COLLAPSE = "yy_collapse";
+  var K_THEME = "yy_theme", K_VIEW = "yy_view", K_TMPL = "yy_tmpl", K_COLLAPSE = "yy_collapse", K_BOOKING = "yy_booking";
 
   var STAGES = [
     { id:"idea",      label:"Idea",      c:"var(--s-idea)",      cc:"#8A7FB0" },
@@ -333,7 +338,7 @@
   var STAGE_IDS = STAGES.map(function (s){ return s.id; });
   function stageObj(id){ return STAGES.filter(function(s){return s.id===id;})[0] || STAGES[0]; }
 
-  var DEFAULT_TMPL = "Yo {first} — Garrett here. I run Yeah You, a sports media show out of Dana Point. We sit people down, cameras on, no script, and let you actually talk. Been wanting to get you in the room. You down to chop it up?";
+  var DEFAULT_TMPL = "Yo {first} — Garrett here. I run Yeah You, a sports media show out of Dana Point. We sit people down, cameras on, no script, and let you actually talk. Been wanting to get you in the room. You down to chop it up? Grab a time here: {calendly}";
 
   var seq = 0;
   function uid(){ return "g" + Date.now().toString(36) + "_" + (seq++); }
@@ -426,6 +431,8 @@
 
   function getTmpl(){ try { return localStorage.getItem(K_TMPL) || DEFAULT_TMPL; } catch(e){ return DEFAULT_TMPL; } }
   function setTmpl(v){ try { localStorage.setItem(K_TMPL, v); } catch(e){} }
+  function getBooking(){ try { return localStorage.getItem(K_BOOKING) || ""; } catch(e){ return ""; } }
+  function setBooking(v){ try { localStorage.setItem(K_BOOKING, v); } catch(e){} }
 
   var collapsed = (function(){ try { return JSON.parse(localStorage.getItem(K_COLLAPSE)) || {}; } catch(e){ return {}; } })();
   function saveCollapse(){ try { localStorage.setItem(K_COLLAPSE, JSON.stringify(collapsed)); } catch(e){} }
@@ -448,7 +455,7 @@
     else fallback();
     function fallback(){ try { var ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); done(); } catch(e){ toast("Copy failed — select manually"); } }
   }
-  function fillTmpl(g){ var first=(g.name||"").split(" ")[0]; return getTmpl().replace(/\{first\}/g,first).replace(/\{name\}/g,g.name||"").replace(/\{handle\}/g,g.handle||"").replace(/\{cat\}/g,g.cat||""); }
+  function fillTmpl(g){ var first=(g.name||"").split(" ")[0]; var bk=getBooking()||"[add your Calendly link in ⚙ Settings]"; return getTmpl().replace(/\{first\}/g,first).replace(/\{name\}/g,g.name||"").replace(/\{handle\}/g,g.handle||"").replace(/\{cat\}/g,g.cat||"").replace(/\{calendly\}/g,bk).replace(/\{booking\}/g,bk); }
 
   /* ---------- DOM ---------- */
   var board=document.getElementById("board"), tablewrap=document.getElementById("tablewrap");
@@ -571,6 +578,7 @@
         '<button class="iconbtn edit" data-id="'+g.id+'" title="Edit">Edit</button>'+
         '<button class="iconbtn dm" data-id="'+g.id+'" title="Copy outreach DM">✉ DM</button>'+
         (ig?'<a class="iconbtn" href="'+ig+'" target="_blank" rel="noopener" title="Open Instagram">↗ IG</a>':'')+
+        (getBooking()?'<a class="iconbtn" href="'+esc(getBooking())+'" target="_blank" rel="noopener" title="Open booking link">📅 Book</a>':'')+
         moveButtons(g)+
       '</div>';
     return el;
@@ -719,10 +727,10 @@
   overlay.addEventListener("mousedown",function(e){ if(e.target===overlay) closeModal(); });
 
   /* ---------- settings ---------- */
-  var setOverlay=document.getElementById("setOverlay"), tmplEl=document.getElementById("tmpl");
-  document.getElementById("settingsBtn").addEventListener("click",function(){ tmplEl.value=getTmpl(); setOverlay.classList.add("open"); });
+  var setOverlay=document.getElementById("setOverlay"), tmplEl=document.getElementById("tmpl"), bookingEl=document.getElementById("booking");
+  document.getElementById("settingsBtn").addEventListener("click",function(){ tmplEl.value=getTmpl(); bookingEl.value=getBooking(); setOverlay.classList.add("open"); });
   document.getElementById("setCancel").addEventListener("click",function(){ setOverlay.classList.remove("open"); });
-  document.getElementById("setSave").addEventListener("click",function(){ setTmpl(tmplEl.value.trim()||DEFAULT_TMPL); setOverlay.classList.remove("open"); toast("Outreach template saved"); });
+  document.getElementById("setSave").addEventListener("click",function(){ setTmpl(tmplEl.value.trim()||DEFAULT_TMPL); setBooking(bookingEl.value.trim()); setOverlay.classList.remove("open"); render(); toast("Settings saved"); });
   setOverlay.addEventListener("mousedown",function(e){ if(e.target===setOverlay) setOverlay.classList.remove("open"); });
   document.getElementById("resetBoardBtn").addEventListener("click",function(){
     if(confirm("Reset the board to the full master list? Everyone goes back to Idea and your changes are cleared.")){ state=buildSeed(); save(); refreshCatOptions(); render(); setOverlay.classList.remove("open"); toast("Board reset to master list"); }
