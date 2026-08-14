@@ -1,0 +1,447 @@
+<title>Yeah You Outreach Contacts</title>
+<style>
+  :root{
+    --bg:#F3EEE6;--panel:#FBF8F2;--panel-2:#F0E9DD;--panel-3:#EAE1D2;
+    --ink:#211C15;--ink-soft:#5A5044;--ink-faint:#8B8172;--line:#E0D6C6;--line-2:#D2C6B2;
+    --accent:#D8442C;--accent-ink:#FFF;--amber:#C6852A;--ok:#2E8C74;
+    --shadow:0 1px 2px rgba(40,30,15,.06),0 6px 20px rgba(40,30,15,.07);
+    --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#17140F;--panel:#211D17;--panel-2:#2A251D;--panel-3:#332D23;
+    --ink:#F1EADD;--ink-soft:#B7AC99;--ink-faint:#857A68;--line:#322C22;--line-2:#423A2C;
+    --accent:#E8503A;--accent-ink:#1A1006;--amber:#E0A23C;--ok:#46B896;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 26px rgba(0,0,0,.44);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#17140F;--panel:#211D17;--panel-2:#2A251D;--panel-3:#332D23;
+    --ink:#F1EADD;--ink-soft:#B7AC99;--ink-faint:#857A68;--line:#322C22;--line-2:#423A2C;
+    --accent:#E8503A;--accent-ink:#1A1006;--amber:#E0A23C;--ok:#46B896;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 26px rgba(0,0,0,.44);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1500px;margin:0 auto;padding:22px clamp(14px,3vw,32px) 60px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .oncircle{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 20%,transparent);flex:none}
+  h1{font-size:clamp(1.3rem,2.4vw,1.85rem);letter-spacing:-.02em;margin:0;font-weight:800;line-height:1}
+  .sub{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:18px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--stat-c,var(--ink-faint))}
+  .stat .n{font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .stat .l{font-family:var(--mono);font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+  .note{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:12px 15px;font-size:.86rem;color:var(--ink-soft);box-shadow:var(--shadow)}
+  .note b{color:var(--ink)}
+  .toolbar{margin-top:16px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .search{flex:1 1 220px;min-width:170px;position:relative}
+  .search input{width:100%;padding:9px 12px 9px 34px;border-radius:9px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);font-size:.88rem;font-family:var(--sans)}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-faint)}
+  select,.tbtn{padding:9px 11px;border-radius:9px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);font-size:.82rem;font-family:var(--sans);cursor:pointer}
+  .tbtn.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
+  .count{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);margin-left:auto}
+  .tablewrap{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:auto}
+  table{border-collapse:collapse;width:100%;font-size:.85rem}
+  thead th{position:sticky;top:0;background:var(--panel);text-align:left;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);padding:11px 12px;border-bottom:1px solid var(--line-2);cursor:pointer;white-space:nowrap;z-index:2}
+  thead th:hover{color:var(--ink)}
+  tbody tr{border-bottom:1px solid var(--line)}
+  tbody tr:hover{background:var(--panel-2)}
+  td{padding:9px 12px;vertical-align:top}
+  td.nm{font-weight:700;white-space:nowrap}
+  td .cat{font-family:var(--mono);font-size:.62rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+  td.email a{color:var(--ok);text-decoration:none;font-family:var(--mono);font-size:.8rem;word-break:break-all}
+  td.email a:hover{text-decoration:underline}
+  td.email .dash{color:var(--ink-faint)}
+  .copy{margin-left:6px;font-size:.62rem;padding:1px 6px;border-radius:5px;border:1px solid var(--line-2);background:var(--panel-3);color:var(--ink-soft);cursor:pointer}
+  .copy:hover{color:var(--accent);border-color:var(--accent)}
+  .conf{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:5px;text-transform:uppercase;white-space:nowrap}
+  .conf.high{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
+  .conf.med{background:color-mix(in srgb,var(--amber) 22%,transparent);color:var(--amber)}
+  .conf.low{background:var(--panel-3);color:var(--ink-faint)}
+  .conf.todo{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+  td.src a{color:var(--ink-faint);font-size:.72rem;text-decoration:none}
+  td.src a:hover{color:var(--accent)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (max-width:640px){td.src,thead th.src{display:none}}
+</style>
+
+<div class="wrap">
+  <div class="brand">
+    <span class="oncircle"></span>
+    <div><h1>Yeah You — Outreach Contacts</h1><div class="sub">Agency &middot; management &middot; booking · researched Aug 2026</div></div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="note">
+    <b>How to read this:</b> A-list athletes don't publish personal emails — they book through their <b>agency/manager</b>, so those rows show the rep + booking channel, not a direct address. Rows with a <b>real email</b> were found verbatim in a cited source (check the confidence). <b class="conf-inline">TODO</b> rows hit the research budget and still need a pass. <b>Never blast the low-confidence ones</b> — confirm on the source first.
+  </div>
+
+  <div class="toolbar">
+    <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg><input id="q" placeholder="Search name, agency, email…"></div>
+    <select id="cat"><option value="">All categories</option></select>
+    <select id="conf"><option value="">All confidence</option><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option><option value="todo">Needs research</option></select>
+    <button class="tbtn" id="emailOnly">✉ Has email only</button>
+    <button class="tbtn" id="csv">⭳ CSV</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="tablewrap"><table>
+    <thead><tr>
+      <th data-c="name">Name</th><th data-c="rep">Repped by</th><th data-c="email">Best contact</th>
+      <th data-c="channel">Booking channel</th><th data-c="conf">Conf.</th><th class="src" data-c="src">Source</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  // [name, category, repped-by, email(""=none), booking-channel, confidence, sourceURL]
+  var D=[
+["Kelly Slater","Surfing","Mgmt team (names private)","","Speaker bureau — AAE 1-800-698-2536 / Athlete Speakers","low","https://bookingagentinfo.com/celebrity/kelly-slater/"],
+["John John Florence","Surfing","MN2S booking agency","info@mn2s.com","Agency email","med","https://mn2s.com/booking-agency/talent-roster/john-john-florence/"],
+["Laird Hamilton","Surfing","Mgmt Steindorff/Castillo; MN2S","info@mn2s.com","Agency / speaker bureau","low","https://mn2s.com/booking-agency/talent-roster/laird-hamilton/"],
+["Kai Lenny","Surfing","MN2S","info@mn2s.com","Agency email","med","https://mn2s.com/booking-agency/talent-roster/kai-lenny/"],
+["Shane Dorian","Surfing","All American Speakers","","Speaker bureau form","low","https://www.allamericanspeakers.com/celebritytalentbios/Shane+Dorian/467552"],
+["Gabriel Medina","Surfing","State Mgmt LA / Endorsco","","Agency form / IG DM","low","https://www.endorsco.agency/talent/gabriel-medina"],
+["Filipe Toledo","Surfing","None public","","IG DM only","low","https://en.wikipedia.org/wiki/Filipe_Toledo"],
+["Italo Ferreira","Surfing","IF15 self-team","","IG DM / agency form","low","https://bookingagentinfo.com/celebrity/italo-ferreira/"],
+["Mick Fanning","Surfing","AMW Media / Endorsco / MN2S","contact@endorsco.com","Agency email","med","https://amwmedia.com.au/talent/mick-fanning/"],
+["Joel Parkinson","Surfing","Athlete Speakers","","Bureau (800-916-6008)","low","https://www.athletespeakers.com/speaker/joel-parkinson"],
+["Taj Burrow","Surfing","NoPac / AAE bureaus","","Bureau form","low","https://www.allamericanspeakers.com/speakers/443796/Taj-Burrow"],
+["Jack Robinson","Surfing","MN2S","info@mn2s.com","Agency email","med","https://mn2s.com/booking-agency/talent-roster/jack-robinson/"],
+["Crosby Colapinto","Surfing","None public (Rip Curl)","","IG DM / via Rip Curl","low","https://www.ripcurl.com/pages/crosby-colapinto"],
+["Griffin Colapinto","Surfing","None public (Quiksilver)","","IG DM / via Quiksilver","low","https://bookingagentinfo.com/celebrity/griffin-colapinto/"],
+["Nathan Florence","Surfing","None public","","IG DM / via sponsors","low","https://www.instagram.com/nathan_florence/"],
+["Kalani Robb","Surfing","None public","","IG DM only","low","https://www.instagram.com/kalanirobb/"],
+["Mason Ho","Surfing","None public (Rip Curl)","","IG DM / via Rip Curl","low","https://www.ripcurl.com/pages/mason-ho"],
+["Clark Little","Surfing","Clark Little Photography (own studio)","","Studio form / 808-888-2877","low","https://clarklittlephotography.com/pages/contact"],
+["Bruce Irons","Surfing","None public","","IG DM only","low","https://www.imdb.com/name/nm1229602/"],
+["Matt Meola","Surfing","None public","","IG DM only","low","https://www.instagram.com/mattmeola/"],
+["Nathan Fletcher","Surfing","None public","","IG DM / via Red Bull","low","https://www.redbull.com/gb-en/nathan-fletcher"],
+["Jackson Dorian","Surfing","None public","","IG DM only","low","https://www.worldsurfleague.com/"],
+["Dylan Graves","Surfing","None (Vans)","","IG DM / via Vans","low","https://stabmag.com/profiles/dylan-graves/"],
+["Billy Kemper","Surfing","Has manager (unnamed)","","billykemper.com form / IG DM","low","https://www.billykemper.com/"],
+["Lucas Chumbo","Surfing","Self","contato@lucaschumbo.com","Personal-site email","med","https://www.lucaschumbo.com/"],
+["Noah Beschen","Surfing","None public","","IG DM only","low","https://www.instagram.com/"],
+["Barron Mamiya","Surfing","Coach Shaun Ward / Sharp Eye","","Via sponsor / IG DM","low","https://sharpeyesurfboards.com/pages/barron-mamiya"],
+["Ethan Ewing","Surfing","MN2S / Always Human PR","info@mn2s.com","Agency email","med","https://mn2s.com/booking-agency/talent-roster/ethan-ewing/"],
+["Seth Moniz","Surfing","Wasserman (Team Wass)","surf@teamwass.com","Agency email","med","https://www.instagram.com/sethmoniz/"],
+["Yago Dora","Surfing","None public (Vissla/Monster)","","IG DM / via sponsors","low","https://www.vissla.com/blogs/creators/yago-dora"],
+["Craig Anderson","Surfing","None (Haydenshapes)","","IG DM / via sponsor","low","https://www.haydenshapes.com/pages/craig-anderson"],
+["Nic Von Rupp","Surfing","Von Rupp Media (self)","management@vonruppmedia.com","Own mgmt email","med","https://www.allamericanspeakers.com/speakers/464821/Nic-Von-Rupp"],
+["Michael February","Surfing","None (Channel Islands)","","IG DM / via sponsor","low","https://cisurfboards.com/pages/michael-february"],
+["Tyler Stanaland","Surfing","A3 Artists Agency; mgr Roy Bongiovani","","Agency (A3 Artists)","low","https://deadline.com/2023/08/selling-the-oc-tyler-stanaland-signs-a3-artists-agency-1235531711/"],
+["Ben Gravy","Surfing","None (brand ambassador)","","IG DM / YouTube business","low","https://jettylife.com/blogs/sea/welcome-ben-gravy"],
+["Koa Rothman","Surfing","Self / 28th Ave","koa@28thave.com","Direct business email","med","https://www.instagram.com/koarothman/"],
+["Sage Burke","Surfing","None found","","IG DM only","low",""],
+["Caity Simmers","Surfing","Mgr Gabe Garcia (O'Neill/Red Bull)","","Via manager / IG DM","low","https://stabmag.com/elsewhere/surfing-has-a-caitlin-clark-but-shes-chill-as-fuck/"],
+["Molly Picklum","Surfing","NC Management (AU)","info@ncmanagement.com.au","Agency email","med","https://ncmanagement.com.au/clients/molly-picklum/"],
+["Erin Brooks","Surfing","Manifesto Sports & Ent (Rip Curl)","","Agency contact form","low","https://manifestose.com/athlete/erin-brooks/"],
+["Jamie O'Brien","Surfing","MN2S / own surf school","info@mn2s.com","Agency; surf@jobsurfexperience.com","med","https://mn2s.com/booking-agency/talent-roster/jamie-obrien/"],
+["Koa Smith","Surfing","Mgr Ryan Runke","","Via manager / IG DM","low","https://bookingagentinfo.com/celebrity/koa-smith/"],
+["Carissa Moore","Surfing","Athlete Speakers / AAE","","Speaker bureau","low","https://www.athletespeakers.com/speaker/carissa-moore"],
+["Caroline Marks","Surfing","Agents (private); coach M. Parsons","","Agency form / IG DM","low","https://bookingagentinfo.com/celebrity/caroline-marks/"],
+["Austin Keen","Skimboarding","Agency 133 (Reed Morales) / self","","'Book AK' form on austinkeen.com","med","https://www.agency133.com/austin-keen"],
+["Brad Domke","Skimboarding","Unmanaged","","IG DM only","low","https://www.instagram.com/braddomke/"],
+["Lucas Fink","Skimboarding","Self (Red Bull)","","IG DM / Red Bull page","low","https://www.redbull.com/us-en/athlete/lucas-fink"],
+["Adrien Raza","Skimboarding","MonRae Management (London)","hello@monraemanagement.com","Management email","med","https://www.monraemanagement.com/contact"],
+["Amber Torrealba","Skimboarding","Self (own brand)","","ambertorrealba.com/contact form","low","https://ambertorrealba.com/contact/"],
+["Jack Tenney","Skimboarding","Self / JoogSquad","","IG DM / YouTube","low","https://www.apexskimboards.com/jack-tenney"],
+["John Akerman","Skimboarding","Self (Nautique/Phase 5)","","IG DM (@jaakerman)","low","https://nautique.com/team/john-akerman"],
+["Rusty Preisendorfer","Shapers","Rusty Surfboards","service@rustysurfboards.com","Company email (directory)","low","https://rustysurfboards.com/pages/custom-surfboard-experience"],
+["Jon Pyzel","Shapers","Pyzel Surfboards","sales@pyzelsurfboards.com","Company contact email","high","https://pyzelsurfboards.com/pages/contact"],
+["Matt Biolos","Shapers","Lost Surfboards","","Site / 949-361-6577 / IG DM","low","https://lostsurfboards.net/"],
+["Charley Stevens","Shapers","Unverified","","IG DM (@ghostshapes)","low","https://www.instagram.com/_charlesstevens/"],
+["Robbie McInery","Shapers","Not found","","IG DM only","low",""],
+["William Trubridge","Freediving / Big Wave","Self / Vertical Blue","","williamtrubridge.com","low","https://www.williamtrubridge.com/"],
+["Mark Healey","Freediving / Big Wave","Self / Healey Water Ops","","Via HWO / IG DM","low","https://www.uniteddsn.com/hwo"],
+["Kimi Werner","Freediving / Big Wave","Wasserman (speaking)","","Wasserman speaker form","med","https://www.teamwass.com/speaker/kimi-werner/"],
+["Hanli Prinsloo","Freediving / Big Wave","Chartwell Speakers / self","hello@hanliprinsloo.com","Direct / bureau (unverified)","low","https://www.hanliprinsloo.com/speaking"],
+["Robby Naish","Wingfoil / Kite","Naish (Kubus Sports)","","Via naish.com","low","https://www.naish.com/pages/robby-naish"],
+["Airton Cozzolino","Wingfoil / Kite","Self / Duotone","","Personal site / IG DM","low","https://airtoncozzolino.com/"],
+["Tom Court","Wingfoil / Kite","Self / Duotone","","tomcourt.com / IG DM","low","http://www.tomcourt.com/"],
+["Jake Kelsick","Wingfoil / Kite","Self / Kelsick Kiteboarding","","jakekelsick.com","low","https://www.jakekelsick.com/"],
+["Parks Bonifay","Wakeboarding","Bureaus (MN2S / AthleteSpeakers)","","Speaker/booking bureau","med","https://mn2s.com/booking-agency/talent-roster/parks-bonifay/"],
+["Shaun Murray","Wakeboarding","Self / AthleteSpeakers","","shaunmurray.com form","med","https://shaunmurray.com/"],
+["Aaron Rathy","Wakeboarding","Not found","","IG DM only","low",""],
+["Charlie Buckingham","Sailing","Self (US Sailing Team)","","charliebuckingham.com / OpenSponsorship","med","https://opensponsorship.com/profiles/charlie-buckingham"],
+["Jimmy Spithill","Sailing","Speaker bureaus (AAE/BigSpeak)","","Speaker bureau","med","https://www.athletespeakers.com/speaker/jimmy-spithill"],
+["Tony Hawk","Skateboarding","Legal Jared Levine (Yorn); Birdhouse","","Bureau (AthleteSpeakers) / Birdhouse","low","https://bookingagentinfo.com/celebrity/tony-hawk/"],
+["Nyjah Huston","Skateboarding","Agent (brand); prev Range Media","","Via agency / AAE","low","https://bookingagentinfo.com/celebrity/nyjah-huston/"],
+["Ryan Sheckler","Skateboarding","The Familie (Stephen Astephen)","","Via mgmt / AthleteSpeakers","med","https://bookingagentinfo.com/celebrity/ryan-sheckler/"],
+["Shaun White","Skateboarding","WME-level agents","","Speaker bureau","low","https://bookingagentinfo.com/celebrity/shaun-white/"],
+["Danny Way","Skateboarding","MN2S / AAE","","MN2S form / AAE","low","https://mn2s.com/booking-agency/talent-roster/danny-way/"],
+["Eric Koston","Skateboarding","Self / The Berrics","","IG DM / via The Berrics","low","https://partymapcelebs.com/actor-eric-koston/"],
+["Greyson Fletcher","Skateboarding","Independent (Birdhouse)","","IG DM only","low","https://www.instagram.com/greyson_fletcher/"],
+["Ivan Florence","Skateboarding","Florence Marine X (family)","","IG DM only","low","https://www.florencemarinex.com/"],
+["Sky Brown","Skateboarding","Select Mgmt Group (Neben/Eblen)","","Via mgmt / MN2S / AAE","med","https://bookingagentinfo.com/celebrity/sky-brown/"],
+["Gustavo Ribeiro","Skateboarding","Father/coach; none formal","","IG DM only","low","https://en.wikipedia.org/wiki/Gustavo_Ribeiro"],
+["Andy Anderson","Skateboarding","Powell-Peralta; none listed","","IG DM only","low","https://grokipedia.com/page/Andy_Anderson_(skateboarder)"],
+["Zion Wright","Skateboarding","Likely Excel Management","","Via management","low","https://bookingagentinfo.com/celebrity/zion-wright/"],
+["Lizzie Armanto","Skateboarding","Likely Excel Management","","Via mgmt / lizziearmanto.com","low","https://bookingagentinfo.com/celebrity/lizzie-armanto/"],
+["Jay Alvarez","Skateboarding","Influencer mgmt","","Via agency","low","https://influencermatchmaker.co.uk/influencer/jay-alvarrez"],
+["Liam Morgan","Skateboarding","None found","","IG DM only","low","https://bookingagentinfo.com/celebrity/liamoo/"],
+["Vince Milou","Skateboarding","Next Management Paris (modeling)","","Via Next Mgmt Paris","med","https://nextmanagement.com/paris/men/profile/vincent-milou/bio"],
+["Don Brown","Skateboarding","Sole Technology exec (not a rep)","","Via Sole Technology","low","https://blog.slamcity.com/don-brown-interview/"],
+["Chloe Covell","Skateboarding","EMM LLC — Tom Curran","tom.curran@emmllc.com","Agent email (listed on IG bio)","med","https://www.instagram.com/chlo_the_flo/"],
+["Yuto Horigome","Olympics — Skate","Polyvalent / Gifted Existence","","Agency contact form","med","https://bookingagentinfo.com/celebrity/yuto-horigome/"],
+["Rayssa Leal","Olympics — Skate","Agent Andreza R.","","Via agency","low","https://bookingagentinfo.com/celebrity/rayssa-leal/"],
+["Jagger Eaton","Olympics — Skate","Endorseco Agency / AAE","","endorsco.agency form / AthleteSpeakers","low","https://www.endorsco.agency/talent/jagger-eaton"],
+["Travis Pastrana","BMX / MTB","The Familie (Astephen); Nitro Circus","travispastrana@nitrocircus.com","Nitro Circus (UNCONFIRMED)","low","https://bookingagentinfo.com/celebrity/travis-pastrana/"],
+["Kevin Peraza","BMX / MTB","The Familie — Chris Feitler","Cfeitler@thefamilie.com","Agent email (listed on IG bio)","med","https://www.instagram.com/kevinperaza/"],
+["Nigel Sylvester","BMX / MTB","Mgr Rush Mac; The Familie","","Via management","low","https://bookingagentinfo.com/celebrity/nigel-sylvester/"],
+["Ryan Williams","BMX / MTB","Nitro Circus / Madd Gear","rwilly@maddgear.com","Nitro Circus (UNCONFIRMED)","low","https://www.nitrocircus.com/athlete-profiles/ryan-williams"],
+["Sam Pilgrim","BMX / MTB","None (Canyon team)","","IG DM / via Canyon","low","https://bookingagentinfo.com/celebrity/sam-pilgrim/"],
+["Brandon Semenuk","BMX / MTB","None (SRAM/Rocky Mountain)","","IG DM only","low","https://en.wikipedia.org/wiki/Brandon_Semenuk"],
+["Logan Martin","BMX / MTB","Talennial listing","","talennial.com form / AthleteSpeakers","low","https://talennial.com/talent/logan-martin/"],
+["Broc Raiford","BMX / MTB","Self (Tough World Co.)","BrocRaifordBmx@gmail.com","Email (reported, unverified)","low","https://www.redbull.com/us-en/athlete/broc-raiford"],
+["Ryan Doyle","Parkour","Self / WFPF; Airborn Academy","","ryandoyle.co.uk / via WFPF","low","https://wfpf.com/ryan-doyle/"],
+["Tim Shieff","Parkour","None found","","IG DM only","low","https://en.wikipedia.org/wiki/Tim_Shieff"],
+["Storror","Parkour","STORROR Parkour Ltd","team@storror.com","Official contact email","med","https://storrorparkourpro.com/pages/contact"],
+["Mike Stewart","Bodyboarding","Likely via Science Bodyboards","","Needs research","todo",""],
+["Tanner McDaniel","Bodyboarding","—","","Needs research","todo",""],
+["Craig Whetter","Bodyboarding","—","","Needs research","todo",""],
+["Chris Monroe","Bodyboarding","—","","Needs research","todo",""],
+["Ken Roczen","Motocross / FMX","Self-managed / store team","","kenroczen.com form / IG DM","low","https://kenroczen.com/pages/contact-us"],
+["Ryan Dungey","Motocross / FMX","Directory listing only","","IG DM (@ryandungey)","low","https://bookingagentinfo.com/celebrity/ryan-dungey/"],
+["Eli Tomac","Motocross / FMX","Team-managed (Dan Fahie)","","Via race team / IG DM","low","https://en.wikipedia.org/wiki/Eli_Tomac"],
+["Cooper Webb","Motocross / FMX","All American Speakers (speaking)","","AAE bureau form","med","https://www.allamericanspeakers.com/speakers/447443/Cooper-Webb"],
+["Jason Anderson","Motocross / FMX","Team-coordinated","","Via race team / IG DM","low","https://en.wikipedia.org/wiki/Jason_Anderson_(motorcyclist)"],
+["Tom Pages","Motocross / FMX","Red Bull athlete channel","","IG DM (@tompages)","low","https://www.redbull.com/int-en/tom-pages-fmx-rider-profile"],
+["Broc Tickle","Motocross / FMX","Not found","","IG DM only","low",""],
+["Travis Rice","Snowboarding","Wasserman; MN2S","","Agency (Wasserman) / MN2S form","med","https://mn2s.com/booking-agency/talent-roster/travis-rice/"],
+["Chloe Kim","Snowboarding","UTA (United Talent Agency)","","UTA talent booking","high","https://deadline.com/2023/12/snowboarding-champion-chloe-kim-signed-uta-1235657708/"],
+["Mark McMorris","Snowboarding","Manifesto Sport Mgmt (Reimer)","","Agency inquiry","med","https://manifestose.com/athlete/mark-mcmorris/"],
+["Zeb Powell","Snowboarding","Superheroes Management","","Agency contact form","med","https://superheroesmgmt.com/news/2024/zeb-powell/"],
+["Seb Toots","Snowboarding","Superheroes Mgmt / Groupe MVP","","Agency contact form","med","https://superheroesmgmt.com/news/2024/sebastien-toutant/"],
+["Red Gerard","Snowboarding","MN2S; early mgr brother Malachi","","MN2S booking form","med","https://mn2s.com/booking-agency/talent-roster/redmond-gerard/"],
+["Scotty James","Snowboarding","Directory listing (obscured)","","thehandbook / bookingagentinfo","low","https://www.thehandbook.com/celebrity/scotty-james/"],
+["Casey Willax","Snowboarding","Not found","","IG DM only","low",""],
+["Eileen Gu","Freestyle Skiing","IMG Models / WME Sports","","WME / IMG talent booking","high","https://bookingagentinfo.com/celebrity/eileen-gu/"],
+["Nick Goepper","Freestyle Skiing","AthleteSpeakers","","Bureau / IG DM","low","https://www.athletespeakers.com/speaker/nick-goepper"],
+["Alex Ferreira","Freestyle Skiing","Olympus Sports Group; MN2S","","Agency contact form","med","https://olympussportsgroup.com/athletes/alex-ferreira/"],
+["Tess Ledeux","Freestyle Skiing","MN2S; FFS agents","","MN2S booking form","med","https://mn2s.com/booking-agency/talent-roster/tess-ledeux/"],
+["Colby Stevenson","Freestyle Skiing","Not confirmed","","IG DM only","low",""],
+["Birk Irving","Freestyle Skiing","Not found","","IG DM only","low",""],
+["Kelly Sildaru","Freestyle Skiing","Not found","","IG DM only","low",""],
+["Alex Hall","Freestyle Skiing","Personal manager","","IG DM / via mgr","low","https://bookingagentinfo.com/celebrity/alex-hall/"],
+["David Wise","Freestyle Skiing","MN2S; AthleteSpeakers","","MN2S booking form","med","https://mn2s.com/booking-agency/talent-roster/david-wise/"],
+["Henrik Harlaut","Freestyle Skiing","MN2S","","MN2S booking form","med","https://mn2s.com/booking-agency/talent-roster/henrik-harlaut/"],
+["Conor McGregor","MMA / UFC","Paradigm Sports (Audie Attar)","","Paradigm form / AAE bureau","med","https://bookingagentinfo.com/celebrity/conor-mcgregor/"],
+["Ilia Topuria","MMA / UFC","First Round Mgmt (Malki Kawa)","info@firstroundmanagement.com","Management email","high","https://1str.com/client/ilia-topuria/"],
+["Islam Makhachev","MMA / UFC","Dominance MMA (Ali Abdelaziz)","","DominanceMMA.com contact form","med","https://dominancemma.com/"],
+["Khamzat Chimaev","MMA / UFC","Majdi Shammas (Allstars)","","Allstars Training Ctr / IG DM","med","https://www.mmanews.com/news/inner-turmoil-engulfs-chimaevs-apparent-split-with-old-management/"],
+["Alex Pereira","MMA / UFC","Unclear","","MN2S / AthleteSpeakers","low","https://mn2s.com/booking-agency/talent-roster/alex-pereira/"],
+["Israel Adesanya","MMA / UFC","Chosen Advisory (Tim Simpson)","","Chosen Advisory","med","https://sportskeeda.com/mma/news-israel-adesanya-leon-edwards-jiri-prochazka"],
+["Max Holloway","MMA / UFC","Chosen Advisory (Simpson)","","Chosen Advisory","med","https://www.athletespeakers.com/speaker/max-holloway"],
+["Sean O'Malley","MMA / UFC","Self-managed","","IG DM / direct","med","https://www.si.com/fannation/mma/news/sean-omalley-explains-why-hes-fed-up-with-mma-managers"],
+["Dustin Poirier","MMA / UFC","Unclear (prev Arsenal)","","MN2S (Sharron Elkabas)","low","https://mn2s.com/booking-agency/talent-roster/dustin-poirier/"],
+["Nate Diaz","MMA / UFC","None current","","Endorsco / All American Speakers","low","https://www.endorsco.agency/talent/nate-diaz"],
+["Jorge Masvidal","MMA / UFC","Dominance MMA (per report)","","Dominance MMA","low","https://www.mediareferee.com/ufc-news-who-is-jorge-masvidals-manager"],
+["Charles Oliveira","MMA / UFC","Diego Lima & Giovani Decker","","IG DM","low","https://bookingagentinfo.com/celebrity/charles-oliveira/"],
+["Paddy Pimblett","MMA / UFC","Graham Boylan (Cage Warriors CEO)","","thebaddy.com/contact-us","med","https://thebaddy.com/contact-us/"],
+["Michael Chandler","MMA / UFC","Samantha Fulare","","Directory listing","low","https://bookingagentinfo.com/celebrity/michael-chandler/"],
+["Kamaru Usman","MMA / UFC","Dominance MMA (Ali Abdelaziz)","","DominanceMMA.com form","med","https://dominancemma.com/"],
+["Leon Edwards","MMA / UFC","Chosen Advisory (Simpson)","","Chosen Advisory","med","https://middleeasy.com/mma-news/tim-simpson-forms-mma-agency/"],
+["Brendan Schaub","MMA / UFC","Antranig Balian; prev CAA","","AthleteSpeakers / CTI","low","https://bookingagentinfo.com/celebrity/brendan-schaub/"],
+["Mike Perry","MMA / UFC","First Round Mgmt (Malki Kawa)","info@firstroundmanagement.com","Management email","high","https://1str.com/client/mike-perry/"],
+["Jake Shields","MMA / UFC","None current","","MN2S / AthleteSpeakers","low","https://mn2s.com/booking-agency/talent-roster/jake-shields/"],
+["Jon Jones","MMA / UFC","Richard Schaefer (advisor)","","Via Richard Schaefer","med","https://www.espn.com/mma/story/_/id/31515628/"],
+["Francis Ngannou","MMA / UFC","CAA (Marquel Martin)","","CAA / bureau","med","https://www.cbssports.com/mma/news/manager-ufc-hasnt-contacted-francis-ngannou"],
+["Bo Nickal","MMA / UFC","First Round Mgmt (Malki Kawa)","info@firstroundmanagement.com","Management email","med","https://bookingagentinfo.com/celebrity/bo-nickal/"],
+["Ryan Garcia","Olympics — Boxing","Golden Boy Promotions","","Golden Boy Promotions","med","https://www.espn.com/boxing/story/_/id/38385527/"],
+["Gervonta Davis","Olympics — Boxing","GTD Promotions / PBC (Al Haymon)","","PBC / GTD Promotions","med","https://www.essentiallysports.com/boxing-news-who-is-gervonta-davis-signed-to/"],
+["Devin Haney","Olympics — Boxing","Devin Haney Promotions (Bill Haney)","","Devin Haney Promotions","med","https://www.espn.com/boxing/story/_/id/37668851/"],
+["Teofimo Lopez","Olympics — Boxing","Top Rank; mgr Keith Connolly","","Top Rank / Keith Connolly","med","https://www.yardbarker.com/boxing/articles/exclusive_split_teofimo_lopez_management/"],
+["Keyshawn Davis","Olympics — Boxing","Top Rank; mgr Jessica Brown","","Top Rank (toprank.com)","med","https://toprank.com/fighters/keyshawn-davis"],
+["Shakur Stevenson","Olympics — Boxing","—","","Needs research","todo",""],
+["Jordan Burroughs","Olympics — Wrestling","—","","Needs research","todo",""],
+["Kyle Dake","Olympics — Wrestling","—","","Needs research","todo",""],
+["David Taylor","Olympics — Wrestling","—","","Needs research","todo",""],
+["Helen Maroulis","Olympics — Wrestling","—","","Needs research","todo",""],
+["Aaron Brooks","Olympics — Wrestling","—","","Needs research","todo",""],
+["Connor McDavid","NHL / Hockey","Wasserman Hockey (Judd Moldaver)","","Via Wasserman Hockey","high","https://thehockeynews.com/news/100-people-of-power-and-influence/no-67-judd-moldaver"],
+["Auston Matthews","NHL / Hockey","Wasserman Hockey (Moldaver)","","Via Wasserman Hockey","high","https://thehockeynews.com/news/100-people-of-power-and-influence/no-67-judd-moldaver"],
+["Alex Ovechkin","NHL / Hockey","Agent David Abrutyn","","Via agent / speaker bureaus","med","https://www.washingtonpost.com/news/dc-sports-bog/wp/2017/04/25/for-alex-ovechkins-agent/"],
+["Sidney Crosby","NHL / Hockey","CAA Hockey (Pat Brisson)","","Via CAA Sports","high","https://en.wikipedia.org/wiki/Pat_Brisson"],
+["Nathan MacKinnon","NHL / Hockey","CAA Hockey (Brisson)","","Via CAA Sports","high","https://www.forbes.com/profile/pat-brisson/"],
+["Leon Draisaitl","NHL / Hockey","Octagon Hockey (Mike Liut)","","Via Octagon Hockey","high","https://www.sportico.com/leagues/hockey/2024/leon-draisaitls-oilers-deal/"],
+["Cale Makar","NHL / Hockey","Bartlett Hockey","","Via Bartlett Hockey","med","https://lastwordonsports.com/hockey/2026/04/12/nhl-rumours-cale-makar/"],
+["David Pastrnak","NHL / Hockey","CAA Hockey (J.P. Barry)","","Via CAA Sports","med","https://bostonhockeynow.com/2022/10/13/david-pastrnak-nhl-agent/"],
+["Nikita Kucherov","NHL / Hockey","Gold Star Sports (Dan Milstein)","","Via Gold Star Hockey","high","https://en.wikipedia.org/wiki/Daniel_Milstein"],
+["Brady Tkachuk","NHL / Hockey","Newport Sports Management","","Via Newport Sports","med","https://www.thehockeyagency.com/players-detail/102"],
+["Trevor Zegras","NHL / Hockey","CAA Hockey (Brisson)","","Via CAA Sports","med","https://www.athletespeakers.com/speaker/trevor-zegras"],
+["Jack Hughes","NHL / Hockey","CAA Hockey (Brisson)","","Via CAA Sports","high","https://www.forbes.com/profile/pat-brisson/"],
+["Tim Stutzle","NHL / Hockey","4sports Hockey (Claude Lemieux)","","Via 4sports Hockey","med","https://thehockeynews.com/nhl/ottawa-senators/latest-news/stutzle-switches-agents"],
+["P.K. Subban","NHL / Hockey","Speakers Bureau of Canada + bureaus","","Speaker bureau (SBC / AAE)","med","https://speakerscanada.com/keynote-speaker/p-k-subban/"],
+["Matthew Tkachuk","NHL / Hockey","Newport Sports Management","","Via Newport Sports","med","https://www.thehockeyagency.com/players-detail/89"],
+["Kirill Kaprizov","NHL / Hockey","Newport (Paul Theofanous)","","Via Newport Sports","med","https://www.minnesotasportsfan.com/minnesota-wild/kirill-kaprizov-agent/"],
+["Michael Phelps","Olympics — Swim","Octagon (Peter Carlisle)","","Via Octagon / AthleteSpeakers","high","https://swimswam.com/michael-phelps-olympic-super-agent-carlisle/"],
+["Katie Ledecky","Olympics — Swim","Wasserman (Levy / Colas)","","Via Wasserman","high","https://www.swimmingworldmagazine.com/news/katie-ledecky-signs-with-wasserman/"],
+["Caeleb Dressel","Olympics — Swim","Mgr Erika Wright; bureaus","","Speaker bureau (AAE)","med","https://bookingagentinfo.com/celebrity/caeleb-dressel/"],
+["Adam Peaty","Olympics — Swim","UK speaker agencies","","UK speaker bureau","med","https://champions-speakers.co.uk/speaker-agent/adam-peaty"],
+["Ryan Murphy","Olympics — Swim","Bureaus (MN2S / AthleteSpeakers)","","Speaker bureau","low","https://www.athletespeakers.com/speaker/ryan-murphy"],
+["Lilly King","Olympics — Swim","MN2S (Sharron Elkabas)","","MN2S booking / AthleteSpeakers","med","https://mn2s.com/booking-agency/talent-roster/lilly-king/"],
+["Emma McKeon","Olympics — Swim","NC Management (AU)","nikki@ncmanagement.com.au","Agency (unverified verbatim)","med","https://ncmanagement.com.au/clients/emma-mckeon/"],
+["Simone Biles","Olympics — Gym","Octagon (Janey Miller)","","Via Octagon","high","https://twitter.com/Simone_Biles/status/1460748532445376513"],
+["Jordan Chiles","Olympics — Gym","Select Mgmt Group (Neben/Maitland)","","Via mgmt / MN2S / AAE","med","https://bookingagentinfo.com/celebrity/jordan-chiles/"],
+["Sunisa Lee","Olympics — Gym","Digital agent; bureaus","","Speaker bureau (AAE)","low","https://bookingagentinfo.com/celebrity/suni-lee/"],
+["Jade Carey","Olympics — Gym","Agents; bureaus","","Speaker bureau","low","https://bookingagentinfo.com/celebrity/jade-carey/"],
+["Brody Malone","Olympics — Gym","Stanton & Company (Prudhomme)","","Stanton & Co (225-620-7252)","med","https://usagym.org/pressbox/agents/"],
+["Fred Richard","Olympics — Gym","Agent Hayes Grooms","","Via agent / AllAmericanSpeakers","med","https://usagym.org/pressbox/agents/"],
+["Livvy Dunne","Olympics — Gym","Wasserman + Brillstein","","Via Wasserman","high","https://www.hollywoodreporter.com/business/business-news/olivia-dunne-signs-wasserman/"],
+["Noah Lyles","Olympics — Track","—","","Needs research","todo",""],
+["Sydney McLaughlin-Levrone","Olympics — Track","—","","Needs research","todo",""],
+["Sha'Carri Richardson","Olympics — Track","—","","Needs research","todo",""],
+["Mondo Duplantis","Olympics — Track","—","","Needs research","todo",""],
+["Grant Holloway","Olympics — Track","—","","Needs research","todo",""],
+["Cole Hocker","Olympics — Track","—","","Needs research","todo",""],
+["Fred Kerley","Olympics — Track","—","","Needs research","todo",""],
+["Allyson Felix","Olympics — Track","—","","Needs research","todo",""],
+["Kenny Bednarek","Olympics — Track","—","","Needs research","todo",""],
+["Ilona Maher","Olympics — Rugby","—","","Needs research","todo",""],
+["Alex Honnold","Rock Climbing","—","","Needs research","todo",""],
+["Tommy Caldwell","Rock Climbing","—","","Needs research","todo",""],
+["Adam Ondra","Rock Climbing","—","","Needs research","todo",""],
+["Sasha DiGiulian","Rock Climbing","—","","Needs research","todo",""],
+["Brooke Raboutou","Rock Climbing","—","","Needs research","todo",""],
+["Nathaniel Coleman","Rock Climbing","—","","Needs research","todo",""],
+["Emily Harrington","Rock Climbing","—","","Needs research","todo",""],
+["Magnus Midtbo","Rock Climbing","—","","Needs research","todo",""],
+["Tfue","Gaming","Mgr Richard Tenney","","Via management","low","https://bookingagentinfo.com/celebrity/turner-tfue-tenney/"],
+["Ninja","Gaming","Loaded (Jessica Blevins)","contact@ninjainfo.com","Loaded management","med","https://bookingagentinfo.com/celebrity/tyler-ninja-blevins/"],
+["TimTheTatman","Gaming","WME","timthetatman@wmeagency.com","WME (agency pattern)","low","https://bookingagentinfo.com/celebrity/timothy-john-timthetatman-betar/"],
+["Nickmercs","Gaming","Paradigm Sports","nickmercs@paradigmsports.com","Listed on X profile","med","https://bookingagentinfo.com/celebrity/nick-kolcheff-nickmercs/"],
+["Arkhram","Gaming","Retired (last org 100 Thieves)","","IG DM only","low","https://x.com/Arkhram1x"],
+["Cloakzy","Gaming","Loaded","","Loaded management","low","https://www.hollywoodreporter.com/business/digital/cloakzy-signs-loaded/"],
+["IShowSpeed","Creators","CAA + management team","","CAA / management","low","https://bookingagentinfo.com/celebrity/ishowspeed/"],
+["Kai Cenat","Creators","UTA; Night","KcenatBusiness@gmail.com","Business email (mgmt: kcenatmanagement@gmail.com)","low","https://bookingagentinfo.com/celebrity/kai-cenat/"],
+["Casey Neistat","Influencers","WME; self","casey@caseyneistat.com","Site work-inquiry form / WME","med","https://www.caseyneistat.com/contact-work-related"],
+["MrBeast","Influencers","Night Media (Reed Duchscher)","contact@mrbeastbusiness.com","Business email → Night","med","https://bookingagentinfo.com/celebrity/jimmy-mrbeast-donaldson/"],
+["Parker Seidel","Influencers","Chris Ryan Marketing","Parker@chrisryanmarketing.com","Business email","med","https://www.creatorland.com/parker.seidel"],
+["Ivy Miller","Influencers","Wilhelmina; NewMark Models","","Modeling agency","low","https://www.thehandbook.com/influencer/ivy-miller/"],
+["Kazsawyer","Influencers","Independent","business@kazsawyer.com","Business email","med","https://x.com/sweepsbeats"],
+["Bert Kreischer","Comedians","UTA; mgmt Brown-Marmel/Beales","","UTA","low","https://bookingagentinfo.com/celebrity/bert-kreischer/"],
+["Steve-O","Comedians","Mgr Adam Ginivisian","","Management / agency","low","https://bookingagentinfo.com/celebrity/steve-o/"],
+["Chris Pontius","Comedians","MN2S","","MN2S / chrispontius.com","low","https://mn2s.com/booking-agency/talent-roster/chris-pontius/"],
+["Ryan O'Flanagan","Comedians","Mgr Adam Triplett; MN2S","","Site / MN2S","low","https://bookingagentinfo.com/celebrity/ryan-oflanagan/"],
+["Pharrell Williams","Musicians","Mgmt McMullan / DePersia","","Management / agency","low","https://bookingagentinfo.com/celebrity/pharrell-williams/"],
+["Jack Johnson","Musicians","Emmett Malloy (Brushfire)","","Management / agency","low","https://bookingagentinfo.com/celebrity/jack-johnson/"],
+["Neil Frances","Musicians","JET Mgmt; Paradigm; Nettwerk","nf@jet-mgmt.com","Official contact page","high","https://www.neilfrances.com/new-page"],
+["Samira Winter","Musicians","Labels (Bar/None; Winspear)","","IG DM only","low","https://en.wikipedia.org/wiki/Winter_(indie_rock_band)"],
+["SweepsBeats","Musicians","Independent","sweepsbeats@gmail.com","Business email","med","https://x.com/sweepsbeats"],
+["Chris Burkard","Media / Film","Self (studio); Verb licensing","info@chrisburkard.com","Official contact (Mike@chrisburkard.com for booking)","high","https://www.chrisburkard.com/Contact"],
+["Taylor Steele","Media / Film","Poor Specimen / THIS. Film Studio","","Production co. site","low","https://www.thisfilmstudio.com/taylor-steele"],
+["Robbie Crawford","Media / Film","Self; Sessions ambassador","","robbiecrawford.com/contact form","low","http://www.robbiecrawford.com/contact/"],
+["Paddy Mack","Media / Film","Victoria Skimboards / Elev8","","IG DM only","low","https://ocean.victoriaskimboards.com/paddy-mack/"],
+["Pat Scola","Media / Film","—","","Needs research","todo",""],
+["Scott Stinnett","Media / Film","—","","Needs research","todo",""],
+["Connor Brashier","Media / Film","—","","Needs research","todo",""],
+["Theo Acworth","Media / Film","—","","Needs research","todo",""],
+["James Ferrel","Media / Film","—","","Needs research","todo",""],
+["Bob Hurley","Business","—","","Needs research","todo",""],
+["Jeff Hurley","Business","—","","Needs research","todo",""],
+["Jason Steris","Business","—","","Needs research","todo",""],
+["Zach Weisberg","Business","The Inertia (founder/CEO)","","Needs research","todo",""],
+["Cheyne Magnusson","Business","—","","Needs research","todo",""],
+["Joey Isea","Business","—","","Needs research","todo",""],
+["Evan Rossel","Artists","—","","Needs research","todo",""],
+["Lucas Beaufort","Artists","—","","Needs research","todo",""],
+["Dee Rosse","Artists","—","","Needs research","todo",""],
+["Ross Edgley","Adventure","—","","Needs research","todo",""],
+["Jon Chema","Media / Film","—","","Needs research","todo",""]
+  ];
+
+  var rows=D.map(function(r){return {name:r[0],cat:r[1],rep:r[2],email:r[3],channel:r[4],conf:r[5],src:r[6]};});
+  var qEl=document.getElementById("q"),catEl=document.getElementById("cat"),confEl=document.getElementById("conf"),
+      emailBtn=document.getElementById("emailOnly"),rowsEl=document.getElementById("rows"),countEl=document.getElementById("count"),statsEl=document.getElementById("stats");
+  var emailOnly=false,sortCol="name",sortDir=1;
+
+  var cats={}; rows.forEach(function(r){cats[r.cat]=1;});
+  Object.keys(cats).sort().forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;catEl.appendChild(o);});
+
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+  function stats(){
+    var withEmail=rows.filter(function(r){return r.email;}).length;
+    var agency=rows.filter(function(r){return !r.email && r.conf!=="todo";}).length;
+    var todo=rows.filter(function(r){return r.conf==="todo";}).length;
+    statsEl.innerHTML=
+      tile(rows.length,"On the list","var(--ink-faint)")+
+      tile(withEmail,"Direct emails found","var(--ok)")+
+      tile(agency,"Agency / mgmt route","var(--amber)")+
+      tile(todo,"Still to research","var(--accent)");
+  }
+  function tile(n,l,c){return '<div class="stat" style="--stat-c:'+c+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+  function filtered(){
+    var q=qEl.value.trim().toLowerCase(),cf=catEl.value,cn=confEl.value;
+    var list=rows.filter(function(r){
+      if(cf&&r.cat!==cf)return false;
+      if(cn&&r.conf!==cn)return false;
+      if(emailOnly&&!r.email)return false;
+      if(q){var h=(r.name+" "+r.rep+" "+r.email+" "+r.channel+" "+r.cat).toLowerCase();if(h.indexOf(q)===-1)return false;}
+      return true;
+    });
+    var rank={high:0,med:1,low:2,todo:3};
+    list.sort(function(a,b){
+      var av,bv;
+      if(sortCol==="conf"){av=rank[a.conf];bv=rank[b.conf];}
+      else if(sortCol==="email"){av=a.email?0:1;bv=b.email?0:1;}
+      else{av=(a[sortCol]||"").toLowerCase();bv=(b[sortCol]||"").toLowerCase();}
+      if(av<bv)return -1*sortDir;if(av>bv)return 1*sortDir;return a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  function render(){
+    stats();
+    var list=filtered();
+    countEl.textContent=list.length+" of "+rows.length;
+    rowsEl.innerHTML=list.map(function(r){
+      var emailCell=r.email
+        ? '<a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a><button class="copy" data-e="'+esc(r.email)+'">copy</button>'
+        : '<span class="dash">— agency route —</span>';
+      var srcCell=r.src?'<a href="'+esc(r.src)+'" target="_blank" rel="noopener">source ↗</a>':'';
+      var confLabel=r.conf==="todo"?"TODO":r.conf.toUpperCase();
+      return '<tr>'+
+        '<td class="nm">'+esc(r.name)+'<div class="cat">'+esc(r.cat)+'</div></td>'+
+        '<td>'+esc(r.rep)+'</td>'+
+        '<td class="email">'+emailCell+'</td>'+
+        '<td>'+esc(r.channel)+'</td>'+
+        '<td><span class="conf '+r.conf+'">'+confLabel+'</span></td>'+
+        '<td class="src">'+srcCell+'</td>'+
+      '</tr>';
+    }).join("");
+  }
+
+  rowsEl.addEventListener("click",function(e){var b=e.target.closest(".copy");if(b){copy(b.dataset.e);}});
+  document.querySelectorAll("thead th").forEach(function(th){th.addEventListener("click",function(){var c=th.dataset.c;if(c==="src")return;if(sortCol===c)sortDir*=-1;else{sortCol=c;sortDir=1;}render();});});
+  qEl.addEventListener("input",render);catEl.addEventListener("change",render);confEl.addEventListener("change",render);
+  emailBtn.addEventListener("click",function(){emailOnly=!emailOnly;emailBtn.classList.toggle("on",emailOnly);render();});
+
+  document.getElementById("csv").addEventListener("click",function(){
+    var head=["Name","Category","Repped by","Email","Booking channel","Confidence","Source"];
+    var lines=[head.join(",")].concat(rows.map(function(r){
+      return [r.name,r.cat,r.rep,r.email,r.channel,r.conf,r.src].map(function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");
+    }));
+    var csv=lines.join("\n"),claude=window.claude;
+    if(claude&&typeof claude.use==="function"){claude.use("downloads").then(function(d){if(!d)return leg(csv);d.save({filename:"yeahyou-contacts.csv",data:csv}).then(function(){toast("CSV exported");}).catch(function(err){if(err&&err.code==="declined")return;leg(csv);});}).catch(function(){leg(csv);});}
+    else leg(csv);
+  });
+  function leg(csv){var b=new Blob([csv],{type:"text/csv"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="yeahyou-contacts.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},800);toast("CSV exported");}
+
+  function copy(t){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast("Copied "+t);},fb);else fb();function fb(){try{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();toast("Copied "+t);}catch(e){toast("Copy failed");}}}
+  var toastEl=document.getElementById("toast"),tt;
+  function toast(m){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove("show");},1900);}
+
+  render();
+})();
+</script>
