@@ -1,13 +1,15 @@
 {
   "_comment": "DogPull settings. `destination: null` means <RM drive>/DogPull/<folderName>. Set it to an absolute path to pull onto an external drive instead.",
+  "_channelConfirmed": "@XanderBudnick confirmed by Garrett as the correct channel.",
+  "_qualityNote": "1080p30, preferring H.264 video with AAC audio — the combination CapCut, Premiere and Resolve handle most smoothly. H.264 only exists up to 1080p on YouTube, so this preference is only valid at this height; DogPull automatically falls back to VP9 if height is raised above 1080.",
   "label": "Xander Budnick",
   "channel": "https://www.youtube.com/@XanderBudnick",
   "folderName": "Xander Budnick",
   "destination": null,
 
-  "height": 2160,
+  "height": 1080,
   "fps": 30,
-  "preferCodec": "vp9",
+  "preferCodec": "h264",
 
   "minDurationSec": 180,
   "concurrency": 2,

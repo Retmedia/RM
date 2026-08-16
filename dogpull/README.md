@@ -1,9 +1,10 @@
 # DogPull
 
-Pulls a YouTube channel's long-form catalogue down to the RM drive in 4K,
+Pulls a YouTube channel's long-form catalogue down to the RM drive,
 named after the videos themselves, and never downloads the same video twice.
 
-Currently pointed at **Xander Budnick — up to 2160p (4K), 30 fps**.
+Currently pointed at **Xander Budnick — up to 1080p, 30 fps**
+(`https://www.youtube.com/@XanderBudnick`).
 
 DogPull is standalone. It is not part of Echo, shares nothing with it, and has
 no npm dependencies — just Node and two binaries.
@@ -18,9 +19,9 @@ npm run setup        # fetches yt-dlp into dogpull/bin
 brew install ffmpeg  # required — see below
 ```
 
-**ffmpeg is not optional.** YouTube sends 4K as separate video and audio
-streams; yt-dlp needs ffmpeg to merge them back together. Without it you
-quietly get a lower-quality single-file version instead of the 4K you asked
+**ffmpeg is not optional.** YouTube sends 1080p and above as separate video and
+audio streams; yt-dlp needs ffmpeg to merge them back together. Without it you
+quietly get a lower-quality single-file version instead of the quality you asked
 for. DogPull refuses to start rather than let that happen.
 
 ---
@@ -53,7 +54,7 @@ node dogpull.js                # then let it finish the channel
 | `--limit N`        | only the first N new videos                            |
 | `--oldest`         | start from the oldest upload (default: newest first)   |
 | `--jobs N`         | videos at once (default 2)                             |
-| `--height N`       | max height, e.g. `2160`, `1080`                        |
+| `--height N`       | max height, e.g. `1080`, `2160`                        |
 | `--fps N`          | preferred frame rate, e.g. `30`, `60`                  |
 | `--min-duration S` | anything shorter counts as a Short (default 180)       |
 | `--dest PATH`      | pull to another drive                                  |
@@ -116,20 +117,24 @@ resume where they left off on the next run.
   (`--refresh` to force a fresh list)
 - throttled streams are automatically re-requested rather than crawling
 
-The real limit is your connection and the drive. 4K runs roughly 2 GB per
-20-minute video, so a full catalogue is a large download — DogPull estimates
-the total up front and warns if it won't fit on the target drive.
+The real limit is your connection and the drive. 1080p30 runs roughly 700 MB per
+20-minute video — about a third of what 4K would cost. DogPull estimates the
+total up front and warns if it won't fit on the target drive.
 
 ---
 
 ## Quality
 
-`up to 2160p, preferring 30fps`. YouTube only has what the channel uploaded: if
-an older video was never posted above 1080p, no tool can invent 4K — DogPull
-takes the best available and records what it actually got in the manifest.
+`up to 1080p, preferring 30fps`, taking H.264 video with AAC audio — the
+combination CapCut, Premiere and Resolve handle most smoothly.
 
-At 4K, video is VP9 (there is no H.264 above 1080p on YouTube) and audio is AAC
-where offered, which keeps the files friendly to CapCut, Premiere and Resolve.
+YouTube only has what the channel uploaded. If a video was posted at 24 or 60
+fps, that is what you get at 1080p; DogPull takes the best match available and
+records the resolution, frame rate and codec it actually received in the
+manifest, so you can check rather than assume.
+
+Raising `--height` above 1080 automatically switches the codec preference to
+VP9, because H.264 does not exist above 1080p on YouTube.
 
 ## Pointing it at another channel
 
