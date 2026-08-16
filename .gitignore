@@ -1,0 +1,6 @@
+# Downloaded footage — DogPull's default destination on the RM drive.
+# Video files must never enter git.
+DogPull/
+
+.DS_Store
+*.log

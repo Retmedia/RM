@@ -1,0 +1,16 @@
+{
+  "name": "dogpull",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bulk-pull a YouTube channel's long-form catalogue onto the RM drive, named by video title, never downloading the same video twice.",
+  "main": "dogpull.js",
+  "scripts": {
+    "start": "node dogpull.js",
+    "pull": "node dogpull.js",
+    "dry-run": "node dogpull.js --dry-run",
+    "setup": "node scripts/install-yt-dlp.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,12 @@
+bin/
+node_modules/
+*.log
+.DS_Store
+
+# Downloaded footage and its state never belong in git
+*.mp4
+*.mkv
+*.webm
+*.part
+.dogpull/
+DogPull Manifest.csv

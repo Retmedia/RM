@@ -1,0 +1,16 @@
+{
+  "_comment": "DogPull settings. `destination: null` means <RM drive>/DogPull/<folderName>. Set it to an absolute path to pull onto an external drive instead.",
+  "label": "Xander Budnick",
+  "channel": "https://www.youtube.com/@XanderBudnick",
+  "folderName": "Xander Budnick",
+  "destination": null,
+
+  "height": 2160,
+  "fps": 30,
+  "preferCodec": "vp9",
+
+  "minDurationSec": 180,
+  "concurrency": 2,
+  "fragments": 8,
+  "listingCacheHours": 6
+}
