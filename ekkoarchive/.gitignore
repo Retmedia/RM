@@ -2,6 +2,9 @@ node_modules/
 bin/yt-dlp
 bin/yt-dlp.exe
 bin/yt-dlp_macos
+bin/ffmpeg
+bin/ffmpeg.exe
 .archive-vault/
+downloads/
 *.log
 .DS_Store

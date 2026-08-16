@@ -32,6 +32,50 @@ $('#job-form').addEventListener('submit', async (e) => {
   }
 });
 
+$('#download-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const body = {
+    channelUrl: fd.get('channelUrl'),
+    height: Number(fd.get('height')),
+    fps: Number(fd.get('fps')),
+    limit: Number(fd.get('limit')) || 0,
+    order: fd.get('order'),
+    destDir: fd.get('destDir') || null,
+  };
+  // No H.264 above 1080p on YouTube — asking for it would cap the run at 1080.
+  if (body.height > 1080) body.preferH264 = false;
+  try {
+    await api('/api/downloads', { method: 'POST', body });
+    e.target.querySelector('input[name=channelUrl]').value = '';
+    refresh();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+const ACTIVE = ['archiving', 'downloading', 'starting', 'fetching-channel', 'listing-videos', 'cancelling'];
+
+function jobLine(j) {
+  const p = j.progress || {};
+  const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+  const name = j.label || j.channelUrl;
+  const detail = j.kind === 'download'
+    ? `${p.done || 0}/${p.total || 0} · failed: ${p.failed || 0} · already had: ${p.skipped || 0}` +
+      `${p.estimated_gb ? ` · ~${p.estimated_gb} GB` : ''}` +
+      `${p.currentTitle ? `<br>${escapeHtml(p.currentTitle)} — ${Math.round(p.percent || 0)}%${p.speed ? ` at ${escapeHtml(p.speed)}` : ''}${p.eta ? `, ETA ${escapeHtml(p.eta)}` : ''}` : ''}`
+    : `${p.done || 0}/${p.total || 0} · failed: ${p.failed || 0} · skipped: ${p.skipped || 0}`;
+  return `
+    <li>
+      <div><strong>${escapeHtml(j.status)}</strong> · ${escapeHtml(j.kind || 'archive')} · ${escapeHtml(name)}</div>
+      <div class="muted">${detail}</div>
+      <progress value="${pct}" max="100"></progress>
+      ${j.warning ? `<div class="error">${escapeHtml(j.warning)}</div>` : ''}
+      ${j.error ? `<div class="error">${escapeHtml(j.error)}</div>` : ''}
+      ${ACTIVE.includes(j.status) ? `<button data-cancel="${escapeHtml(j.id)}">Cancel</button>` : ''}
+    </li>`;
+}
+
 async function refresh() {
   try {
     const [jobs, channels] = await Promise.all([
@@ -40,19 +84,9 @@ async function refresh() {
     ]);
 
     const jobList = $('#jobs');
-    jobList.innerHTML = jobs.length ? jobs.map((j) => {
-      const p = j.progress || {};
-      const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
-      return `
-        <li>
-          <div><strong>${escapeHtml(j.status)}</strong> · ${escapeHtml(j.channelUrl)}</div>
-          <div class="muted">${p.done || 0}/${p.total || 0} · failed: ${p.failed || 0} · skipped: ${p.skipped || 0}</div>
-          <progress value="${pct}" max="100"></progress>
-          ${j.error ? `<div class="error">${escapeHtml(j.error)}</div>` : ''}
-          ${(j.status === 'archiving' || j.status === 'starting' || j.status === 'fetching-channel' || j.status === 'listing-videos')
-            ? `<button data-cancel="${escapeHtml(j.id)}">Cancel</button>` : ''}
-        </li>`;
-    }).join('') : '<li class="muted">No jobs yet.</li>';
+    jobList.innerHTML = jobs.length
+      ? jobs.map(jobLine).join('')
+      : '<li class="muted">No jobs yet.</li>';
 
     const channelList = $('#channels');
     channelList.innerHTML = channels.length ? channels.map((c) => `
@@ -79,7 +113,7 @@ document.body.addEventListener('click', async (e) => {
     $('#videos').innerHTML = `
       <h3>${escapeHtml(key)} — ${videos.length} videos</h3>
       <table>
-        <thead><tr><th>Date</th><th>Title</th><th>Duration</th><th>Transcript</th></tr></thead>
+        <thead><tr><th>Date</th><th>Title</th><th>Duration</th><th>Transcript</th><th>Video file</th></tr></thead>
         <tbody>
           ${videos.map((v) => `
             <tr>
@@ -87,11 +121,34 @@ document.body.addEventListener('click', async (e) => {
               <td><a href="${escapeHtml(v.url)}" target="_blank" rel="noopener">${escapeHtml(v.title || v.id)}</a></td>
               <td>${v.duration ? Math.round(v.duration / 60) + 'm' : ''}</td>
               <td>${v.transcript_status === 'ok' ? `${v.transcript_segments} segs` : escapeHtml(v.transcript_reason || '—')}</td>
+              <td>${v.download_status === 'ok'
+                ? `${v.download_height || '?'}p${v.download_fps ? Math.round(v.download_fps) : ''} · ${Math.round((v.download_size_bytes || 0) / 1_000_000)} MB`
+                : v.download_status === 'failed' ? '<span class="error">failed</span>' : '—'}</td>
             </tr>`).join('')}
         </tbody>
       </table>`;
   }
 });
 
-setInterval(refresh, 2500);
+async function loadTooling() {
+  try {
+    const [health, clients] = await Promise.all([api('/api/health'), api('/api/clients')]);
+
+    $('#client-list').innerHTML = clients
+      .map((c) => `<option value="${escapeHtml(c.channelUrl)}">${escapeHtml(c.label)} — ${c.height}p${c.fps}</option>`)
+      .join('');
+
+    const missing = [];
+    if (!health.ytdlp) missing.push('yt-dlp (run: npm run install-ytdlp)');
+    if (!health.ffmpeg) missing.push('ffmpeg (run: brew install ffmpeg) — required to merge 1080p/4K video with audio');
+    const status = $('#tool-status');
+    status.className = missing.length ? 'error' : 'muted';
+    status.textContent = missing.length ? `Missing: ${missing.join(' · ')}` : `Vault: ${health.vault}`;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+setInterval(refresh, 1500);
 refresh();
+loadTooling();

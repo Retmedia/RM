@@ -27,6 +27,50 @@
   </section>
 
   <section>
+    <h2>Download videos</h2>
+    <p class="muted">Long-form only (Shorts and live streams are skipped). Files land in the
+      vault's <code>downloads</code> folder with a <code>manifest.csv</code> alongside them.</p>
+    <form id="download-form">
+      <label>Client or channel
+        <input type="text" name="channelUrl" list="client-list" placeholder="@channel or full URL" required />
+      </label>
+      <datalist id="client-list"></datalist>
+      <div class="pair">
+        <label>Max height
+          <select name="height">
+            <option value="2160">2160 (4K)</option>
+            <option value="1440">1440</option>
+            <option value="1080" selected>1080</option>
+            <option value="720">720</option>
+          </select>
+        </label>
+        <label>Frame rate
+          <select name="fps">
+            <option value="60" selected>60 fps</option>
+            <option value="30">30 fps</option>
+          </select>
+        </label>
+      </div>
+      <div class="pair">
+        <label>Limit (0 = all)
+          <input type="number" name="limit" value="0" min="0" />
+        </label>
+        <label>Order
+          <select name="order">
+            <option value="newest" selected>Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </label>
+      </div>
+      <label>Save to (blank = vault)
+        <input type="text" name="destDir" placeholder="/Volumes/Drive/Xander" />
+      </label>
+      <button type="submit">Start download</button>
+    </form>
+    <p id="tool-status" class="muted"></p>
+  </section>
+
+  <section>
     <h2>Active jobs</h2>
     <ul id="jobs"><li class="muted">No jobs yet.</li></ul>
   </section>

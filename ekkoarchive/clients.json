@@ -1,0 +1,25 @@
+{
+  "_comment": "Named presets for bulk downloads. `verified: false` means the channelUrl is a best guess — the CLI shows you the resolved channel name and video count and waits for confirmation before downloading anything. Once a channel is confirmed, set verified to true to skip the prompt.",
+  "clients": {
+    "xander": {
+      "label": "Xander Budnick",
+      "channelUrl": "https://www.youtube.com/@XanderBudnick",
+      "verified": false,
+      "height": 2160,
+      "fps": 30,
+      "preferH264": false,
+      "minDurationSec": 180,
+      "notes": "4K30 source for clipping. YouTube serves 2160p as VP9/AV1 only — there is no H.264 above 1080p — so preferH264 is off."
+    },
+    "blair": {
+      "label": "Blair Conklin",
+      "channelUrl": "https://www.youtube.com/@blairconklin",
+      "verified": true,
+      "height": 1080,
+      "fps": 60,
+      "preferH264": true,
+      "minDurationSec": 180,
+      "notes": "1080p60 H.264 — the most edit-friendly combination for CapCut/Premiere and the Skid Kids shorts pipeline."
+    }
+  }
+}

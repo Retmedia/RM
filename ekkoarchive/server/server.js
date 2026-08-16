@@ -1,16 +1,26 @@
 const path = require('node:path');
 const express = require('express');
 const storage = require('./storage');
-const { startArchiveJob, getJob, listJobs, cancelJob } = require('./jobs');
-const { isSafeChannelUrl } = require('./utils');
+const { startArchiveJob, startDownloadJob, getJob, listJobs, cancelJob } = require('./jobs');
+const { isSafeChannelUrl, normalizeChannelUrl } = require('./utils');
+const { checkFfmpeg, ytDlpInstalled, DEFAULT_HEIGHT, DEFAULT_FPS } = require('./downloads');
+const { listClients } = require('./clients');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, vault: storage.VAULT_ROOT });
+app.get('/api/health', async (_req, res) => {
+  const ffmpeg = await checkFfmpeg();
+  res.json({
+    ok: true,
+    vault: storage.VAULT_ROOT,
+    ytdlp: ytDlpInstalled(),
+    ffmpeg: ffmpeg.ok,
+  });
 });
+
+app.get('/api/clients', (_req, res) => res.json(listClients()));
 
 app.get('/api/channels', async (_req, res, next) => {
   try { res.json(await storage.listChannels()); } catch (e) { next(e); }
@@ -33,6 +43,34 @@ app.post('/api/jobs', async (req, res, next) => {
     });
     res.json({ jobId: id });
   } catch (e) { next(e); }
+});
+
+app.post('/api/downloads', async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const channelUrl = normalizeChannelUrl(b.channelUrl);
+    if (!channelUrl) {
+      return res.status(400).json({ error: 'channelUrl must be a YouTube channel URL or @handle' });
+    }
+    const toInt = (value, fallback) => {
+      const n = Number.parseInt(value, 10);
+      return Number.isFinite(n) && n >= 0 ? n : fallback;
+    };
+    const id = await startDownloadJob({
+      channelUrl,
+      label: typeof b.label === 'string' ? b.label.slice(0, 80) : null,
+      height: toInt(b.height, DEFAULT_HEIGHT),
+      fps: toInt(b.fps, DEFAULT_FPS),
+      preferH264: b.preferH264 !== false,
+      minDurationSec: toInt(b.minDurationSec, 180),
+      limit: toInt(b.limit, 0),
+      order: b.order === 'oldest' ? 'oldest' : 'newest',
+      destDir: typeof b.destDir === 'string' && b.destDir.trim() ? b.destDir.trim() : null,
+    });
+    res.json({ jobId: id });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
 app.get('/api/jobs', (_req, res) => res.json(listJobs()));

@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('node:fs/promises');
-const { writeJSONAtomic, readJSONIfExists, slugify } = require('./utils');
+const { writeJSONAtomic, readJSONIfExists, slugify, toCsv } = require('./utils');
 
 const VAULT_ROOT = process.env.EKKOARCHIVE_VAULT
   ? path.resolve(process.env.EKKOARCHIVE_VAULT)
@@ -16,6 +16,10 @@ function channelDir(channelKey) {
 
 function transcriptDir(channelKey) {
   return path.join(channelDir(channelKey), 'transcripts');
+}
+
+function downloadDir(channelKey) {
+  return path.join(channelDir(channelKey), 'downloads');
 }
 
 function makeChannelKey(meta) {
@@ -51,6 +55,27 @@ async function getVideo(channelKey, videoId) {
   return readJSONIfExists(path.join(channelDir(channelKey), 'videos', `${videoId}.json`));
 }
 
+// Download jobs run against the same records the transcript archiver writes, so
+// they patch fields instead of replacing the whole record.
+async function mergeVideo(channelKey, videoId, patch) {
+  const existing = await getVideo(channelKey, videoId);
+  const record = { ...(existing || { id: videoId }), ...patch };
+  await saveVideo(channelKey, record);
+  return record;
+}
+
+const MANIFEST_HEADERS = [
+  'filename', 'video_id', 'title', 'upload_date', 'duration_min',
+  'height', 'fps', 'vcodec', 'size_mb', 'url',
+];
+
+async function writeManifest(dir, rows) {
+  await fs.mkdir(dir, { recursive: true });
+  const file = path.join(dir, 'manifest.csv');
+  await fs.writeFile(file, toCsv(MANIFEST_HEADERS, rows));
+  return file;
+}
+
 async function listVideos(channelKey) {
   const dir = path.join(channelDir(channelKey), 'videos');
   try {
@@ -74,10 +99,13 @@ module.exports = {
   ensureVault,
   channelDir,
   transcriptDir,
+  downloadDir,
   makeChannelKey,
   listChannels,
   saveChannelMeta,
   saveVideo,
   getVideo,
+  mergeVideo,
   listVideos,
+  writeManifest,
 };
