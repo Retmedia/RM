@@ -19,6 +19,7 @@ const {
   ytDlpInstalled, checkFfmpeg, getChannelMetadata, listChannelVideos, downloadVideo,
 } = require('./lib/youtube');
 const { openLedger } = require('./lib/ledger');
+const { probeCatalogue } = require('./lib/probe');
 const {
   sanitizeTitle, channelVideosUrl, fmtBytes, fmtDuration, fmtElapsed, runPool, sleep,
 } = require('./lib/util');
@@ -35,6 +36,16 @@ function estimateBytes(durationSec, height, fps) {
   const rung = rungs.find((h) => h >= height) ?? rungs[rungs.length - 1];
   const mbps = BITRATE[rung] * (fps >= 50 ? 1.4 : 1) + 0.13;
   return Math.round((mbps * 1_000_000 / 8) * durationSec);
+}
+
+const TIER_ORDER = ['2160', '1440', '1080', 'lower'];
+const TIER_LABELS = { 2160: '4K', 1440: '1440p', 1080: '1080p', lower: 'below 1080p' };
+
+function describeTiers(probe) {
+  const parts = TIER_ORDER
+    .filter((tier) => probe.tiers[tier])
+    .map((tier) => `${probe.tiers[tier]} at ${TIER_LABELS[tier]}`);
+  return `${probe.sampled} sampled — ${parts.join(', ')}`;
 }
 
 async function freeSpace(dir) {
@@ -73,6 +84,7 @@ Options:
   --min-duration S   anything shorter counts as a Short (default ${config.minDurationSec})
   --dest PATH        pull somewhere else, e.g. an external drive
   --refresh          re-list the channel instead of using the cached listing
+  --no-probe         skip the source-quality check (faster, rougher estimate)
   --retry-failed     retry videos that previously failed
   --yes              skip the confirmation prompt
   --help             this message
@@ -209,17 +221,42 @@ merge them. Without it you would quietly get a lower-quality single file.
   const limit = Number(flags.limit) || 0;
   const queue = limit > 0 ? ordered.slice(0, limit) : ordered;
 
-  const estimated = queue.reduce((sum, v) => sum + estimateBytes(v.duration, settings.height, settings.fps), 0);
+  // A flat listing says nothing about resolution, so sample real videos: it
+  // answers "will I actually get 4K here?" and makes the size figure a
+  // measurement instead of a guess from a bitrate table.
+  let probe = null;
+  if (!flags['no-probe'] && queue.length) {
+    const probeKey = `${settings.height}p${settings.fps}:${settings.preferCodec}`;
+    probe = await ledger.readProbeCache(probeKey, 7 * 24 * 3600 * 1000);
+    if (!probe) {
+      // Only draw the transient status where \r can actually erase it.
+      const transient = process.stdout.isTTY;
+      if (transient) process.stdout.write('  Checking what the catalogue actually offers ...');
+      probe = await probeCatalogue(queue, settings);
+      if (transient) process.stdout.write(`\r${' '.repeat(50)}\r`);
+      if (probe) await ledger.writeProbeCache(probeKey, probe);
+    }
+  }
+
+  const queueSeconds = queue.reduce((sum, v) => sum + (v.duration || 0), 0);
+  const measured = Boolean(probe?.reliable && probe.bytesPerSec);
+  const estimated = measured
+    ? Math.round(probe.bytesPerSec * queueSeconds)
+    : queue.reduce((sum, v) => sum + estimateBytes(v.duration, settings.height, settings.fps), 0);
   const free = await freeSpace(destDir);
+
+  const sourceLine = probe
+    ? `\n  Source check: ${describeTiers(probe)}`
+    : '';
 
   console.log(`
   Channel:      ${config.label}
   Long form:    ${longForm.length} videos on the channel
   Already have: ${alreadyHave.length}${failedBefore.length ? `   (plus ${failedBefore.length} previously failed — --retry-failed to retry)` : ''}
   To download:  ${queue.length}${limit && ordered.length > limit ? `  (limited from ${ordered.length})` : ''}
-  Quality:      up to ${settings.height}p, preferring ${settings.fps}fps
+  Quality:      up to ${settings.height}p, preferring ${settings.fps}fps${sourceLine}
   Destination:  ${destDir}
-  Estimated:    ~${fmtBytes(estimated)}${free !== null ? `   (free on that drive: ${fmtBytes(free)})` : ''}
+  Estimated:    ~${fmtBytes(estimated)} ${measured ? '(measured from sampled videos)' : '(rough — could not sample)'}${free !== null ? `\n  Free space:   ${fmtBytes(free)}` : ''}
   Downloading:  ${settings.concurrency} at a time
 `);
 

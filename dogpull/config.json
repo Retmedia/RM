@@ -1,15 +1,15 @@
 {
   "_comment": "DogPull settings. `destination: null` means <RM drive>/DogPull/<folderName>. Set it to an absolute path to pull onto an external drive instead.",
   "_channelConfirmed": "@XanderBudnick confirmed by Garrett as the correct channel.",
-  "_qualityNote": "1080p30, preferring H.264 video with AAC audio — the combination CapCut, Premiere and Resolve handle most smoothly. H.264 only exists up to 1080p on YouTube, so this preference is only valid at this height; DogPull automatically falls back to VP9 if height is raised above 1080.",
+  "_qualityNote": "Ceiling is 'best available up to 4K', not a fixed size. Shorts are cropped 9:16 out of 16:9 source: from 1080p that leaves ~608px wide and has to be upscaled ~1.8x to fill a 1080x1920 short, which looks soft. From 4K the same crop is ~1215px wide and gets downscaled, which stays sharp and leaves room to reframe. Videos only ever uploaded at 1080p simply come down at 1080p — asking for more costs nothing there. Run --dry-run to see what this channel actually offers and what it will cost. Use --height 1440 to halve the size, or --height 1080 for the smallest.",
   "label": "Xander Budnick",
   "channel": "https://www.youtube.com/@XanderBudnick",
   "folderName": "Xander Budnick",
   "destination": null,
 
-  "height": 1080,
+  "height": 2160,
   "fps": 30,
-  "preferCodec": "h264",
+  "preferCodec": "vp9",
 
   "minDurationSec": 180,
   "concurrency": 2,

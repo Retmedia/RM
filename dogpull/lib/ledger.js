@@ -40,6 +40,7 @@ async function openLedger(destDir, channelUrl) {
   const stateDir = path.join(destDir, STATE_DIRNAME);
   const ledgerFile = path.join(stateDir, 'ledger.json');
   const cacheFile = path.join(stateDir, 'listing-cache.json');
+  const probeFile = path.join(stateDir, 'probe-cache.json');
 
   const data = await readJSON(ledgerFile, {
     version: LEDGER_VERSION,
@@ -146,6 +147,24 @@ async function openLedger(destDir, channelUrl) {
         channel: channelUrl,
         fetched_at: new Date().toISOString(),
         videos,
+      });
+    },
+
+    // Probing costs a network call per sampled video, and the answer only
+    // changes when the requested quality does — so it is cached against a key.
+    async readProbeCache(key, maxAgeMs) {
+      const cached = await readJSON(probeFile, null);
+      if (!cached || cached.key !== key) return null;
+      const age = Date.now() - new Date(cached.probed_at).getTime();
+      if (!Number.isFinite(age) || age < 0 || age > maxAgeMs) return null;
+      return cached.result;
+    },
+
+    async writeProbeCache(key, result) {
+      await writeJSONAtomic(probeFile, {
+        key,
+        probed_at: new Date().toISOString(),
+        result,
       });
     },
   };
