@@ -1,114 +1,222 @@
-<title>Yeah You Outreach Contacts</title>
+<title>Yeah You Contacts Board</title>
 <style>
   :root{
     --bg:#F3EEE6;--panel:#FBF8F2;--panel-2:#F0E9DD;--panel-3:#EAE1D2;
     --ink:#211C15;--ink-soft:#5A5044;--ink-faint:#8B8172;--line:#E0D6C6;--line-2:#D2C6B2;
-    --accent:#D8442C;--accent-ink:#FFF;--amber:#C6852A;--ok:#2E8C74;
+    --accent:#D8442C;--accent-ink:#FFF;--amber:#C6852A;--ok:#2E8C74;--danger:#C23A2A;
     --shadow:0 1px 2px rgba(40,30,15,.06),0 6px 20px rgba(40,30,15,.07);
+    --shadow-lift:0 4px 8px rgba(40,30,15,.10),0 16px 40px rgba(40,30,15,.14);
+    --g-clients:#D8442C;--g-contact:#2E8C74;--g-email:#3A73B8;--g-agency:#C6852A;--g-research:#8A7FB0;
+    --radius:14px;--radius-sm:9px;
     --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
     --bg:#17140F;--panel:#211D17;--panel-2:#2A251D;--panel-3:#332D23;
     --ink:#F1EADD;--ink-soft:#B7AC99;--ink-faint:#857A68;--line:#322C22;--line-2:#423A2C;
-    --accent:#E8503A;--accent-ink:#1A1006;--amber:#E0A23C;--ok:#46B896;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 26px rgba(0,0,0,.44);
+    --accent:#E8503A;--accent-ink:#1A1006;--amber:#E0A23C;--ok:#46B896;--danger:#EA6350;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 26px rgba(0,0,0,.44);--shadow-lift:0 6px 14px rgba(0,0,0,.5),0 22px 50px rgba(0,0,0,.6);
+    --g-clients:#E8503A;--g-contact:#46B896;--g-email:#5C97E0;--g-agency:#E0A23C;--g-research:#A99AD6;
   }}
   :root[data-theme="dark"]{
     --bg:#17140F;--panel:#211D17;--panel-2:#2A251D;--panel-3:#332D23;
     --ink:#F1EADD;--ink-soft:#B7AC99;--ink-faint:#857A68;--line:#322C22;--line-2:#423A2C;
-    --accent:#E8503A;--accent-ink:#1A1006;--amber:#E0A23C;--ok:#46B896;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 26px rgba(0,0,0,.44);
+    --accent:#E8503A;--accent-ink:#1A1006;--amber:#E0A23C;--ok:#46B896;--danger:#EA6350;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 26px rgba(0,0,0,.44);--shadow-lift:0 6px 14px rgba(0,0,0,.5),0 22px 50px rgba(0,0,0,.6);
+    --g-clients:#E8503A;--g-contact:#46B896;--g-email:#5C97E0;--g-agency:#E0A23C;--g-research:#A99AD6;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.45;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1500px;margin:0 auto;padding:22px clamp(14px,3vw,32px) 60px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  .wrap{max-width:1560px;margin:0 auto;padding:0 clamp(14px,3vw,32px)}
+  header{padding-top:20px}
+  .brandrow{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:12px}
   .oncircle{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 20%,transparent);flex:none}
   h1{font-size:clamp(1.3rem,2.4vw,1.85rem);letter-spacing:-.02em;margin:0;font-weight:800;line-height:1}
-  .sub{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px}
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:18px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .sub{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px}
+  .head-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  button{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);border-radius:9px;padding:9px 13px;font-size:.84rem;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:transform .08s,background .15s,border-color .15s,color .15s}
+  button:hover{border-color:var(--ink-faint)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  button.ghost{padding:9px 11px}
+  .stats{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px;box-shadow:var(--shadow);position:relative;overflow:hidden;cursor:pointer}
+  .stat.active{box-shadow:0 0 0 1px var(--stat-c) inset,var(--shadow)}
   .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--stat-c,var(--ink-faint))}
-  .stat .n{font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-  .stat .l{font-family:var(--mono);font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
-  .note{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:12px 15px;font-size:.86rem;color:var(--ink-soft);box-shadow:var(--shadow)}
-  .note b{color:var(--ink)}
-  .toolbar{margin-top:16px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
-  .search{flex:1 1 220px;min-width:170px;position:relative}
+  .stat .n{font-size:1.4rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .stat .l{font-family:var(--mono);font-size:.57rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+  .toolbar{margin-top:15px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .search{flex:1 1 200px;min-width:160px;position:relative}
   .search input{width:100%;padding:9px 12px 9px 34px;border-radius:9px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);font-size:.88rem;font-family:var(--sans)}
   .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-faint)}
-  select,.tbtn{padding:9px 11px;border-radius:9px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);font-size:.82rem;font-family:var(--sans);cursor:pointer}
-  .tbtn.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
-  .count{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);margin-left:auto}
-  .tablewrap{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:auto}
+  .toolbar select{padding:9px 11px;border-radius:9px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);font-size:.82rem;font-family:var(--sans);max-width:170px}
+  .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;background:var(--panel)}
+  .seg button{border:none;border-radius:0;background:transparent;padding:9px 13px;font-size:.8rem;color:var(--ink-soft)}
+  .seg button.on{background:var(--accent);color:var(--accent-ink)}
+  .clearbtn{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--line-2));font-size:.8rem}
+  .count-note{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);margin-left:auto;white-space:nowrap}
+  .board-wrap{margin-top:16px;margin-bottom:60px}
+  .board{display:flex;gap:14px;overflow-x:auto;padding-bottom:14px;align-items:flex-start}
+  .col{flex:1 0 250px;max-width:340px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:110px;transition:border-color .15s,background .15s}
+  .col.drag-over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
+  .col-head{padding:12px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+  .dot{width:9px;height:9px;border-radius:3px;background:var(--col-c);flex:none}
+  .col-head .t{font-weight:800;letter-spacing:.05em;text-transform:uppercase;font-size:.72rem}
+  .col-head .count{margin-left:auto;font-family:var(--mono);font-size:.72rem;font-weight:700;background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink-soft);border-radius:20px;min-width:22px;text-align:center;padding:1px 7px}
+  .cards{padding:10px;display:flex;flex-direction:column;gap:9px;flex:1;max-height:66vh;overflow-y:auto}
+  .card{background:var(--panel-2);border:1px solid var(--line-2);border-left:3px solid var(--col-c);border-radius:var(--radius-sm);padding:11px 12px;box-shadow:var(--shadow);cursor:grab;position:relative;transition:box-shadow .12s,transform .08s}
+  .card:hover{box-shadow:var(--shadow-lift)}
+  .card.dragging{opacity:.45;cursor:grabbing}
+  .card .nm{font-weight:700;font-size:.95rem;letter-spacing:-.01em;line-height:1.2}
+  .card .email{margin-top:6px;font-family:var(--mono);font-size:.76rem;color:var(--ok);word-break:break-all}
+  .card .email a{color:inherit;text-decoration:none}
+  .card .email a:hover{text-decoration:underline}
+  .card .email.none{color:var(--ink-faint);font-style:italic;font-family:var(--sans)}
+  .card .rep{font-size:.78rem;color:var(--ink-soft);margin-top:5px}
+  .card .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{font-family:var(--mono);font-size:.62rem;padding:2px 7px;border-radius:6px;background:var(--panel);border:1px solid var(--line-2);color:var(--ink-soft);display:inline-flex;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.04em}
+  .conf{font-weight:700}
+  .conf.high{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,var(--line-2))}
+  .conf.med{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 40%,var(--line-2))}
+  .conf.low{color:var(--ink-faint)}
+  .conf.todo{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line-2))}
+  .card .note{font-size:.75rem;color:var(--ink-soft);margin-top:7px;font-style:italic}
+  .card-actions{display:flex;gap:5px;margin-top:9px;align-items:center}
+  .iconbtn{font-size:.71rem;padding:4px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line-2);flex:none;line-height:1;text-decoration:none;color:var(--ink)}
+  .iconbtn:hover{color:var(--accent);border-color:var(--accent)}
+  .nav-wrap{margin-left:auto;display:flex;gap:4px}
+  .col-empty{color:var(--ink-faint);font-size:.8rem;text-align:center;padding:16px 8px;font-style:italic}
+  .add-in-col{margin:0 10px 10px;border:1px dashed var(--line-2);background:transparent;color:var(--ink-faint);justify-content:center;font-weight:600;font-size:.78rem}
+  .add-in-col:hover{color:var(--accent);border-color:var(--accent)}
+  /* table */
+  .tablewrap{margin-top:16px;margin-bottom:60px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:auto}
   table{border-collapse:collapse;width:100%;font-size:.85rem}
   thead th{position:sticky;top:0;background:var(--panel);text-align:left;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);padding:11px 12px;border-bottom:1px solid var(--line-2);cursor:pointer;white-space:nowrap;z-index:2}
   thead th:hover{color:var(--ink)}
   tbody tr{border-bottom:1px solid var(--line)}
   tbody tr:hover{background:var(--panel-2)}
-  td{padding:9px 12px;vertical-align:top}
-  td.nm{font-weight:700;white-space:nowrap}
-  td .cat{font-family:var(--mono);font-size:.62rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
-  td.email a{color:var(--ok);text-decoration:none;font-family:var(--mono);font-size:.8rem;word-break:break-all}
-  td.email a:hover{text-decoration:underline}
-  td.email .dash{color:var(--ink-faint)}
-  .copy{margin-left:6px;font-size:.62rem;padding:1px 6px;border-radius:5px;border:1px solid var(--line-2);background:var(--panel-3);color:var(--ink-soft);cursor:pointer}
-  .copy:hover{color:var(--accent);border-color:var(--accent)}
-  .conf{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:5px;text-transform:uppercase;white-space:nowrap}
-  .conf.high{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
-  .conf.med{background:color-mix(in srgb,var(--amber) 22%,transparent);color:var(--amber)}
-  .conf.low{background:var(--panel-3);color:var(--ink-faint)}
-  .conf.todo{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
-  td.src a{color:var(--ink-faint);font-size:.72rem;text-decoration:none}
-  td.src a:hover{color:var(--accent)}
-  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60}
+  td{padding:8px 12px;vertical-align:middle}
+  td.nm{font-weight:700;white-space:nowrap;cursor:pointer}
+  td .cat{font-family:var(--mono);font-size:.6rem;color:var(--ink-faint);text-transform:uppercase}
+  td select.grp{padding:5px 8px;border-radius:7px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);font-size:.74rem;font-family:var(--sans)}
+  td .gdot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px;vertical-align:middle}
+  td input.emailedit{width:100%;min-width:160px;padding:5px 8px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--ok);font-family:var(--mono);font-size:.78rem}
+  td input.emailedit:hover{border-color:var(--line-2);background:var(--bg)}
+  td input.emailedit:focus{border-color:var(--accent);background:var(--bg);color:var(--ink);outline:none}
+  .tconf{font-family:var(--mono);font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase}
+  .tconf.high{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
+  .tconf.med{background:color-mix(in srgb,var(--amber) 22%,transparent);color:var(--amber)}
+  .tconf.low{background:var(--panel-3);color:var(--ink-faint)}
+  .tconf.todo{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+  td.tact{white-space:nowrap;text-align:right}
+  .tempty{padding:30px;text-align:center;color:var(--ink-faint);font-style:italic}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(15,10,4,.5);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:5vh 16px;z-index:50;overflow-y:auto}
+  .overlay.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line-2);border-radius:18px;box-shadow:var(--shadow-lift);width:100%;max-width:520px;padding:22px}
+  .modal h3{margin:0 0 3px;font-size:1.15rem;letter-spacing:-.01em}
+  .modal .mh-sub{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:16px}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:.66rem;font-family:var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);font-size:.9rem;font-family:var(--sans)}
+  .field textarea{resize:vertical;min-height:54px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-actions{display:flex;gap:9px;margin-top:16px;align-items:center}
+  .modal-actions .spacer{flex:1}
+  .del-btn{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line-2))}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow-lift);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  @media (max-width:640px){td.src,thead th.src{display:none}}
+  @media (max-width:620px){.row2{grid-template-columns:1fr}.col{flex:0 0 82vw}.count-note{display:none}}
 </style>
 
 <div class="wrap">
-  <div class="brand">
-    <span class="oncircle"></span>
-    <div><h1>Yeah You — Outreach Contacts</h1><div class="sub">Agency &middot; management &middot; booking · researched Aug 2026</div></div>
+<header>
+  <div class="brandrow">
+    <div class="brand"><span class="oncircle"></span><div>
+      <h1>Yeah You — Contacts Board</h1>
+      <div class="sub">Clients &middot; outreach contacts &middot; agency routing</div>
+    </div></div>
+    <div class="head-actions">
+      <button id="themeBtn" class="ghost" title="Theme">☾ Auto</button>
+      <button id="csvBtn" class="ghost" title="Export CSV">⭳ CSV</button>
+      <button id="exportBtn" class="ghost" title="Export JSON">⭳ JSON</button>
+      <button id="importBtn" class="ghost" title="Import JSON">⭱</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+      <button id="addBtn" class="primary">＋ Add</button>
+    </div>
   </div>
-
   <div class="stats" id="stats"></div>
-
-  <div class="note">
-    <b>How to read this:</b> A-list athletes don't publish personal emails — they book through their <b>agency/manager</b>, so those rows show the rep + booking channel, not a direct address. Rows with a <b>real email</b> were found verbatim in a cited source (check the confidence). <b class="conf-inline">TODO</b> rows hit the research budget and still need a pass. <b>Never blast the low-confidence ones</b> — confirm on the source first.
-  </div>
-
   <div class="toolbar">
-    <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg><input id="q" placeholder="Search name, agency, email…"></div>
+    <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg><input id="q" placeholder="Search name, email, agency…"></div>
     <select id="cat"><option value="">All categories</option></select>
-    <select id="conf"><option value="">All confidence</option><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option><option value="todo">Needs research</option></select>
-    <button class="tbtn" id="emailOnly">✉ Has email only</button>
-    <button class="tbtn" id="csv">⭳ CSV</button>
-    <span class="count" id="count"></span>
+    <select id="grp"><option value="">All groups</option></select>
+    <select id="conf"><option value="">All confidence</option><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option><option value="todo">To research</option></select>
+    <div class="seg" id="viewSeg"><button data-view="board" class="on">▤ Board</button><button data-view="table">☰ Table</button></div>
+    <button class="clearbtn" id="clearBtn" style="display:none">✕ Clear</button>
+    <span class="count-note" id="countNote"></span>
   </div>
-
-  <div class="tablewrap"><table>
-    <thead><tr>
-      <th data-c="name">Name</th><th data-c="rep">Repped by</th><th data-c="email">Best contact</th>
-      <th data-c="channel">Booking channel</th><th data-c="conf">Conf.</th><th class="src" data-c="src">Source</th>
-    </tr></thead>
-    <tbody id="rows"></tbody>
-  </table></div>
+</header>
+<div class="board-wrap"><div class="board" id="board"></div></div>
+<div class="tablewrap" id="tablewrap" style="display:none"></div>
 </div>
+
+<div class="overlay" id="overlay"><div class="modal" role="dialog" aria-modal="true">
+  <h3 id="mTitle">Add contact</h3><div class="mh-sub" id="mSub">New</div>
+  <form id="form">
+    <div class="field"><label for="f-name">Name *</label><input id="f-name" required maxlength="80"></div>
+    <div class="row2">
+      <div class="field"><label for="f-cat">Category</label><input id="f-cat" list="catlist" maxlength="40"><datalist id="catlist"></datalist></div>
+      <div class="field"><label for="f-group">Group</label><select id="f-group"></select></div>
+    </div>
+    <div class="field"><label for="f-email">Email</label><input id="f-email" maxlength="120" placeholder="best email (leave blank if agency-only)"></div>
+    <div class="row2">
+      <div class="field"><label for="f-rep">Repped by / agency</label><input id="f-rep" maxlength="90"></div>
+      <div class="field"><label for="f-conf">Confidence</label><select id="f-conf"><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option><option value="todo">To research</option></select></div>
+    </div>
+    <div class="field"><label for="f-channel">Booking channel</label><input id="f-channel" maxlength="120" placeholder="e.g. Agency email / IG DM / bureau"></div>
+    <div class="field"><label for="f-notes">Notes</label><textarea id="f-notes" maxlength="500"></textarea></div>
+    <div class="modal-actions">
+      <button type="button" class="del-btn" id="delBtn" hidden>Delete</button>
+      <div class="spacer"></div>
+      <button type="button" id="cancelBtn">Cancel</button>
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 (function(){
   "use strict";
-  // [name, category, repped-by, email(""=none), booking-channel, confidence, sourceURL]
+  var KEY="yeayou_contacts_v1",K_THEME="yyc_theme",K_VIEW="yyc_view";
+  var GROUPS=[
+    {id:"clients",label:"Clients",c:"var(--g-clients)",cc:"#D8442C"},
+    {id:"contact",label:"Have Contact",c:"var(--g-contact)",cc:"#2E8C74"},
+    {id:"email",label:"Email Found",c:"var(--g-email)",cc:"#3A73B8"},
+    {id:"agency",label:"Agency Route",c:"var(--g-agency)",cc:"#C6852A"},
+    {id:"research",label:"To Research",c:"var(--g-research)",cc:"#8A7FB0"}
+  ];
+  var GIDS=GROUPS.map(function(g){return g.id;});
+  function gObj(id){return GROUPS.filter(function(g){return g.id===id;})[0]||GROUPS[0];}
+  var seq=0;function uid(){return "c"+Date.now().toString(36)+"_"+(seq++);}
+
+  // People you already have a relationship with (drag any card in/out to adjust)
+  var CLIENTS={"Blair Conklin":1,"Paulo Prietto":1,"Shane Dorian":1};
+  var HAVE_CONTACT={"Austin Keen":1,"Tanner McDaniel":1,"Greyson Fletcher":1,"Amber Torrealba":1,"Kalani Robb":1,"Nathan Florence":1,"Chris Monroe":1,"Robbie Crawford":1,"Paddy Mack":1,"James Ferrel":1,"Parker Seidel":1,"Evan Rossel":1,"Tfue":1,"Ryan Sheckler":1,"Jack Robinson":1,"Crosby Colapinto":1,"Griffin Colapinto":1,"Tyler Stanaland":1,"Koa Smith":1};
+
+  // [name, category, repped-by, email, channel, confidence, source]
   var D=[
-["Kelly Slater","Surfing","Mgmt team (names private)","","Speaker bureau — AAE 1-800-698-2536 / Athlete Speakers","low","https://bookingagentinfo.com/celebrity/kelly-slater/"],
+["Blair Conklin","Skimboarding","RET Media — your client","blair@blairconklin.com","Direct — your client","high","(in your Gmail)"],
+["Paulo Prietto","Skimboarding","RET Media — your client","paulo.prietto@compass.com","Direct — your client","high","(in your Gmail)"],
+["Kelly Slater","Surfing","Mgmt team (names private)","","Speaker bureau — AAE / Athlete Speakers","low","https://bookingagentinfo.com/celebrity/kelly-slater/"],
 ["John John Florence","Surfing","MN2S booking agency","info@mn2s.com","Agency email","med","https://mn2s.com/booking-agency/talent-roster/john-john-florence/"],
 ["Laird Hamilton","Surfing","Mgmt Steindorff/Castillo; MN2S","info@mn2s.com","Agency / speaker bureau","low","https://mn2s.com/booking-agency/talent-roster/laird-hamilton/"],
 ["Kai Lenny","Surfing","MN2S","info@mn2s.com","Agency email","med","https://mn2s.com/booking-agency/talent-roster/kai-lenny/"],
-["Shane Dorian","Surfing","All American Speakers","","Speaker bureau form","low","https://www.allamericanspeakers.com/celebritytalentbios/Shane+Dorian/467552"],
+["Shane Dorian","Surfing","RET Media — your client (Surf Longevity)","","Direct — your client","high","(RET client)"],
 ["Gabriel Medina","Surfing","State Mgmt LA / Endorsco","","Agency form / IG DM","low","https://www.endorsco.agency/talent/gabriel-medina"],
 ["Filipe Toledo","Surfing","None public","","IG DM only","low","https://en.wikipedia.org/wiki/Filipe_Toledo"],
 ["Italo Ferreira","Surfing","IF15 self-team","","IG DM / agency form","low","https://bookingagentinfo.com/celebrity/italo-ferreira/"],
@@ -129,7 +237,7 @@
 ["Dylan Graves","Surfing","None (Vans)","","IG DM / via Vans","low","https://stabmag.com/profiles/dylan-graves/"],
 ["Billy Kemper","Surfing","Has manager (unnamed)","","billykemper.com form / IG DM","low","https://www.billykemper.com/"],
 ["Lucas Chumbo","Surfing","Self","contato@lucaschumbo.com","Personal-site email","med","https://www.lucaschumbo.com/"],
-["Noah Beschen","Surfing","None public","","IG DM only","low","https://www.instagram.com/"],
+["Noah Beschen","Surfing","None public","","IG DM only","low",""],
 ["Barron Mamiya","Surfing","Coach Shaun Ward / Sharp Eye","","Via sponsor / IG DM","low","https://sharpeyesurfboards.com/pages/barron-mamiya"],
 ["Ethan Ewing","Surfing","MN2S / Always Human PR","info@mn2s.com","Agency email","med","https://mn2s.com/booking-agency/talent-roster/ethan-ewing/"],
 ["Seth Moniz","Surfing","Wasserman (Team Wass)","surf@teamwass.com","Agency email","med","https://www.instagram.com/sethmoniz/"],
@@ -145,7 +253,7 @@
 ["Molly Picklum","Surfing","NC Management (AU)","info@ncmanagement.com.au","Agency email","med","https://ncmanagement.com.au/clients/molly-picklum/"],
 ["Erin Brooks","Surfing","Manifesto Sports & Ent (Rip Curl)","","Agency contact form","low","https://manifestose.com/athlete/erin-brooks/"],
 ["Jamie O'Brien","Surfing","MN2S / own surf school","info@mn2s.com","Agency; surf@jobsurfexperience.com","med","https://mn2s.com/booking-agency/talent-roster/jamie-obrien/"],
-["Koa Smith","Surfing","Mgr Ryan Runke","","Via manager / IG DM","low","https://bookingagentinfo.com/celebrity/koa-smith/"],
+["Koa Smith","Surfing","Mgr Ryan Runke / Foreign Waters","","Via manager / IG DM","low","https://bookingagentinfo.com/celebrity/koa-smith/"],
 ["Carissa Moore","Surfing","Athlete Speakers / AAE","","Speaker bureau","low","https://www.athletespeakers.com/speaker/carissa-moore"],
 ["Caroline Marks","Surfing","Agents (private); coach M. Parsons","","Agency form / IG DM","low","https://bookingagentinfo.com/celebrity/caroline-marks/"],
 ["Austin Keen","Skimboarding","Agency 133 (Reed Morales) / self","","'Book AK' form on austinkeen.com","med","https://www.agency133.com/austin-keen"],
@@ -155,7 +263,7 @@
 ["Amber Torrealba","Skimboarding","Self (own brand)","","ambertorrealba.com/contact form","low","https://ambertorrealba.com/contact/"],
 ["Jack Tenney","Skimboarding","Self / JoogSquad","","IG DM / YouTube","low","https://www.apexskimboards.com/jack-tenney"],
 ["John Akerman","Skimboarding","Self (Nautique/Phase 5)","","IG DM (@jaakerman)","low","https://nautique.com/team/john-akerman"],
-["Rusty Preisendorfer","Shapers","Rusty Surfboards","service@rustysurfboards.com","Company email (directory)","low","https://rustysurfboards.com/pages/custom-surfboard-experience"],
+["Rusty Preisendorfer","Shapers","Rusty Surfboards","service@rustysurfboards.com","Company email (directory)","low","https://rustysurfboards.com/"],
 ["Jon Pyzel","Shapers","Pyzel Surfboards","sales@pyzelsurfboards.com","Company contact email","high","https://pyzelsurfboards.com/pages/contact"],
 ["Matt Biolos","Shapers","Lost Surfboards","","Site / 949-361-6577 / IG DM","low","https://lostsurfboards.net/"],
 ["Charley Stevens","Shapers","Unverified","","IG DM (@ghostshapes)","low","https://www.instagram.com/_charlesstevens/"],
@@ -183,19 +291,19 @@
 ["Ivan Florence","Skateboarding","Florence Marine X (family)","","IG DM only","low","https://www.florencemarinex.com/"],
 ["Sky Brown","Skateboarding","Select Mgmt Group (Neben/Eblen)","","Via mgmt / MN2S / AAE","med","https://bookingagentinfo.com/celebrity/sky-brown/"],
 ["Gustavo Ribeiro","Skateboarding","Father/coach; none formal","","IG DM only","low","https://en.wikipedia.org/wiki/Gustavo_Ribeiro"],
-["Andy Anderson","Skateboarding","Powell-Peralta; none listed","","IG DM only","low","https://grokipedia.com/page/Andy_Anderson_(skateboarder)"],
+["Andy Anderson","Skateboarding","Powell-Peralta; none listed","","IG DM only","low",""],
 ["Zion Wright","Skateboarding","Likely Excel Management","","Via management","low","https://bookingagentinfo.com/celebrity/zion-wright/"],
 ["Lizzie Armanto","Skateboarding","Likely Excel Management","","Via mgmt / lizziearmanto.com","low","https://bookingagentinfo.com/celebrity/lizzie-armanto/"],
 ["Jay Alvarez","Skateboarding","Influencer mgmt","","Via agency","low","https://influencermatchmaker.co.uk/influencer/jay-alvarrez"],
-["Liam Morgan","Skateboarding","None found","","IG DM only","low","https://bookingagentinfo.com/celebrity/liamoo/"],
+["Liam Morgan","Skateboarding","None found","","IG DM only","low",""],
 ["Vince Milou","Skateboarding","Next Management Paris (modeling)","","Via Next Mgmt Paris","med","https://nextmanagement.com/paris/men/profile/vincent-milou/bio"],
-["Don Brown","Skateboarding","Sole Technology exec (not a rep)","","Via Sole Technology","low","https://blog.slamcity.com/don-brown-interview/"],
-["Chloe Covell","Skateboarding","EMM LLC — Tom Curran","tom.curran@emmllc.com","Agent email (listed on IG bio)","med","https://www.instagram.com/chlo_the_flo/"],
+["Don Brown","Skateboarding","Sole Technology exec (not a rep)","","Via Sole Technology","low",""],
+["Chloe Covell","Skateboarding","EMM LLC — Tom Curran","tom.curran@emmllc.com","Agent email (IG bio)","med","https://www.instagram.com/chlo_the_flo/"],
 ["Yuto Horigome","Olympics — Skate","Polyvalent / Gifted Existence","","Agency contact form","med","https://bookingagentinfo.com/celebrity/yuto-horigome/"],
 ["Rayssa Leal","Olympics — Skate","Agent Andreza R.","","Via agency","low","https://bookingagentinfo.com/celebrity/rayssa-leal/"],
 ["Jagger Eaton","Olympics — Skate","Endorseco Agency / AAE","","endorsco.agency form / AthleteSpeakers","low","https://www.endorsco.agency/talent/jagger-eaton"],
 ["Travis Pastrana","BMX / MTB","The Familie (Astephen); Nitro Circus","travispastrana@nitrocircus.com","Nitro Circus (UNCONFIRMED)","low","https://bookingagentinfo.com/celebrity/travis-pastrana/"],
-["Kevin Peraza","BMX / MTB","The Familie — Chris Feitler","Cfeitler@thefamilie.com","Agent email (listed on IG bio)","med","https://www.instagram.com/kevinperaza/"],
+["Kevin Peraza","BMX / MTB","The Familie — Chris Feitler","Cfeitler@thefamilie.com","Agent email (IG bio)","med","https://www.instagram.com/kevinperaza/"],
 ["Nigel Sylvester","BMX / MTB","Mgr Rush Mac; The Familie","","Via management","low","https://bookingagentinfo.com/celebrity/nigel-sylvester/"],
 ["Ryan Williams","BMX / MTB","Nitro Circus / Madd Gear","rwilly@maddgear.com","Nitro Circus (UNCONFIRMED)","low","https://www.nitrocircus.com/athlete-profiles/ryan-williams"],
 ["Sam Pilgrim","BMX / MTB","None (Canyon team)","","IG DM / via Canyon","low","https://bookingagentinfo.com/celebrity/sam-pilgrim/"],
@@ -221,7 +329,7 @@
 ["Mark McMorris","Snowboarding","Manifesto Sport Mgmt (Reimer)","","Agency inquiry","med","https://manifestose.com/athlete/mark-mcmorris/"],
 ["Zeb Powell","Snowboarding","Superheroes Management","","Agency contact form","med","https://superheroesmgmt.com/news/2024/zeb-powell/"],
 ["Seb Toots","Snowboarding","Superheroes Mgmt / Groupe MVP","","Agency contact form","med","https://superheroesmgmt.com/news/2024/sebastien-toutant/"],
-["Red Gerard","Snowboarding","MN2S; early mgr brother Malachi","","MN2S booking form","med","https://mn2s.com/booking-agency/talent-roster/redmond-gerard/"],
+["Red Gerard","Snowboarding","MN2S; mgr brother Malachi","","MN2S booking form","med","https://mn2s.com/booking-agency/talent-roster/redmond-gerard/"],
 ["Scotty James","Snowboarding","Directory listing (obscured)","","thehandbook / bookingagentinfo","low","https://www.thehandbook.com/celebrity/scotty-james/"],
 ["Casey Willax","Snowboarding","Not found","","IG DM only","low",""],
 ["Eileen Gu","Freestyle Skiing","IMG Models / WME Sports","","WME / IMG talent booking","high","https://bookingagentinfo.com/celebrity/eileen-gu/"],
@@ -237,14 +345,14 @@
 ["Conor McGregor","MMA / UFC","Paradigm Sports (Audie Attar)","","Paradigm form / AAE bureau","med","https://bookingagentinfo.com/celebrity/conor-mcgregor/"],
 ["Ilia Topuria","MMA / UFC","First Round Mgmt (Malki Kawa)","info@firstroundmanagement.com","Management email","high","https://1str.com/client/ilia-topuria/"],
 ["Islam Makhachev","MMA / UFC","Dominance MMA (Ali Abdelaziz)","","DominanceMMA.com contact form","med","https://dominancemma.com/"],
-["Khamzat Chimaev","MMA / UFC","Majdi Shammas (Allstars)","","Allstars Training Ctr / IG DM","med","https://www.mmanews.com/news/inner-turmoil-engulfs-chimaevs-apparent-split-with-old-management/"],
+["Khamzat Chimaev","MMA / UFC","Majdi Shammas (Allstars)","","Allstars Training Ctr / IG DM","med","https://www.mmanews.com/"],
 ["Alex Pereira","MMA / UFC","Unclear","","MN2S / AthleteSpeakers","low","https://mn2s.com/booking-agency/talent-roster/alex-pereira/"],
-["Israel Adesanya","MMA / UFC","Chosen Advisory (Tim Simpson)","","Chosen Advisory","med","https://sportskeeda.com/mma/news-israel-adesanya-leon-edwards-jiri-prochazka"],
+["Israel Adesanya","MMA / UFC","Chosen Advisory (Tim Simpson)","","Chosen Advisory","med","https://sportskeeda.com/mma/news-israel-adesanya"],
 ["Max Holloway","MMA / UFC","Chosen Advisory (Simpson)","","Chosen Advisory","med","https://www.athletespeakers.com/speaker/max-holloway"],
-["Sean O'Malley","MMA / UFC","Self-managed","","IG DM / direct","med","https://www.si.com/fannation/mma/news/sean-omalley-explains-why-hes-fed-up-with-mma-managers"],
+["Sean O'Malley","MMA / UFC","Self-managed","","IG DM / direct","med","https://www.si.com/fannation/mma/"],
 ["Dustin Poirier","MMA / UFC","Unclear (prev Arsenal)","","MN2S (Sharron Elkabas)","low","https://mn2s.com/booking-agency/talent-roster/dustin-poirier/"],
 ["Nate Diaz","MMA / UFC","None current","","Endorsco / All American Speakers","low","https://www.endorsco.agency/talent/nate-diaz"],
-["Jorge Masvidal","MMA / UFC","Dominance MMA (per report)","","Dominance MMA","low","https://www.mediareferee.com/ufc-news-who-is-jorge-masvidals-manager"],
+["Jorge Masvidal","MMA / UFC","Dominance MMA (per report)","","Dominance MMA","low","https://www.mediareferee.com/"],
 ["Charles Oliveira","MMA / UFC","Diego Lima & Giovani Decker","","IG DM","low","https://bookingagentinfo.com/celebrity/charles-oliveira/"],
 ["Paddy Pimblett","MMA / UFC","Graham Boylan (Cage Warriors CEO)","","thebaddy.com/contact-us","med","https://thebaddy.com/contact-us/"],
 ["Michael Chandler","MMA / UFC","Samantha Fulare","","Directory listing","low","https://bookingagentinfo.com/celebrity/michael-chandler/"],
@@ -254,12 +362,12 @@
 ["Mike Perry","MMA / UFC","First Round Mgmt (Malki Kawa)","info@firstroundmanagement.com","Management email","high","https://1str.com/client/mike-perry/"],
 ["Jake Shields","MMA / UFC","None current","","MN2S / AthleteSpeakers","low","https://mn2s.com/booking-agency/talent-roster/jake-shields/"],
 ["Jon Jones","MMA / UFC","Richard Schaefer (advisor)","","Via Richard Schaefer","med","https://www.espn.com/mma/story/_/id/31515628/"],
-["Francis Ngannou","MMA / UFC","CAA (Marquel Martin)","","CAA / bureau","med","https://www.cbssports.com/mma/news/manager-ufc-hasnt-contacted-francis-ngannou"],
+["Francis Ngannou","MMA / UFC","CAA (Marquel Martin)","","CAA / bureau","med","https://www.cbssports.com/mma/"],
 ["Bo Nickal","MMA / UFC","First Round Mgmt (Malki Kawa)","info@firstroundmanagement.com","Management email","med","https://bookingagentinfo.com/celebrity/bo-nickal/"],
 ["Ryan Garcia","Olympics — Boxing","Golden Boy Promotions","","Golden Boy Promotions","med","https://www.espn.com/boxing/story/_/id/38385527/"],
-["Gervonta Davis","Olympics — Boxing","GTD Promotions / PBC (Al Haymon)","","PBC / GTD Promotions","med","https://www.essentiallysports.com/boxing-news-who-is-gervonta-davis-signed-to/"],
+["Gervonta Davis","Olympics — Boxing","GTD Promotions / PBC (Al Haymon)","","PBC / GTD Promotions","med","https://www.essentiallysports.com/boxing-news/"],
 ["Devin Haney","Olympics — Boxing","Devin Haney Promotions (Bill Haney)","","Devin Haney Promotions","med","https://www.espn.com/boxing/story/_/id/37668851/"],
-["Teofimo Lopez","Olympics — Boxing","Top Rank; mgr Keith Connolly","","Top Rank / Keith Connolly","med","https://www.yardbarker.com/boxing/articles/exclusive_split_teofimo_lopez_management/"],
+["Teofimo Lopez","Olympics — Boxing","Top Rank; mgr Keith Connolly","","Top Rank / Keith Connolly","med","https://www.yardbarker.com/boxing/"],
 ["Keyshawn Davis","Olympics — Boxing","Top Rank; mgr Jessica Brown","","Top Rank (toprank.com)","med","https://toprank.com/fighters/keyshawn-davis"],
 ["Shakur Stevenson","Olympics — Boxing","—","","Needs research","todo",""],
 ["Jordan Burroughs","Olympics — Wrestling","—","","Needs research","todo",""],
@@ -267,36 +375,36 @@
 ["David Taylor","Olympics — Wrestling","—","","Needs research","todo",""],
 ["Helen Maroulis","Olympics — Wrestling","—","","Needs research","todo",""],
 ["Aaron Brooks","Olympics — Wrestling","—","","Needs research","todo",""],
-["Connor McDavid","NHL / Hockey","Wasserman Hockey (Judd Moldaver)","","Via Wasserman Hockey","high","https://thehockeynews.com/news/100-people-of-power-and-influence/no-67-judd-moldaver"],
-["Auston Matthews","NHL / Hockey","Wasserman Hockey (Moldaver)","","Via Wasserman Hockey","high","https://thehockeynews.com/news/100-people-of-power-and-influence/no-67-judd-moldaver"],
-["Alex Ovechkin","NHL / Hockey","Agent David Abrutyn","","Via agent / speaker bureaus","med","https://www.washingtonpost.com/news/dc-sports-bog/wp/2017/04/25/for-alex-ovechkins-agent/"],
+["Connor McDavid","NHL / Hockey","Wasserman Hockey (Judd Moldaver)","","Via Wasserman Hockey","high","https://thehockeynews.com/"],
+["Auston Matthews","NHL / Hockey","Wasserman Hockey (Moldaver)","","Via Wasserman Hockey","high","https://thehockeynews.com/"],
+["Alex Ovechkin","NHL / Hockey","Agent David Abrutyn","","Via agent / speaker bureaus","med","https://www.washingtonpost.com/"],
 ["Sidney Crosby","NHL / Hockey","CAA Hockey (Pat Brisson)","","Via CAA Sports","high","https://en.wikipedia.org/wiki/Pat_Brisson"],
 ["Nathan MacKinnon","NHL / Hockey","CAA Hockey (Brisson)","","Via CAA Sports","high","https://www.forbes.com/profile/pat-brisson/"],
-["Leon Draisaitl","NHL / Hockey","Octagon Hockey (Mike Liut)","","Via Octagon Hockey","high","https://www.sportico.com/leagues/hockey/2024/leon-draisaitls-oilers-deal/"],
-["Cale Makar","NHL / Hockey","Bartlett Hockey","","Via Bartlett Hockey","med","https://lastwordonsports.com/hockey/2026/04/12/nhl-rumours-cale-makar/"],
-["David Pastrnak","NHL / Hockey","CAA Hockey (J.P. Barry)","","Via CAA Sports","med","https://bostonhockeynow.com/2022/10/13/david-pastrnak-nhl-agent/"],
+["Leon Draisaitl","NHL / Hockey","Octagon Hockey (Mike Liut)","","Via Octagon Hockey","high","https://www.sportico.com/"],
+["Cale Makar","NHL / Hockey","Bartlett Hockey","","Via Bartlett Hockey","med","https://lastwordonsports.com/hockey/"],
+["David Pastrnak","NHL / Hockey","CAA Hockey (J.P. Barry)","","Via CAA Sports","med","https://bostonhockeynow.com/"],
 ["Nikita Kucherov","NHL / Hockey","Gold Star Sports (Dan Milstein)","","Via Gold Star Hockey","high","https://en.wikipedia.org/wiki/Daniel_Milstein"],
 ["Brady Tkachuk","NHL / Hockey","Newport Sports Management","","Via Newport Sports","med","https://www.thehockeyagency.com/players-detail/102"],
 ["Trevor Zegras","NHL / Hockey","CAA Hockey (Brisson)","","Via CAA Sports","med","https://www.athletespeakers.com/speaker/trevor-zegras"],
 ["Jack Hughes","NHL / Hockey","CAA Hockey (Brisson)","","Via CAA Sports","high","https://www.forbes.com/profile/pat-brisson/"],
-["Tim Stutzle","NHL / Hockey","4sports Hockey (Claude Lemieux)","","Via 4sports Hockey","med","https://thehockeynews.com/nhl/ottawa-senators/latest-news/stutzle-switches-agents"],
+["Tim Stutzle","NHL / Hockey","4sports Hockey (Claude Lemieux)","","Via 4sports Hockey","med","https://thehockeynews.com/nhl/ottawa-senators/"],
 ["P.K. Subban","NHL / Hockey","Speakers Bureau of Canada + bureaus","","Speaker bureau (SBC / AAE)","med","https://speakerscanada.com/keynote-speaker/p-k-subban/"],
 ["Matthew Tkachuk","NHL / Hockey","Newport Sports Management","","Via Newport Sports","med","https://www.thehockeyagency.com/players-detail/89"],
-["Kirill Kaprizov","NHL / Hockey","Newport (Paul Theofanous)","","Via Newport Sports","med","https://www.minnesotasportsfan.com/minnesota-wild/kirill-kaprizov-agent/"],
-["Michael Phelps","Olympics — Swim","Octagon (Peter Carlisle)","","Via Octagon / AthleteSpeakers","high","https://swimswam.com/michael-phelps-olympic-super-agent-carlisle/"],
-["Katie Ledecky","Olympics — Swim","Wasserman (Levy / Colas)","","Via Wasserman","high","https://www.swimmingworldmagazine.com/news/katie-ledecky-signs-with-wasserman/"],
+["Kirill Kaprizov","NHL / Hockey","Newport (Paul Theofanous)","","Via Newport Sports","med","https://www.minnesotasportsfan.com/"],
+["Michael Phelps","Olympics — Swim","Octagon (Peter Carlisle)","","Via Octagon / AthleteSpeakers","high","https://swimswam.com/"],
+["Katie Ledecky","Olympics — Swim","Wasserman (Levy / Colas)","","Via Wasserman","high","https://www.swimmingworldmagazine.com/"],
 ["Caeleb Dressel","Olympics — Swim","Mgr Erika Wright; bureaus","","Speaker bureau (AAE)","med","https://bookingagentinfo.com/celebrity/caeleb-dressel/"],
 ["Adam Peaty","Olympics — Swim","UK speaker agencies","","UK speaker bureau","med","https://champions-speakers.co.uk/speaker-agent/adam-peaty"],
 ["Ryan Murphy","Olympics — Swim","Bureaus (MN2S / AthleteSpeakers)","","Speaker bureau","low","https://www.athletespeakers.com/speaker/ryan-murphy"],
 ["Lilly King","Olympics — Swim","MN2S (Sharron Elkabas)","","MN2S booking / AthleteSpeakers","med","https://mn2s.com/booking-agency/talent-roster/lilly-king/"],
 ["Emma McKeon","Olympics — Swim","NC Management (AU)","nikki@ncmanagement.com.au","Agency (unverified verbatim)","med","https://ncmanagement.com.au/clients/emma-mckeon/"],
-["Simone Biles","Olympics — Gym","Octagon (Janey Miller)","","Via Octagon","high","https://twitter.com/Simone_Biles/status/1460748532445376513"],
+["Simone Biles","Olympics — Gym","Octagon (Janey Miller)","","Via Octagon","high","https://twitter.com/Simone_Biles/"],
 ["Jordan Chiles","Olympics — Gym","Select Mgmt Group (Neben/Maitland)","","Via mgmt / MN2S / AAE","med","https://bookingagentinfo.com/celebrity/jordan-chiles/"],
 ["Sunisa Lee","Olympics — Gym","Digital agent; bureaus","","Speaker bureau (AAE)","low","https://bookingagentinfo.com/celebrity/suni-lee/"],
 ["Jade Carey","Olympics — Gym","Agents; bureaus","","Speaker bureau","low","https://bookingagentinfo.com/celebrity/jade-carey/"],
 ["Brody Malone","Olympics — Gym","Stanton & Company (Prudhomme)","","Stanton & Co (225-620-7252)","med","https://usagym.org/pressbox/agents/"],
 ["Fred Richard","Olympics — Gym","Agent Hayes Grooms","","Via agent / AllAmericanSpeakers","med","https://usagym.org/pressbox/agents/"],
-["Livvy Dunne","Olympics — Gym","Wasserman + Brillstein","","Via Wasserman","high","https://www.hollywoodreporter.com/business/business-news/olivia-dunne-signs-wasserman/"],
+["Livvy Dunne","Olympics — Gym","Wasserman + Brillstein","","Via Wasserman","high","https://www.hollywoodreporter.com/"],
 ["Noah Lyles","Olympics — Track","—","","Needs research","todo",""],
 ["Sydney McLaughlin-Levrone","Olympics — Track","—","","Needs research","todo",""],
 ["Sha'Carri Richardson","Olympics — Track","—","","Needs research","todo",""],
@@ -320,14 +428,14 @@
 ["TimTheTatman","Gaming","WME","timthetatman@wmeagency.com","WME (agency pattern)","low","https://bookingagentinfo.com/celebrity/timothy-john-timthetatman-betar/"],
 ["Nickmercs","Gaming","Paradigm Sports","nickmercs@paradigmsports.com","Listed on X profile","med","https://bookingagentinfo.com/celebrity/nick-kolcheff-nickmercs/"],
 ["Arkhram","Gaming","Retired (last org 100 Thieves)","","IG DM only","low","https://x.com/Arkhram1x"],
-["Cloakzy","Gaming","Loaded","","Loaded management","low","https://www.hollywoodreporter.com/business/digital/cloakzy-signs-loaded/"],
+["Cloakzy","Gaming","Loaded","","Loaded management","low","https://www.hollywoodreporter.com/"],
 ["IShowSpeed","Creators","CAA + management team","","CAA / management","low","https://bookingagentinfo.com/celebrity/ishowspeed/"],
-["Kai Cenat","Creators","UTA; Night","KcenatBusiness@gmail.com","Business email (mgmt: kcenatmanagement@gmail.com)","low","https://bookingagentinfo.com/celebrity/kai-cenat/"],
+["Kai Cenat","Creators","UTA; Night","KcenatBusiness@gmail.com","Business email (mgmt kcenatmanagement@gmail.com)","low","https://bookingagentinfo.com/celebrity/kai-cenat/"],
 ["Casey Neistat","Influencers","WME; self","casey@caseyneistat.com","Site work-inquiry form / WME","med","https://www.caseyneistat.com/contact-work-related"],
 ["MrBeast","Influencers","Night Media (Reed Duchscher)","contact@mrbeastbusiness.com","Business email → Night","med","https://bookingagentinfo.com/celebrity/jimmy-mrbeast-donaldson/"],
 ["Parker Seidel","Influencers","Chris Ryan Marketing","Parker@chrisryanmarketing.com","Business email","med","https://www.creatorland.com/parker.seidel"],
 ["Ivy Miller","Influencers","Wilhelmina; NewMark Models","","Modeling agency","low","https://www.thehandbook.com/influencer/ivy-miller/"],
-["Kazsawyer","Influencers","Independent","business@kazsawyer.com","Business email","med","https://x.com/sweepsbeats"],
+["Kazsawyer","Influencers","Independent","business@kazsawyer.com","Business email","med",""],
 ["Bert Kreischer","Comedians","UTA; mgmt Brown-Marmel/Beales","","UTA","low","https://bookingagentinfo.com/celebrity/bert-kreischer/"],
 ["Steve-O","Comedians","Mgr Adam Ginivisian","","Management / agency","low","https://bookingagentinfo.com/celebrity/steve-o/"],
 ["Chris Pontius","Comedians","MN2S","","MN2S / chrispontius.com","low","https://mn2s.com/booking-agency/talent-roster/chris-pontius/"],
@@ -337,7 +445,7 @@
 ["Neil Frances","Musicians","JET Mgmt; Paradigm; Nettwerk","nf@jet-mgmt.com","Official contact page","high","https://www.neilfrances.com/new-page"],
 ["Samira Winter","Musicians","Labels (Bar/None; Winspear)","","IG DM only","low","https://en.wikipedia.org/wiki/Winter_(indie_rock_band)"],
 ["SweepsBeats","Musicians","Independent","sweepsbeats@gmail.com","Business email","med","https://x.com/sweepsbeats"],
-["Chris Burkard","Media / Film","Self (studio); Verb licensing","info@chrisburkard.com","Official contact (Mike@chrisburkard.com for booking)","high","https://www.chrisburkard.com/Contact"],
+["Chris Burkard","Media / Film","Self (studio); Verb licensing","info@chrisburkard.com","Official (Mike@chrisburkard.com booking)","high","https://www.chrisburkard.com/Contact"],
 ["Taylor Steele","Media / Film","Poor Specimen / THIS. Film Studio","","Production co. site","low","https://www.thisfilmstudio.com/taylor-steele"],
 ["Robbie Crawford","Media / Film","Self; Sessions ambassador","","robbiecrawford.com/contact form","low","http://www.robbiecrawford.com/contact/"],
 ["Paddy Mack","Media / Film","Victoria Skimboards / Elev8","","IG DM only","low","https://ocean.victoriaskimboards.com/paddy-mack/"],
@@ -359,89 +467,151 @@
 ["Jon Chema","Media / Film","—","","Needs research","todo",""]
   ];
 
-  var rows=D.map(function(r){return {name:r[0],cat:r[1],rep:r[2],email:r[3],channel:r[4],conf:r[5],src:r[6]};});
-  var qEl=document.getElementById("q"),catEl=document.getElementById("cat"),confEl=document.getElementById("conf"),
-      emailBtn=document.getElementById("emailOnly"),rowsEl=document.getElementById("rows"),countEl=document.getElementById("count"),statsEl=document.getElementById("stats");
-  var emailOnly=false,sortCol="name",sortDir=1;
+  function groupFor(name,email,conf){
+    if(CLIENTS[name])return "clients";
+    if(HAVE_CONTACT[name])return "contact";
+    if(email)return "email";
+    if(conf==="todo")return "research";
+    return "agency";
+  }
+  function buildSeed(){
+    var seen={},out=[];
+    D.forEach(function(r){
+      var name=r[0];if(seen[name])return;seen[name]=1;
+      out.push({id:uid(),name:name,cat:r[1],rep:r[2],email:r[3],channel:r[4],conf:r[5],src:r[6],
+        group:groupFor(name,r[3],r[5]),notes:"",updated:0});
+    });
+    return out;
+  }
 
-  var cats={}; rows.forEach(function(r){cats[r.cat]=1;});
-  Object.keys(cats).sort().forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;catEl.appendChild(o);});
-
+  var state=load();
+  function load(){try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);if(Array.isArray(p))return p;}}catch(e){}return buildSeed();}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
   function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 
-  function stats(){
-    var withEmail=rows.filter(function(r){return r.email;}).length;
-    var agency=rows.filter(function(r){return !r.email && r.conf!=="todo";}).length;
-    var todo=rows.filter(function(r){return r.conf==="todo";}).length;
-    statsEl.innerHTML=
-      tile(rows.length,"On the list","var(--ink-faint)")+
-      tile(withEmail,"Direct emails found","var(--ok)")+
-      tile(agency,"Agency / mgmt route","var(--amber)")+
-      tile(todo,"Still to research","var(--accent)");
-  }
-  function tile(n,l,c){return '<div class="stat" style="--stat-c:'+c+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+  var board=document.getElementById("board"),tablewrap=document.getElementById("tablewrap"),statsEl=document.getElementById("stats"),
+      qEl=document.getElementById("q"),catEl=document.getElementById("cat"),grpEl=document.getElementById("grp"),confEl=document.getElementById("conf"),
+      clearBtn=document.getElementById("clearBtn"),countNote=document.getElementById("countNote");
+  var viewMode=(function(){try{return localStorage.getItem(K_VIEW)||"board";}catch(e){return "board";}})();
+  var tableSort={col:"name",dir:1};
 
-  function filtered(){
-    var q=qEl.value.trim().toLowerCase(),cf=catEl.value,cn=confEl.value;
-    var list=rows.filter(function(r){
-      if(cf&&r.cat!==cf)return false;
-      if(cn&&r.conf!==cn)return false;
-      if(emailOnly&&!r.email)return false;
-      if(q){var h=(r.name+" "+r.rep+" "+r.email+" "+r.channel+" "+r.cat).toLowerCase();if(h.indexOf(q)===-1)return false;}
-      return true;
-    });
-    var rank={high:0,med:1,low:2,todo:3};
-    list.sort(function(a,b){
-      var av,bv;
-      if(sortCol==="conf"){av=rank[a.conf];bv=rank[b.conf];}
-      else if(sortCol==="email"){av=a.email?0:1;bv=b.email?0:1;}
-      else{av=(a[sortCol]||"").toLowerCase();bv=(b[sortCol]||"").toLowerCase();}
-      if(av<bv)return -1*sortDir;if(av>bv)return 1*sortDir;return a.name.localeCompare(b.name);
-    });
-    return list;
-  }
+  GROUPS.forEach(function(g){var o=document.createElement("option");o.value=g.id;o.textContent=g.label;grpEl.appendChild(o);});
+  function allCats(){var s={};state.forEach(function(g){if(g.cat)s[g.cat]=1;});return Object.keys(s).sort();}
+  function refreshCats(){var cur=catEl.value;catEl.innerHTML='<option value="">All categories</option>';allCats().forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;catEl.appendChild(o);});catEl.value=cur;var dl=document.getElementById("catlist");dl.innerHTML="";allCats().forEach(function(c){var o=document.createElement("option");o.value=c;dl.appendChild(o);});}
+
+  function anyFilter(){return qEl.value.trim()||catEl.value||grpEl.value||confEl.value;}
+  function matches(r){var q=qEl.value.trim().toLowerCase();if(catEl.value&&r.cat!==catEl.value)return false;if(grpEl.value&&r.group!==grpEl.value)return false;if(confEl.value&&r.conf!==confEl.value)return false;if(q){var h=(r.name+" "+(r.email||"")+" "+(r.rep||"")+" "+(r.cat||"")+" "+(r.channel||"")+" "+(r.notes||"")).toLowerCase();if(h.indexOf(q)===-1)return false;}return true;}
 
   function render(){
-    stats();
-    var list=filtered();
-    countEl.textContent=list.length+" of "+rows.length;
-    rowsEl.innerHTML=list.map(function(r){
-      var emailCell=r.email
-        ? '<a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a><button class="copy" data-e="'+esc(r.email)+'">copy</button>'
-        : '<span class="dash">— agency route —</span>';
-      var srcCell=r.src?'<a href="'+esc(r.src)+'" target="_blank" rel="noopener">source ↗</a>':'';
-      var confLabel=r.conf==="todo"?"TODO":r.conf.toUpperCase();
-      return '<tr>'+
-        '<td class="nm">'+esc(r.name)+'<div class="cat">'+esc(r.cat)+'</div></td>'+
-        '<td>'+esc(r.rep)+'</td>'+
-        '<td class="email">'+emailCell+'</td>'+
-        '<td>'+esc(r.channel)+'</td>'+
-        '<td><span class="conf '+r.conf+'">'+confLabel+'</span></td>'+
-        '<td class="src">'+srcCell+'</td>'+
-      '</tr>';
-    }).join("");
+    var counts={};GIDS.forEach(function(g){counts[g]=0;});state.forEach(function(r){if(counts[r.group]!=null)counts[r.group]++;});
+    statsEl.innerHTML=GROUPS.map(function(g){return statCard(g.id,counts[g.id],g.label,g.c);}).join("");
+    Array.prototype.forEach.call(statsEl.querySelectorAll(".stat"),function(el){if(el.dataset.g===grpEl.value)el.classList.add("active");el.addEventListener("click",function(){grpEl.value=(grpEl.value===el.dataset.g)?"":el.dataset.g;render();});});
+    clearBtn.style.display=anyFilter()?"":"none";
+    var shown=state.filter(matches).length;
+    countNote.textContent=anyFilter()?("Showing "+shown+" of "+state.length):(state.length+" contacts");
+    if(viewMode==="table"){board.parentElement.style.display="none";tablewrap.style.display="";renderTable();}
+    else{board.parentElement.style.display="";tablewrap.style.display="none";renderBoard(counts);}
+  }
+  function statCard(g,n,l,c){return '<div class="stat" data-g="'+g+'" style="--stat-c:'+c+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+  function renderBoard(counts){
+    board.innerHTML="";
+    GROUPS.forEach(function(g){
+      var col=document.createElement("div");col.className="col";col.style.setProperty("--col-c",g.c);col.dataset.group=g.id;
+      var list=state.filter(function(r){return r.group===g.id&&matches(r);}).sort(function(a,b){return a.name.localeCompare(b.name);});
+      col.innerHTML='<div class="col-head"><span class="dot"></span><span class="t">'+g.label+'</span><span class="count">'+counts[g.id]+'</span></div><div class="cards"></div><button class="add-in-col" data-group="'+g.id+'">＋ Add</button>';
+      var cardsEl=col.querySelector(".cards");
+      if(!list.length)cardsEl.innerHTML='<div class="col-empty">'+(counts[g.id]?"No matches":"Empty")+'</div>';
+      else list.forEach(function(r){cardsEl.appendChild(cardEl(r));});
+      attachDrop(col);board.appendChild(col);
+    });
+  }
+  function cardEl(r){
+    var el=document.createElement("div");el.className="card";el.draggable=true;el.dataset.id=r.id;el.style.setProperty("--col-c",gObj(r.group).c);
+    var emailHtml=r.email?'<div class="email"><a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a></div>':'<div class="email none">— '+esc(r.channel||"agency route")+' —</div>';
+    var meta='<span class="chip">'+esc(r.cat)+'</span><span class="chip conf '+r.conf+'">'+(r.conf==="todo"?"TODO":r.conf)+'</span>';
+    el.innerHTML='<div class="nm">'+esc(r.name)+'</div>'+emailHtml+
+      (r.rep&&r.rep!=="—"?'<div class="rep">'+esc(r.rep)+'</div>':'')+
+      '<div class="meta">'+meta+'</div>'+
+      (r.notes?'<div class="note">'+esc(r.notes)+'</div>':'')+
+      '<div class="card-actions"><button class="iconbtn edit" data-id="'+r.id+'">Edit</button>'+
+      (r.email?'<button class="iconbtn copy" data-e="'+esc(r.email)+'">✉ Copy</button>':'')+
+      (r.src&&r.src.indexOf("http")===0?'<a class="iconbtn" href="'+esc(r.src)+'" target="_blank" rel="noopener">↗</a>':'')+
+      moveBtns(r)+'</div>';
+    return el;
+  }
+  function moveBtns(r){var i=GIDS.indexOf(r.group),out='<span class="nav-wrap">';if(i>0)out+='<button class="iconbtn nav" data-id="'+r.id+'" data-dir="-1" title="'+GROUPS[i-1].label+'">←</button>';if(i<GROUPS.length-1)out+='<button class="iconbtn nav" data-id="'+r.id+'" data-dir="1" title="'+GROUPS[i+1].label+'">→</button>';return out+'</span>';}
+
+  var COLS=[{k:"name",l:"Name"},{k:"cat",l:"Category"},{k:"group",l:"Group"},{k:"email",l:"Email (click to edit)"},{k:"rep",l:"Repped by"},{k:"conf",l:"Conf"},{k:"act",l:""}];
+  function renderTable(){
+    var list=state.filter(matches).slice(),c=tableSort.col,dir=tableSort.dir,rank={high:0,med:1,low:2,todo:3};
+    list.sort(function(a,b){var av,bv;if(c==="conf"){av=rank[a.conf];bv=rank[b.conf];}else if(c==="group"){av=GIDS.indexOf(a.group);bv=GIDS.indexOf(b.group);}else if(c==="email"){av=a.email?0:1;bv=b.email?0:1;}else{av=(a[c]||"").toLowerCase();bv=(b[c]||"").toLowerCase();}if(av<bv)return -1*dir;if(av>bv)return 1*dir;return a.name.localeCompare(b.name);});
+    var head="<tr>"+COLS.map(function(col){var arw=tableSort.col===col.k?('<span style="opacity:.6">'+(dir>0?"▲":"▼")+'</span>'):"";return '<th data-col="'+col.k+'">'+esc(col.l)+" "+arw+"</th>";}).join("")+"</tr>";
+    var rows=list.length?list.map(function(r){
+      var gsel='<select class="grp" data-id="'+r.id+'">'+GROUPS.map(function(g){return '<option value="'+g.id+'"'+(g.id===r.group?" selected":"")+'>'+g.label+'</option>';}).join("")+'</select>';
+      return '<tr data-id="'+r.id+'">'+
+        '<td class="nm" data-edit="'+r.id+'">'+esc(r.name)+'<div class="cat">'+esc(r.cat)+'</div></td>'+
+        '<td>'+esc(r.cat)+'</td>'+
+        '<td><span class="gdot" style="background:'+gObj(r.group).cc+'"></span>'+gsel+'</td>'+
+        '<td><input class="emailedit" data-id="'+r.id+'" value="'+esc(r.email)+'" placeholder="add email…"></td>'+
+        '<td style="max-width:220px">'+esc(r.rep)+'</td>'+
+        '<td><span class="tconf '+r.conf+'">'+(r.conf==="todo"?"TODO":r.conf)+'</span></td>'+
+        '<td class="tact"><button class="iconbtn edit" data-id="'+r.id+'">Edit</button></td></tr>';
+    }).join(""):'<tr><td colspan="7" class="tempty">No matches.</td></tr>';
+    tablewrap.innerHTML="<table><thead>"+head+"</thead><tbody>"+rows+"</tbody></table>";
   }
 
-  rowsEl.addEventListener("click",function(e){var b=e.target.closest(".copy");if(b){copy(b.dataset.e);}});
-  document.querySelectorAll("thead th").forEach(function(th){th.addEventListener("click",function(){var c=th.dataset.c;if(c==="src")return;if(sortCol===c)sortDir*=-1;else{sortCol=c;sortDir=1;}render();});});
-  qEl.addEventListener("input",render);catEl.addEventListener("change",render);confEl.addEventListener("change",render);
-  emailBtn.addEventListener("click",function(){emailOnly=!emailOnly;emailBtn.classList.toggle("on",emailOnly);render();});
+  var dragId=null;
+  board.addEventListener("dragstart",function(e){var c=e.target.closest(".card");if(!c)return;dragId=c.dataset.id;c.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragId);}catch(x){}});
+  board.addEventListener("dragend",function(e){var c=e.target.closest(".card");if(c)c.classList.remove("dragging");dragId=null;Array.prototype.forEach.call(document.querySelectorAll(".col.drag-over"),function(x){x.classList.remove("drag-over");});});
+  function attachDrop(col){col.addEventListener("dragover",function(e){e.preventDefault();col.classList.add("drag-over");});col.addEventListener("dragleave",function(e){if(!col.contains(e.relatedTarget))col.classList.remove("drag-over");});col.addEventListener("drop",function(e){e.preventDefault();col.classList.remove("drag-over");if(!dragId)return;var r=byId(dragId);if(r&&r.group!==col.dataset.group){setGroup(r,col.dataset.group);}});}
+  function setGroup(r,g){r.group=g;r.updated=Date.now();var i=state.indexOf(r);if(i>-1){state.splice(i,1);state.push(r);}save();render();toast(r.name+" → "+gObj(g).label);}
+  function byId(id){return state.filter(function(r){return r.id===id;})[0];}
 
-  document.getElementById("csv").addEventListener("click",function(){
-    var head=["Name","Category","Repped by","Email","Booking channel","Confidence","Source"];
-    var lines=[head.join(",")].concat(rows.map(function(r){
-      return [r.name,r.cat,r.rep,r.email,r.channel,r.conf,r.src].map(function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");
-    }));
-    var csv=lines.join("\n"),claude=window.claude;
-    if(claude&&typeof claude.use==="function"){claude.use("downloads").then(function(d){if(!d)return leg(csv);d.save({filename:"yeahyou-contacts.csv",data:csv}).then(function(){toast("CSV exported");}).catch(function(err){if(err&&err.code==="declined")return;leg(csv);});}).catch(function(){leg(csv);});}
-    else leg(csv);
-  });
-  function leg(csv){var b=new Blob([csv],{type:"text/csv"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="yeahyou-contacts.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},800);toast("CSV exported");}
+  board.addEventListener("click",function(e){var t=e.target;var ed=t.closest(".edit");if(ed){openModal(byId(ed.dataset.id));return;}var cp=t.closest(".copy");if(cp){copy(cp.dataset.e);return;}var nv=t.closest(".nav");if(nv){var r=byId(nv.dataset.id);if(!r)return;var i=GIDS.indexOf(r.group)+(+nv.dataset.dir);if(i>=0&&i<GROUPS.length)setGroup(r,GIDS[i]);return;}var add=t.closest(".add-in-col");if(add){openModal(null,add.dataset.group);return;}if(t.closest("a")||t.closest("button"))return;var card=t.closest(".card");if(card)openModal(byId(card.dataset.id));});
+
+  tablewrap.addEventListener("click",function(e){var t=e.target;var th=t.closest("th");if(th&&th.dataset.col&&th.dataset.col!=="act"){if(tableSort.col===th.dataset.col)tableSort.dir*=-1;else{tableSort.col=th.dataset.col;tableSort.dir=1;}renderTable();return;}var ed=t.closest(".edit");if(ed){openModal(byId(ed.dataset.id));return;}var nm=t.closest("[data-edit]");if(nm){openModal(byId(nm.dataset.edit));return;}});
+  tablewrap.addEventListener("change",function(e){var s=e.target.closest(".grp");if(s){var r=byId(s.dataset.id);if(r){r.group=s.value;r.updated=Date.now();save();render();toast(r.name+" → "+gObj(s.value).label);}return;}var em=e.target.closest(".emailedit");if(em){var r2=byId(em.dataset.id);if(r2){r2.email=em.value.trim();r2.updated=Date.now();save();toast("Updated "+r2.name);}}});
+
+  // modal
+  var overlay=document.getElementById("overlay"),form=document.getElementById("form"),editingId=null,gSel=document.getElementById("f-group");
+  GROUPS.forEach(function(g){var o=document.createElement("option");o.value=g.id;o.textContent=g.label;gSel.appendChild(o);});
+  function openModal(r,presetGroup){editingId=r?r.id:null;
+    document.getElementById("mTitle").textContent=r?"Edit contact":"Add contact";
+    document.getElementById("mSub").textContent=r?(r.cat||""):"New";
+    setV("f-name",r?r.name:"");setV("f-cat",r?r.cat:(catEl.value||""));setV("f-group",r?r.group:(presetGroup||"research"));
+    setV("f-email",r?r.email:"");setV("f-rep",r?r.rep:"");setV("f-conf",r?r.conf:"low");setV("f-channel",r?r.channel:"");setV("f-notes",r?(r.notes||""):"");
+    document.getElementById("delBtn").hidden=!r;overlay.classList.add("open");setTimeout(function(){document.getElementById("f-name").focus();},30);}
+  function setV(id,v){document.getElementById(id).value=v||"";}
+  function gv(id){return document.getElementById(id).value.trim();}
+  function closeModal(){overlay.classList.remove("open");editingId=null;}
+  form.addEventListener("submit",function(e){e.preventDefault();var data={name:gv("f-name"),cat:gv("f-cat"),group:gv("f-group"),email:gv("f-email"),rep:gv("f-rep"),conf:gv("f-conf"),channel:gv("f-channel"),notes:gv("f-notes")};if(!data.name)return;if(editingId){var r=byId(editingId);if(r){Object.keys(data).forEach(function(k){r[k]=data[k];});r.updated=Date.now();}toast("Saved "+data.name);}else{data.id=uid();data.src="";data.updated=Date.now();state.push(data);toast("Added "+data.name);}save();refreshCats();render();closeModal();});
+  document.getElementById("cancelBtn").addEventListener("click",closeModal);
+  document.getElementById("delBtn").addEventListener("click",function(){if(!editingId)return;var r=byId(editingId);if(r&&confirm("Delete "+r.name+"?")){state=state.filter(function(x){return x.id!==editingId;});save();refreshCats();render();closeModal();toast("Deleted "+r.name);}});
+  overlay.addEventListener("mousedown",function(e){if(e.target===overlay)closeModal();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&overlay.classList.contains("open"))closeModal();});
+
+  document.getElementById("addBtn").addEventListener("click",function(){openModal(null);});
+  qEl.addEventListener("input",render);[catEl,grpEl,confEl].forEach(function(el){el.addEventListener("change",render);});
+  clearBtn.addEventListener("click",function(){qEl.value="";catEl.value="";grpEl.value="";confEl.value="";render();});
+
+  var viewSeg=document.getElementById("viewSeg");
+  function applyView(){Array.prototype.forEach.call(viewSeg.querySelectorAll("button"),function(b){b.classList.toggle("on",b.dataset.view===viewMode);});}
+  viewSeg.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;viewMode=b.dataset.view;try{localStorage.setItem(K_VIEW,viewMode);}catch(x){}applyView();render();});
+
+  var themeBtn=document.getElementById("themeBtn");
+  function applyTheme(){var t;try{t=localStorage.getItem(K_THEME)||"auto";}catch(e){t="auto";}if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);themeBtn.textContent=t==="auto"?"☾ Auto":(t==="light"?"☀ Light":"☾ Dark");}
+  themeBtn.addEventListener("click",function(){var t;try{t=localStorage.getItem(K_THEME)||"auto";}catch(e){t="auto";}var n=t==="auto"?"light":(t==="light"?"dark":"auto");try{localStorage.setItem(K_THEME,n);}catch(e){}applyTheme();});
+
+  function dl(name,data,type){var claude=window.claude;if(claude&&typeof claude.use==="function"){claude.use("downloads").then(function(d){if(!d)return leg();d.save({filename:name,data:data}).then(function(){toast("Exported");}).catch(function(err){if(err&&err.code==="declined")return;leg();});}).catch(leg);}else leg();function leg(){var b=new Blob([data],{type:type}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},800);toast("Exported");}}
+  document.getElementById("exportBtn").addEventListener("click",function(){dl("yeahyou-contacts.json",JSON.stringify(state,null,2),"application/json");});
+  document.getElementById("csvBtn").addEventListener("click",function(){var head=["Name","Category","Group","Email","Repped by","Channel","Confidence","Notes","Source"];var lines=[head.join(",")].concat(state.map(function(r){return [r.name,r.cat,gObj(r.group).label,r.email,r.rep,r.channel,r.conf,r.notes,r.src].map(function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");}));dl("yeahyou-contacts.csv",lines.join("\n"),"text/csv");});
+  document.getElementById("importBtn").addEventListener("click",function(){document.getElementById("importFile").click();});
+  document.getElementById("importFile").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var data=JSON.parse(rd.result);if(!Array.isArray(data))throw 0;data.forEach(function(r){if(!r.id)r.id=uid();if(GIDS.indexOf(r.group)===-1)r.group="research";});if(state.length&&!confirm("Replace with "+data.length+" imported contacts?")){e.target.value="";return;}state=data;save();refreshCats();render();toast("Imported "+data.length);}catch(x){toast("Couldn't read that file.");}e.target.value="";};rd.readAsText(f);});
 
   function copy(t){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast("Copied "+t);},fb);else fb();function fb(){try{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();toast("Copied "+t);}catch(e){toast("Copy failed");}}}
-  var toastEl=document.getElementById("toast"),tt;
-  function toast(m){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove("show");},1900);}
+  var toastEl=document.getElementById("toast"),tt;function toast(m){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove("show");},1900);}
 
-  render();
+  applyTheme();applyView();refreshCats();render();
 })();
 </script>
