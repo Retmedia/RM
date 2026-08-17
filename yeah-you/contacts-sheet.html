@@ -153,7 +153,7 @@
   <div class="toolbar">
     <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg><input id="q" placeholder="Search name, email, agency…"></div>
     <select id="cat"><option value="">All categories</option></select>
-    <select id="grp"><option value="">All groups</option></select>
+    <select id="grp"><option value="">All stages</option></select>
     <select id="conf"><option value="">All confidence</option><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option><option value="todo">To research</option></select>
     <div class="seg" id="viewSeg"><button data-view="board" class="on">▤ Board</button><button data-view="table">☰ Table</button></div>
     <button class="clearbtn" id="clearBtn" style="display:none">✕ Clear</button>
@@ -170,7 +170,7 @@
     <div class="field"><label for="f-name">Name *</label><input id="f-name" required maxlength="80"></div>
     <div class="row2">
       <div class="field"><label for="f-cat">Category</label><input id="f-cat" list="catlist" maxlength="40"><datalist id="catlist"></datalist></div>
-      <div class="field"><label for="f-group">Group</label><select id="f-group"></select></div>
+      <div class="field"><label for="f-group">Stage</label><select id="f-group"></select></div>
     </div>
     <div class="field"><label for="f-email">Email</label><input id="f-email" maxlength="120" placeholder="best email (leave blank if agency-only)"></div>
     <div class="row2">
@@ -192,13 +192,14 @@
 <script>
 (function(){
   "use strict";
-  var KEY="yeayou_contacts_v1",K_THEME="yyc_theme",K_VIEW="yyc_view";
+  var KEY="yeayou_contacts_v2",K_THEME="yyc_theme",K_VIEW="yyc_view";
   var GROUPS=[
-    {id:"clients",label:"Clients",c:"var(--g-clients)",cc:"#D8442C"},
-    {id:"contact",label:"Have Contact",c:"var(--g-contact)",cc:"#2E8C74"},
-    {id:"email",label:"Email Found",c:"var(--g-email)",cc:"#3A73B8"},
-    {id:"agency",label:"Agency Route",c:"var(--g-agency)",cc:"#C6852A"},
-    {id:"research",label:"To Research",c:"var(--g-research)",cc:"#8A7FB0"}
+    {id:"idea",label:"Idea",c:"#9B8FC4",cc:"#9B8FC4"},
+    {id:"outreach",label:"Reach Out",c:"#C4632F",cc:"#C4632F"},
+    {id:"contacted",label:"Contacted",c:"#C6852A",cc:"#C6852A"},
+    {id:"scheduled",label:"Booked",c:"#2E8C74",cc:"#2E8C74"},
+    {id:"recorded",label:"Recorded",c:"#3A73B8",cc:"#3A73B8"},
+    {id:"published",label:"Published",c:"#6B8F3D",cc:"#6B8F3D"}
   ];
   var GIDS=GROUPS.map(function(g){return g.id;});
   function gObj(id){return GROUPS.filter(function(g){return g.id===id;})[0]||GROUPS[0];}
@@ -207,6 +208,8 @@
   // People you already have a relationship with (drag any card in/out to adjust)
   var CLIENTS={"Blair Conklin":1,"Paulo Prietto":1,"Shane Dorian":1};
   var HAVE_CONTACT={"Austin Keen":1,"Tanner McDaniel":1,"Greyson Fletcher":1,"Amber Torrealba":1,"Kalani Robb":1,"Nathan Florence":1,"Chris Monroe":1,"Robbie Crawford":1,"Paddy Mack":1,"James Ferrel":1,"Parker Seidel":1,"Evan Rossel":1,"Tfue":1,"Ryan Sheckler":1,"Jack Robinson":1,"Crosby Colapinto":1,"Griffin Colapinto":1,"Tyler Stanaland":1,"Koa Smith":1};
+  // Outreach already sent, awaiting reply
+  var PENDING={"Tony Hawk":1,"Kelly Slater":1,"John John Florence":1,"Conor McGregor":1,"Ilia Topuria":1,"Connor McDavid":1,"Alex Ovechkin":1,"Simone Biles":1,"Noah Lyles":1,"Alex Honnold":1,"Bert Kreischer":1,"Eileen Gu":1,"Travis Rice":1,"Ryan Garcia":1};
 
   // [name, category, repped-by, email, channel, confidence, source]
   var D=[
@@ -468,11 +471,10 @@
   ];
 
   function groupFor(name,email,conf){
-    if(CLIENTS[name])return "clients";
-    if(HAVE_CONTACT[name])return "contact";
-    if(email)return "email";
-    if(conf==="todo")return "research";
-    return "agency";
+    if(CLIENTS[name]||HAVE_CONTACT[name])return "scheduled";  // Booked
+    if(PENDING[name])return "contacted";
+    if(email)return "outreach";                               // Reach Out — you have a direct line
+    return "idea";
   }
   function buildSeed(){
     var seen={},out=[];
@@ -579,7 +581,7 @@
   function openModal(r,presetGroup){editingId=r?r.id:null;
     document.getElementById("mTitle").textContent=r?"Edit contact":"Add contact";
     document.getElementById("mSub").textContent=r?(r.cat||""):"New";
-    setV("f-name",r?r.name:"");setV("f-cat",r?r.cat:(catEl.value||""));setV("f-group",r?r.group:(presetGroup||"research"));
+    setV("f-name",r?r.name:"");setV("f-cat",r?r.cat:(catEl.value||""));setV("f-group",r?r.group:(presetGroup||"idea"));
     setV("f-email",r?r.email:"");setV("f-rep",r?r.rep:"");setV("f-conf",r?r.conf:"low");setV("f-channel",r?r.channel:"");setV("f-notes",r?(r.notes||""):"");
     document.getElementById("delBtn").hidden=!r;overlay.classList.add("open");setTimeout(function(){document.getElementById("f-name").focus();},30);}
   function setV(id,v){document.getElementById(id).value=v||"";}
@@ -607,7 +609,7 @@
   document.getElementById("exportBtn").addEventListener("click",function(){dl("yeahyou-contacts.json",JSON.stringify(state,null,2),"application/json");});
   document.getElementById("csvBtn").addEventListener("click",function(){var head=["Name","Category","Group","Email","Repped by","Channel","Confidence","Notes","Source"];var lines=[head.join(",")].concat(state.map(function(r){return [r.name,r.cat,gObj(r.group).label,r.email,r.rep,r.channel,r.conf,r.notes,r.src].map(function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");}));dl("yeahyou-contacts.csv",lines.join("\n"),"text/csv");});
   document.getElementById("importBtn").addEventListener("click",function(){document.getElementById("importFile").click();});
-  document.getElementById("importFile").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var data=JSON.parse(rd.result);if(!Array.isArray(data))throw 0;data.forEach(function(r){if(!r.id)r.id=uid();if(GIDS.indexOf(r.group)===-1)r.group="research";});if(state.length&&!confirm("Replace with "+data.length+" imported contacts?")){e.target.value="";return;}state=data;save();refreshCats();render();toast("Imported "+data.length);}catch(x){toast("Couldn't read that file.");}e.target.value="";};rd.readAsText(f);});
+  document.getElementById("importFile").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var data=JSON.parse(rd.result);if(!Array.isArray(data))throw 0;data.forEach(function(r){if(!r.id)r.id=uid();if(GIDS.indexOf(r.group)===-1)r.group="idea";});if(state.length&&!confirm("Replace with "+data.length+" imported contacts?")){e.target.value="";return;}state=data;save();refreshCats();render();toast("Imported "+data.length);}catch(x){toast("Couldn't read that file.");}e.target.value="";};rd.readAsText(f);});
 
   function copy(t){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast("Copied "+t);},fb);else fb();function fb(){try{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();toast("Copied "+t);}catch(e){toast("Copy failed");}}}
   var toastEl=document.getElementById("toast"),tt;function toast(m){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove("show");},1900);}
