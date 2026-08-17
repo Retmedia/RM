@@ -158,6 +158,17 @@
   .kpis li { font-size: 12.5px; color: var(--ink-soft); padding-left: 15px; position: relative; } .kpis li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); font-size: 10px; top: 2px; }
   .kpis li .kdel { display:none; margin-left:6px; color:var(--ink-faint); cursor:pointer; } body.editing .kpis li .kdel { display:inline; } .kpis li .kdel:hover { color: var(--red); }
 
+  .acct-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+  .acct { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+  .acct-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .acct-name { font-weight: 700; font-size: 16px; }
+  .acct-tags { font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
+  .acct-owner { font-family: var(--mono); font-size: 11.5px; color: var(--accent); margin: 4px 0 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+  .acct-owner span { color: var(--accent); }
+  .acct-items li { font-size: 12.5px; color: var(--ink-soft); padding-left: 15px; position: relative; }
+  .acct-items li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); font-size: 10px; top: 2px; }
+  .acct-items li .kdel { display:none; margin-left:6px; color:var(--ink-faint); cursor:pointer; } body.editing .acct-items li .kdel { display:inline; } .acct-items li .kdel:hover { color: var(--red); }
+
   .engine { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
   .engine .num-tag { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; } .engine h3 { margin: 6px 0 6px; font-size: 15.5px; } .engine p { margin: 0; font-size: 13px; color: var(--ink-soft); } .engine .own { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-top: 10px; }
 
@@ -258,6 +269,14 @@
   </section>
 
   <section>
+    <p class="eyebrow">RM org breakdown · who does what, for whom</p>
+    <h2 data-ep="copy.acctTitle"></h2>
+    <p class="sec-note" data-ep="copy.acctNote"></p>
+    <div class="grid acct-grid" id="accounts"></div>
+    <div class="editonly block"><button class="addbtn" id="add-acct">+ Add account</button></div>
+  </section>
+
+  <section>
     <p class="eyebrow">Footage in → published out</p>
     <h2 data-ep="copy.pipeTitle"></h2>
     <p class="sec-note" data-ep="copy.pipeNote"></p>
@@ -307,7 +326,7 @@
 <script>
 (function () {
   "use strict";
-  var KEY = "retmedia-org-model-v2";
+  var KEY = "retmedia-org-model-v3";
 
   var DEFAULTS = {
     editing: true,
@@ -316,11 +335,13 @@
       h1: "An org built so the founder does only two things.",
       lede: "Everything here is editable — click any text or number. Change comp or revenue and the run-rate, recurring floor, concentration, guardrails, and risk register all recompute instantly.",
       teamTitle: "Team & costs",
-      teamNote: "Monthly cost = rate × qty. Edit the rate, quantity, or assignment — the run-rate and every derived figure update live. (Interns default to $150 each for Blair's 30 videos/mo.)",
+      teamNote: "Monthly cost = rate × qty. Edit the rate, quantity, or assignment — the run-rate and every derived figure update live. Julia (real estate) and Skylar (podcast) are on the roster at $0 until you set their rate.",
       clientTitle: "Clients & revenue",
       clientNote: "Recurring $/mo feeds the monthly floor; YTD $ drives the concentration analysis below.",
       structTitle: "The structure",
       structNote: "A deliberately lean pyramid. The Social Media Manager is the unlock hire that removes QC, scheduling, and access from the founder.",
+      acctTitle: "Account scope & assignments",
+      acctNote: "The RM org breakdown — exactly what each account gets every week/month and who owns it. This is the delivery contract the whole pyramid runs against.",
       pipeTitle: "The production pipeline",
       pipeNote: "One canonical flow for every client. The founder's touch on QC and publish drops away once the SMM earns publishing trust.",
       scoreTitle: "Role scorecards",
@@ -331,10 +352,11 @@
       recNote: "Findings from auditing everything — QuickBooks revenue & A/R, the Notion CRM, billing, access, and team economics. Edit, reorder, or add your own."
     },
     team: [
-      { id: "victor",  role: "Editor",               who: "Victor",     serves: "Xander", rate: 400, qty: 1, unit: "/mo" },
-      { id: "intern1", role: "Intern Editor 1",      who: "",           serves: "Blair",  rate: 150, qty: 1, unit: "Blair 30/mo" },
-      { id: "intern2", role: "Intern Editor 2",      who: "",           serves: "Blair",  rate: 150, qty: 1, unit: "Blair 30/mo" },
-      { id: "smm",     role: "Social Media Manager", who: "recruiting", serves: "All",    rate: 0,   qty: 1, unit: "unpaid → 800–1200" }
+      { id: "viktor",  role: "Editor / SMM",           who: "Viktor",     serves: "Xander + Podcast",                   rate: 400, qty: 1, unit: "/mo" },
+      { id: "intern1", role: "Intern Editor / SMM",    who: "",           serves: "Blair",                              rate: 150, qty: 1, unit: "Blair 30/mo" },
+      { id: "smm",     role: "Social Media Manager",   who: "recruiting", serves: "Foreign Waters · Lucas · reposting", rate: 0,   qty: 1, unit: "unpaid → 800–1200" },
+      { id: "julia",   role: "Real-estate posts",      who: "Julia",      serves: "Paulo · Tara",                       rate: 0,   qty: 1, unit: "/mo" },
+      { id: "skylar",  role: "Podcast film / produce", who: "Skylar",     serves: "Yeah You Podcast",                   rate: 0,   qty: 1, unit: "/mo" }
     ],
     clients: [
       { id: "blair",  name: "Blair Conklin",   status: "Active",  model: "Rev-share", mrr: 0,   share: 35, ytd: 19984 },
@@ -342,6 +364,7 @@
       { id: "paulo",  name: "Paulo Prietto",   status: "Active",  model: "Recurring", mrr: 900, share: 0,  ytd: 2700 },
       { id: "fw",     name: "Foreign Waters",  status: "Active",  model: "Project",   mrr: 0,   share: 0,  ytd: 1500 },
       { id: "tara",   name: "Tara Bunker",     status: "Sep 1",   model: "Recurring", mrr: 900, share: 0,  ytd: 1299 },
+      { id: "lucas",  name: "Lucas Fink",      status: "Active",  model: "Project",   mrr: 0,   share: 0,  ytd: 0 },
       { id: "nathan", name: "Nathan Florence", status: "One-off", model: "Project",   mrr: 0,   share: 0,  ytd: 28 }
     ],
     org: {
@@ -350,13 +373,54 @@
         { id: "fn1", role: "Sales / Pipeline", sop: "held by Garrett · skill: rm-sales" },
         { id: "fn2", role: "Accounting / Billing", sop: "held by Garrett · skill: ret-media-accountant" }
       ],
-      smm: { role: "Social Media Manager", who: "recruiting · the unlock hire", desc: "QC every video · scheduling · RM Drive · access hygiene" },
+      smm: { role: "Social Media Manager", who: "recruiting · the unlock hire", desc: "QC · scheduling · RM Drive · access · cross-platform reposting" },
       tier3: [
-        { id: "n1", role: "Editor", who: "Victor", desc: "~30 shorts + 1 midform/wk" },
-        { id: "n2", role: "Intern Editor 1", who: "Blair's 30/mo", desc: "Short-form cuts → RM/Intern review" },
-        { id: "n3", role: "Intern Editor 2", who: "Blair's 30/mo", desc: "Short-form cuts → RM/Intern review" }
+        { id: "n1", role: "Editor / SMM", who: "Viktor", desc: "Xander clips + Yeah You podcast shorts" },
+        { id: "n2", role: "Intern Editor / SMM", who: "Blair", desc: "Blair longform + 30 posts/mo" },
+        { id: "n3", role: "Social Media Manager", who: "recruiting", desc: "Foreign Waters · Lucas Fink · reposting" },
+        { id: "n4", role: "Real-estate posts", who: "Julia", desc: "Paulo + Tara IG posts" },
+        { id: "n5", role: "Podcast film / produce", who: "Skylar", desc: "Films & produces Yeah You" }
       ]
     },
+    accounts: [
+      { id: "ac-xander", name: "Xander Budnick", owner: "Viktor — Editor / SMM", tags: "YouTube · TikTok · FB", items: [
+        "2 midforms/week on YouTube, repurposed to TikTok & Facebook",
+        "1–2 short-form bangers/day — one educational/informative, one entertaining (funny, bear encounters, etc.)"
+      ] },
+      { id: "ac-blair", name: "Blair Conklin", owner: "Intern Editor — Editor / SMM", tags: "FB · TikTok · YT Shorts", items: [
+        "10 RAW longform river videos/month (4–20 min, vertical, for Facebook)",
+        "30 1-min+ posts from iCloud footage → TikTok / YT Shorts / Facebook",
+        "Repurpose all longform from YouTube → Facebook"
+      ] },
+      { id: "ac-paulo", name: "Paulo Prietto", owner: "Garrett / Julia", tags: "Instagram · Real estate", items: [
+        "2–3 real-estate posts/week"
+      ] },
+      { id: "ac-tara", name: "Tara Bunker", owner: "Julia", tags: "Instagram · Real estate", items: [
+        "2 real-estate posts/week"
+      ] },
+      { id: "ac-fw", name: "Foreign Waters", owner: "Social Media Manager", tags: "TikTok Shop · UGC", items: [
+        "Full TikTok Shop management",
+        "Trybe — TT Shop seller center",
+        "Organic posts 2×/week",
+        "UGC coordination",
+        "Probe roster athletes on working scripts from UGC",
+        "Athlete roster posts on their own accounts + link product"
+      ] },
+      { id: "ac-shane", name: "Shane Dorian — Surf Longevity", owner: "Garrett", tags: "Skool · Course", items: [
+        "Surf Longevity project",
+        "Skool course build / Skool management"
+      ] },
+      { id: "ac-lucas", name: "Lucas Fink", owner: "Social Media Manager", tags: "Facebook", items: [
+        "Repurpose already-posted videos → Facebook"
+      ] },
+      { id: "ac-pod", name: "Yeah You Podcast", owner: "Garrett · Skylar · Viktor · SMM", tags: "YouTube · Podcast", items: [
+        "4 pods/month",
+        "Garrett edits the full podcast + creates thumbnail & title",
+        "Skylar films & produces",
+        "Viktor: 2 YT Shorts/week (main channel) + 3 shorts → Garrett Abdulla personal + 2 midforms/week",
+        "SMM reposts across all platforms — TikTok, Facebook, IG (bangers only), X"
+      ] }
+    ],
     pipeline: [
       { id: "s1", n: "01", t: "Footage In", o: "Client · R", d: "Shared cloud folder, auto-upload on." },
       { id: "s2", n: "02", t: "Edit", o: "Victor + Interns · R", d: "Cut to the client's style guide." },
@@ -473,6 +537,18 @@
   }
 
   /* ---------- pipeline / scorecards / engines / recs ---------- */
+  function buildAccounts() {
+    document.getElementById("accounts").innerHTML = state.accounts.map(function (a, i) {
+      var items = a.items.map(function (it, j) {
+        return '<li><span data-ep="accounts.' + i + '.items.' + j + '"></span><span class="kdel" data-act="del-item" data-id="' + a.id + '" data-j="' + j + '">×</span></li>';
+      }).join("");
+      return '<div class="acct"><button class="del" data-act="del-acct" data-id="' + a.id + '">×</button>' +
+        '<div class="acct-head"><span class="acct-name" data-ep="accounts.' + i + '.name"></span><span class="acct-tags" data-ep="accounts.' + i + '.tags"></span></div>' +
+        '<div class="acct-owner">Owner: <span data-ep="accounts.' + i + '.owner"></span></div>' +
+        '<ul class="kpis acct-items">' + items + '</ul>' +
+        '<button class="addbtn editonly" data-act="add-item" data-id="' + a.id + '" style="margin-top:8px;font-size:10.5px;padding:4px 9px">+ deliverable</button></div>';
+    }).join("");
+  }
   function buildPipe() {
     document.getElementById("pipe").innerHTML = state.pipeline.map(function (s, i) {
       return '<div class="step"><button class="del" data-act="del-step" data-id="' + s.id + '">×</button>' +
@@ -577,7 +653,7 @@
   }
 
   function rebuildAll() {
-    fillText(); buildTeam(); buildClients(); buildOrg(); buildPipe(); buildScores(); buildEngines(); buildRecs();
+    fillText(); buildTeam(); buildClients(); buildOrg(); buildAccounts(); buildPipe(); buildScores(); buildEngines(); buildRecs();
     applyEdit(); recalc();
   }
   function findRow(sec, id) { var a = state[sec]; for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
@@ -619,7 +695,10 @@
     else if (act === "del-kpi") { var s2 = findRow("scorecards", id); if (s2) { s2.kpis.splice(+b.dataset.j, 1); buildScores(); fillText(); applyEdit(); save(); } }
     else if (act === "del-engine") { state.engines = state.engines.filter(function (x) { return x.id !== id; }); buildEngines(); fillText(); applyEdit(); }
     else if (act === "del-rec") { state.recs = state.recs.filter(function (r) { return r.id !== id; }); buildRecs(); fillText(); applyEdit(); }
-    if (["del-fn","del-node","del-step","del-score","del-engine","del-rec"].indexOf(act) >= 0) save();
+    else if (act === "del-acct") { state.accounts = state.accounts.filter(function (a) { return a.id !== id; }); buildAccounts(); fillText(); applyEdit(); }
+    else if (act === "add-item") { var ac = findRow("accounts", id); if (ac) { ac.items.push("New deliverable"); buildAccounts(); fillText(); applyEdit(); save(); } }
+    else if (act === "del-item") { var ac2 = findRow("accounts", id); if (ac2) { ac2.items.splice(+b.dataset.j, 1); buildAccounts(); fillText(); applyEdit(); save(); } }
+    if (["del-fn","del-node","del-step","del-score","del-engine","del-rec","del-acct"].indexOf(act) >= 0) save();
   });
   document.getElementById("add-team").addEventListener("click", function () { state.team.push({ id: "t" + Date.now(), role: "New role", who: "", serves: "", rate: 0, qty: 1, unit: "/mo" }); buildTeam(); applyEdit(); recalc(); });
   document.getElementById("add-client").addEventListener("click", function () { state.clients.push({ id: "c" + Date.now(), name: "New client", status: "Trial", model: "Recurring", mrr: 0, share: 0, ytd: 0 }); buildClients(); applyEdit(); recalc(); });
@@ -627,6 +706,7 @@
   document.getElementById("add-score").addEventListener("click", function () { state.scorecards.push({ id: "sc" + Date.now(), role: "New role", who: "", kpis: ["New KPI"] }); buildScores(); fillText(); applyEdit(); save(); });
   document.getElementById("add-engine").addEventListener("click", function () { state.engines.push({ id: "e" + Date.now(), tag: "Engine", title: "New engine", body: "", own: "" }); buildEngines(); fillText(); applyEdit(); save(); });
   document.getElementById("add-rec").addEventListener("click", function () { state.recs.push({ id: "r" + Date.now(), chip: "soon", label: "This month", title: "New recommendation", body: "" }); buildRecs(); fillText(); applyEdit(); save(); });
+  document.getElementById("add-acct").addEventListener("click", function () { state.accounts.push({ id: "ac" + Date.now(), name: "New account", owner: "Owner", tags: "Platform", items: ["New deliverable"] }); buildAccounts(); fillText(); applyEdit(); save(); });
 
   // controls
   document.getElementById("toggle-edit").addEventListener("click", function () { state.editing = !state.editing; applyEdit(); save(); });
