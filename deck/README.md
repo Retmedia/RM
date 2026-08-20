@@ -1,34 +1,48 @@
-# RM Dispatch Deck
+# RM Org Blueprint
 
-`index.html` is a single self-contained page — the RET Media org breakdown rebuilt as a
-live work board. Open it directly in a browser, or use the published artifact.
+`index.html` is a single self-contained page — RET Media's roster, deliverables and
+reporting lines, with my recommended restructure sitting next to the current one.
 
-## What's in it
+## The switch
 
-- **Board** — every deliverable as a card moving through Queue → In progress → QC → Shipped.
-  Group by stage, by person, or by account; drag cards to move, reassign, or reallocate them.
-- **Roster** — the team with weekly targets, banked points, levels and badges, plus a
-  this-week leaderboard.
-- **Accounts** — the delivery contract per client. Any line can be pushed onto the board.
-- **Weekly output** — the reference distribution tables, editable cell by cell.
-- **Org chart** — redraws from the "reports to" controls underneath it.
+Everything on the page reads from a **Today / Proposed** toggle in the header (or press `P`).
+Roster loads, the org chart, account owners and every headline number recompute against
+whichever scenario is selected, so the two structures are the same page rather than two
+documents.
 
-## Points and the weekly reset
+## Views
 
-Each card carries a point value. Shipping a card banks those points to its owner, feeding
-their level and the team meter. A person's weekly target defaults to the sum of the points
-they own; set a number in their editor to override it.
+- **Roster** — a card per seat: role, reporting line, direct reports, pay, weekly load
+  against capacity, and every deliverable they own grouped by account. Drag any deliverable
+  onto another person to move it. In Proposed, moves are stored separately, so the "today"
+  picture never changes underneath you.
+- **Org chart** — redraws from the reports-to controls beneath it. Seats cut in the proposal
+  disappear from the proposed chart.
+- **Accounts** — the delivery contract per client, with the owner and hours on every line.
+- **The plan** — the recommendation: eight moves with reasoning and impact, a sequence, and
+  the risks. Fully editable.
+- **Weekly output** — the original distribution tables.
 
-When the ISO week rolls over the deck archives the week into history, resets everyone's
-weekly count, moves recurring shipped work back to the queue (monthly work waits for the
-month to turn), and extends or breaks the team streak.
+## The model
+
+Every deliverable carries an estimated **hours a week**. A person's load is the sum of what
+they own; capacity is per seat and editable. There is no scoring or task tracking — the
+hours exist to answer one question: does this seat justify a hire.
+
+Totals are conserved across scenarios — 118.5 hours either way. The proposal redistributes
+work, it does not add or remove any.
+
+## Locked seats
+
+A seat can be marked **Locked** in its editor. Julia is locked: her scope, reporting line and
+pay are identical in both scenarios, her reports-to control is disabled, and deliverables
+cannot be dragged into or out of her card.
 
 ## Saving
 
-Every change writes to `localStorage` under `rm_dispatch_deck_v1` — per browser, no save
-button. Use ⋯ → *Download backup* to take a `.json` file and *Restore from backup* to load
-one on another machine.
+Every edit writes to `localStorage` under `rm_org_blueprint_v1` as you type — per browser,
+no save button. ⋯ → *Download backup* takes a `.json`; *Restore from backup* loads one.
 
 ## Keyboard
 
-`/` search · `N` new work · `1`–`5` switch view · `⌘/Ctrl+Z` undo · `Esc` close
+`P` toggle scenario · `1`–`5` switch view · `⌘/Ctrl+Z` undo · `Esc` close
