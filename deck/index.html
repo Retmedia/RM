@@ -1,344 +1,260 @@
 <title>RM Org Blueprint</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
-  --ground:#EFE8E0; --surface:#FFFFFF; --surface-2:#F7F2EB; --surface-3:#E8DFD3;
-  --line:#E2D8CB; --line-2:#CDC0AF;
-  --ink:#1C1611; --ink-soft:#5B4F44; --ink-faint:#8E8073;
-  --coral:#C04A2E; --amber:#9C6A11; --teal:#0B7568; --indigo:#2B569E; --violet:#6A3E9C; --moss:#4A7228;
-  --coral-w:rgba(192,74,46,.11); --amber-w:rgba(156,106,17,.13); --teal-w:rgba(11,117,104,.12);
-  --indigo-w:rgba(43,86,158,.11); --violet-w:rgba(106,62,156,.11); --moss-w:rgba(74,114,40,.12);
-  --accent:#C04A2E; --accent-w:rgba(192,74,46,.11); --on-accent:#FFFFFF;
-  --good:#0B7568; --good-w:rgba(11,117,104,.12);
-  --warn:#9C6A11; --warn-w:rgba(156,106,17,.13);
-  --shadow:0 1px 1px rgba(58,40,26,.05),0 4px 14px rgba(58,40,26,.07);
-  --shadow-lift:0 6px 14px rgba(58,40,26,.13),0 22px 46px rgba(58,40,26,.17);
-  --r:13px; --r-sm:9px; --r-xs:6px;
-  --mono:"DM Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --ground:#F2EDE6; --surface:#FFFFFF; --surface-2:#F8F4EE; --sunk:#EBE4DA;
+  --line:#E3DACE; --line-2:#D0C4B4;
+  --ink:#241D16; --ink-soft:#574C41; --ink-faint:#8A7C6E;
+  --coral:#B8452B; --amber:#96650F; --teal:#0B6F63; --indigo:#2A5395; --violet:#663C96; --moss:#456C26;
+  --coral-w:rgba(184,69,43,.10); --amber-w:rgba(150,101,15,.12); --teal-w:rgba(11,111,99,.11);
+  --indigo-w:rgba(42,83,149,.10); --violet-w:rgba(102,60,150,.10); --moss-w:rgba(69,108,38,.11);
+  --accent:#B8452B; --accent-w:rgba(184,69,43,.10); --on-accent:#FFFFFF;
+  --shadow:0 1px 1px rgba(58,40,26,.04),0 3px 12px rgba(58,40,26,.06);
+  --shadow-lift:0 6px 14px rgba(58,40,26,.12),0 22px 46px rgba(58,40,26,.16);
+  --r:16px; --r-sm:11px; --r-xs:7px;
+  --sans:"Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ground:#14100D; --surface:#221D18; --surface-2:#1A1512; --surface-3:#2E2720;
-  --line:#332B23; --line-2:#483C30;
-  --ink:#F3ECE3; --ink-soft:#B3A596; --ink-faint:#857668;
-  --coral:#FF8163; --amber:#E8A845; --teal:#38C6AC; --indigo:#7BA5F0; --violet:#B68FF2; --moss:#A5D165;
-  --coral-w:rgba(255,129,99,.15); --amber-w:rgba(232,168,69,.15); --teal-w:rgba(56,198,172,.14);
-  --indigo-w:rgba(123,165,240,.15); --violet-w:rgba(182,143,242,.15); --moss-w:rgba(165,209,101,.14);
-  --accent:#FF8163; --accent-w:rgba(255,129,99,.15); --on-accent:#1E0D06;
-  --good:#38C6AC; --good-w:rgba(56,198,172,.14);
-  --warn:#E8A845; --warn-w:rgba(232,168,69,.15);
-  --shadow:0 1px 2px rgba(0,0,0,.5),0 8px 26px rgba(0,0,0,.44);
-  --shadow-lift:0 8px 18px rgba(0,0,0,.56),0 26px 56px rgba(0,0,0,.64);
+  --ground:#16120E; --surface:#241E18; --surface-2:#1C1713; --sunk:#120F0C;
+  --line:#352C23; --line-2:#4A3E32;
+  --ink:#F4EEE6; --ink-soft:#BCAE9E; --ink-faint:#8B7C6D;
+  --coral:#FF8A6E; --amber:#EBB055; --teal:#48CFB6; --indigo:#82ABF2; --violet:#BC99F4; --moss:#AAD473;
+  --coral-w:rgba(255,138,110,.14); --amber-w:rgba(235,176,85,.14); --teal-w:rgba(72,207,182,.13);
+  --indigo-w:rgba(130,171,242,.14); --violet-w:rgba(188,153,244,.14); --moss-w:rgba(170,212,115,.13);
+  --accent:#FF8A6E; --accent-w:rgba(255,138,110,.14); --on-accent:#20100A;
+  --shadow:0 1px 2px rgba(0,0,0,.42),0 6px 22px rgba(0,0,0,.36);
+  --shadow-lift:0 8px 18px rgba(0,0,0,.54),0 26px 56px rgba(0,0,0,.62);
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --ground:#14100D; --surface:#221D18; --surface-2:#1A1512; --surface-3:#2E2720;
-  --line:#332B23; --line-2:#483C30;
-  --ink:#F3ECE3; --ink-soft:#B3A596; --ink-faint:#857668;
-  --coral:#FF8163; --amber:#E8A845; --teal:#38C6AC; --indigo:#7BA5F0; --violet:#B68FF2; --moss:#A5D165;
-  --coral-w:rgba(255,129,99,.15); --amber-w:rgba(232,168,69,.15); --teal-w:rgba(56,198,172,.14);
-  --indigo-w:rgba(123,165,240,.15); --violet-w:rgba(182,143,242,.15); --moss-w:rgba(165,209,101,.14);
-  --accent:#FF8163; --accent-w:rgba(255,129,99,.15); --on-accent:#1E0D06;
-  --good:#38C6AC; --good-w:rgba(56,198,172,.14);
-  --warn:#E8A845; --warn-w:rgba(232,168,69,.15);
-  --shadow:0 1px 2px rgba(0,0,0,.5),0 8px 26px rgba(0,0,0,.44);
-  --shadow-lift:0 8px 18px rgba(0,0,0,.56),0 26px 56px rgba(0,0,0,.64);
+  --ground:#16120E; --surface:#241E18; --surface-2:#1C1713; --sunk:#120F0C;
+  --line:#352C23; --line-2:#4A3E32;
+  --ink:#F4EEE6; --ink-soft:#BCAE9E; --ink-faint:#8B7C6D;
+  --coral:#FF8A6E; --amber:#EBB055; --teal:#48CFB6; --indigo:#82ABF2; --violet:#BC99F4; --moss:#AAD473;
+  --coral-w:rgba(255,138,110,.14); --amber-w:rgba(235,176,85,.14); --teal-w:rgba(72,207,182,.13);
+  --indigo-w:rgba(130,171,242,.14); --violet-w:rgba(188,153,244,.14); --moss-w:rgba(170,212,115,.13);
+  --accent:#FF8A6E; --accent-w:rgba(255,138,110,.14); --on-accent:#20100A;
+  --shadow:0 1px 2px rgba(0,0,0,.42),0 6px 22px rgba(0,0,0,.36);
+  --shadow-lift:0 8px 18px rgba(0,0,0,.54),0 26px 56px rgba(0,0,0,.62);
   color-scheme:dark;
 }
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62;
+  -webkit-font-smoothing:antialiased;letter-spacing:-.003em}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-h1,h2,h3,h4{margin:0;letter-spacing:-.02em;text-wrap:balance}
-.mono{font-family:var(--mono)}
-.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+h1,h2,h3{margin:0;letter-spacing:-.022em;line-height:1.2;text-wrap:balance}
 
-/* ---------- chrome ---------- */
-.shell{max-width:1580px;margin:0 auto;padding:0 clamp(12px,2.4vw,26px) 96px}
-.topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--ground) 90%,transparent);backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--line);margin:0 calc(-1 * clamp(12px,2.4vw,26px));padding:11px clamp(12px,2.4vw,26px) 0}
+.shell{max-width:1180px;margin:0 auto;padding:0 clamp(16px,3vw,30px) 110px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);margin:0 calc(-1 * clamp(16px,3vw,30px));padding:14px clamp(16px,3vw,30px) 0}
 .tb-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-.mark{width:26px;height:26px;border-radius:7px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;
-  font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:-.04em;flex:none}
-.brand h1{font-size:15.5px;font-weight:800;letter-spacing:-.025em;line-height:1.1;white-space:nowrap}
-.brand .sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
-.tb-spacer{flex:1 1 20px}
-
-.hud{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.hud-block{display:flex;flex-direction:column;gap:3px}
-.hud-block .k{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:baseline;gap:7px;white-space:nowrap}
-.hud-block .k b{color:var(--ink-soft);font-weight:500}
-.meter{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
-.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--amber)));transition:width .5s cubic-bezier(.22,.61,.36,1)}
-.meter.good i{background:linear-gradient(90deg,var(--good),color-mix(in srgb,var(--good) 60%,var(--moss)))}
-.scenario{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:var(--surface)}
-.scenario button{border:none;border-radius:0;background:transparent;padding:8px 15px;font-size:12.5px;font-weight:700;color:var(--ink-faint);letter-spacing:-.01em}
-.scenario button.on{background:var(--accent);color:var(--on-accent)}
-.scenario button.on[data-sc="proposed"]{background:var(--teal);color:var(--ground)}
-
-button{font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
-  border-radius:9px;padding:8px 12px;display:inline-flex;align-items:center;gap:7px;transition:border-color .14s,background .14s,color .14s,transform .07s}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.mark{width:30px;height:30px;border-radius:9px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;
+  font-size:13px;font-weight:700;letter-spacing:-.02em;flex:none}
+.brand h1{font-size:18px;font-weight:700}
+.brand .sub{font-size:14px;color:var(--ink-faint);margin-top:1px}
+.tb-grow{flex:1}
+button{font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--line-2);background:var(--surface);
+  color:var(--ink);border-radius:10px;padding:8px 14px;display:inline-flex;align-items:center;gap:8px;
+  transition:border-color .14s,background .14s,color .14s,transform .07s;letter-spacing:-.006em}
 button:hover{border-color:var(--ink-faint)}
 button:active{transform:translateY(1px)}
 button.primary{background:var(--accent);color:var(--on-accent);border-color:transparent}
-button.primary:hover{background:color-mix(in srgb,var(--accent) 86%,var(--ink));border-color:transparent}
 button.quiet{background:transparent;border-color:var(--line)}
 button.quiet:hover{background:var(--surface)}
-button.icon{padding:8px 10px}
-button.danger{color:var(--coral);border-color:color-mix(in srgb,var(--coral) 40%,var(--line-2))}
-button.dashed{border-style:dashed;background:transparent;color:var(--ink-faint);font-weight:500}
-button.dashed:hover{color:var(--accent);border-color:var(--accent)}
-button.tiny{font-size:11px;padding:4px 8px;border-radius:7px;font-weight:500}
+button.icon{padding:8px 11px}
+button.danger{color:var(--coral);border-color:color-mix(in srgb,var(--coral) 38%,var(--line-2))}
+button.soft{border-style:dashed;background:transparent;color:var(--ink-faint);font-weight:500}
+button.soft:hover{color:var(--accent);border-color:var(--accent)}
+button.tiny{font-size:13px;padding:4px 9px;border-radius:8px;font-weight:500}
+.savechip{font-size:13.5px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.savechip .pip{width:7px;height:7px;border-radius:50%;background:var(--teal);transition:background .2s}
+.savechip.dirty .pip{background:var(--amber)}
 
-.tabs{display:flex;gap:2px;margin-top:11px;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;gap:4px;margin-top:14px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{border:none;background:transparent;border-radius:0;padding:9px 13px 11px;font-size:13px;font-weight:600;color:var(--ink-faint);
-  border-bottom:2px solid transparent;white-space:nowrap;gap:8px}
+.tab{border:none;background:transparent;border-radius:0;padding:10px 14px 13px;font-size:16px;font-weight:600;color:var(--ink-faint);
+  border-bottom:2px solid transparent;white-space:nowrap}
 .tab:hover{color:var(--ink-soft);border-color:var(--line-2)}
 .tab[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
-.tab .cnt{font-family:var(--mono);font-size:10px;font-weight:500;padding:1px 6px;border-radius:20px;background:var(--surface-2);color:var(--ink-faint);border:1px solid var(--line)}
-.tab[aria-selected="true"] .cnt{background:var(--accent-w);color:var(--accent);border-color:transparent}
 
-.savechip{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);
-  display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.savechip .pip{width:7px;height:7px;border-radius:50%;background:var(--good);transition:background .2s}
-.savechip.dirty .pip{background:var(--warn)}
-</style>
-<style>
-/* ---------- section furniture ---------- */
-.view{display:none;padding-top:22px}
+/* sections */
+.view{display:none;padding-top:34px}
 .view.on{display:block}
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:500}
-.sechead{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-.sechead h2{font-size:21px;font-weight:800}
-.sechead .note{font-size:13.5px;color:var(--ink-soft);max-width:64ch;margin-top:4px}
-.sechead .grow{flex:1}
-.hint{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);white-space:nowrap}
-.cell{border:1px solid transparent;border-radius:var(--r-xs);padding:2px 5px;margin:-2px -5px;cursor:text;word-break:break-word}
+.lead h2{font-size:clamp(26px,3.4vw,34px);font-weight:800}
+.lead p{font-size:18px;color:var(--ink-soft);max-width:64ch;margin:12px 0 0;line-height:1.6}
+.lead{margin-bottom:30px}
+.headrow{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.headrow .grow{flex:1}
+h3.block{font-size:22px;font-weight:700;margin-bottom:6px}
+.blocknote{font-size:16px;color:var(--ink-soft);max-width:62ch}
+.tip{font-size:14px;color:var(--ink-faint)}
+
+.cell{border:1px solid transparent;border-radius:var(--r-xs);padding:2px 6px;margin:-2px -6px;cursor:text;word-break:break-word}
 .cell:hover{border-color:var(--line-2);background:var(--surface-2)}
 .cell:focus{outline:none;border-color:var(--accent);background:var(--surface-2)}
 .cell:empty::before{content:attr(data-ph);color:var(--ink-faint);font-style:italic}
 .rowdel{opacity:0;transition:opacity .12s}
-li:hover .rowdel,li:focus-within .rowdel,tr:hover .rowdel{opacity:1}
+li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 
-/* ---------- roster ---------- */
-.tierbar{display:flex;align-items:center;gap:12px;margin:30px 0 13px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--ink-faint)}
-.tierbar:first-child{margin-top:0}
-.tierbar .ln{flex:1;height:1px;background:var(--line)}
-.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;align-items:start}
+/* roster */
+.layer{margin:34px 0 16px;display:flex;align-items:baseline;gap:12px}
+.layer:first-child{margin-top:0}
+.layer .name{font-size:15px;font-weight:700;color:var(--ink-faint)}
+.layer .ln{flex:1;height:1px;background:var(--line);transform:translateY(-3px)}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px;align-items:start}
 .pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);
   position:relative;touch-action:pan-y;overflow:hidden}
-.pcard.cut{opacity:.62}
-.pcard.cut .phead{background:repeating-linear-gradient(135deg,transparent,transparent 9px,var(--coral-w) 9px,var(--coral-w) 18px)}
-.phead{padding:15px 16px 13px;display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line)}
-.avatar{width:42px;height:42px;border-radius:12px;background:var(--c);color:var(--surface);display:grid;place-items:center;
-  font-size:15px;font-weight:800;letter-spacing:-.03em;flex:none}
+.pcard.over{outline:2px dashed var(--accent);outline-offset:3px}
+.phead{padding:20px 22px 16px;display:flex;gap:14px;align-items:flex-start}
+.avatar{width:46px;height:46px;border-radius:14px;background:var(--c);color:#fff;display:grid;place-items:center;
+  font-size:17px;font-weight:700;letter-spacing:-.02em;flex:none}
 :root[data-theme="dark"] .avatar{color:var(--ground)}
-.pname{font-size:17px;font-weight:800;letter-spacing:-.025em;line-height:1.1}
-.prole{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--c);margin-top:4px;line-height:1.4}
-.prole .was{color:var(--ink-faint);text-decoration:line-through;margin-right:6px}
-.pline{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 12px}
-.pline b{color:var(--ink-soft);font-weight:500}
-.flag{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;
-  border-radius:20px;margin-top:8px;font-weight:500}
-.flag.keep{background:var(--surface-2);color:var(--ink-faint);border:1px solid var(--line)}
-.flag.change{background:var(--teal-w);color:var(--teal)}
-.flag.cut{background:var(--coral-w);color:var(--coral)}
-.flag.hire{background:var(--amber-w);color:var(--amber)}
-.flag.locked{background:var(--violet-w);color:var(--violet)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .avatar{color:var(--ground)}}
+.pname{font-size:21px;font-weight:800;letter-spacing:-.025em;line-height:1.15}
+.prole{font-size:15.5px;font-weight:600;color:var(--c);margin-top:2px}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;margin-top:9px;background:var(--tw);color:var(--tc)}
+.psec{padding:0 22px 18px}
+.psec h4{margin:0 0 9px;font-size:14px;font-weight:700;color:var(--ink-faint);letter-spacing:0}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.plist li{display:flex;gap:10px;align-items:baseline;font-size:15.5px;color:var(--ink-soft);line-height:1.5}
+.plist li .bullet{width:6px;height:6px;border-radius:2px;background:var(--c);opacity:.65;flex:none;transform:translateY(-2px)}
+.plist li .txt{flex:1;min-width:0}
+.jobs{padding:0 22px 8px}
+.jgroup{margin-bottom:16px}
+.jgroup .gname{font-size:14px;font-weight:700;color:var(--gc);margin-bottom:7px}
+.jlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.jlist li{display:flex;gap:10px;align-items:baseline;font-size:15.5px;color:var(--ink-soft);line-height:1.5;
+  padding:5px 7px;margin:0 -7px;border-radius:var(--r-xs);cursor:grab;touch-action:pan-y}
+.jlist li:hover{background:var(--surface-2)}
+.jlist li .bullet{width:6px;height:6px;border-radius:2px;background:var(--gc);opacity:.65;flex:none;transform:translateY(-2px)}
+.jlist li .txt{flex:1;min-width:0}
+.jlist li .beat{font-size:13px;color:var(--ink-faint);white-space:nowrap;font-weight:500}
+.pfoot{padding:15px 22px 18px;border-top:1px solid var(--line);font-size:14.5px;color:var(--ink-faint);
+  display:flex;gap:6px 22px;flex-wrap:wrap}
+.pfoot b{color:var(--ink-soft);font-weight:600}
+.pnote{margin:0 22px 20px;font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-left:3px solid var(--c);
+  border-radius:var(--r-sm);padding:12px 15px;line-height:1.55}
+.cardtools{position:absolute;top:16px;right:18px;display:flex;gap:5px;opacity:0;transition:opacity .13s}
+.pcard:hover .cardtools,.pcard:focus-within .cardtools,.acard:hover .cardtools,.acard:focus-within .cardtools,
+.move:hover .cardtools,.move:focus-within .cardtools,.risk:hover .cardtools,.risk:focus-within .cardtools{opacity:1}
 
-.loadwrap{padding:12px 16px 13px;border-bottom:1px solid var(--line)}
-.loadrow{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:9.5px;
-  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
-.loadrow b{font-size:14px;color:var(--ink);letter-spacing:-.01em;text-transform:none;font-weight:700;font-variant-numeric:tabular-nums}
-.loadrow .delta{font-size:10.5px;letter-spacing:0;text-transform:none}
-.delta.up{color:var(--amber)} .delta.down{color:var(--teal)}
-.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line);position:relative}
-.bar i{display:block;height:100%;background:var(--c);opacity:.85;transition:width .45s cubic-bezier(.22,.61,.36,1)}
-.bar.over i{background:var(--coral);opacity:1}
-.bar .capmark{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--ink-faint);opacity:.5}
+/* org chart */
+.orgwrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);
+  padding:38px 24px 32px;overflow-x:auto}
+.orginner{min-width:min(100%,720px);display:inline-block;width:100%}
+.otop{display:flex;justify-content:center}
+.onode{background:var(--surface);border:1.5px solid var(--c);border-radius:14px;padding:14px 20px;text-align:center;
+  box-shadow:var(--shadow);min-width:196px;max-width:250px}
+.onode.open{border-style:dashed}
+.onode .orole{font-size:14px;font-weight:600;color:var(--c)}
+.onode .onm{font-size:19px;font-weight:800;letter-spacing:-.025em;margin-top:2px}
+.onode .otag{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--cw);color:var(--c);margin-top:8px}
+.vline{width:2px;height:28px;background:var(--line-2);margin:0 auto}
+.orow{display:flex;gap:26px;position:relative;padding-top:28px;align-items:flex-start;justify-content:center;flex-wrap:nowrap}
+.obar{position:absolute;top:0;height:2px;background:var(--line-2);display:none}
+.obr{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;position:relative}
+.obr::before{content:"";position:absolute;top:-28px;left:calc(50% - 1px);width:2px;height:28px;background:var(--line-2)}
+.orow.solo>.obr::before{display:none}
+.obr>.kidrow{width:100%}
+.orgfoot{margin-top:30px;padding-top:22px;border-top:1px solid var(--line);font-size:16px;color:var(--ink-soft);
+  text-align:center;max-width:60ch;margin-inline:auto;line-height:1.6}
+.reassign{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}
+.reassign .ra{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:8px 12px}
+.reassign .ra .n{font-size:15px;font-weight:600;white-space:nowrap}
+.reassign .ra select{font-size:14px;padding:5px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);font-family:var(--sans)}
+.locknote{font-size:14.5px;color:var(--violet);margin-top:14px}
 
-.delivs{padding:13px 16px 6px}
-.dgroup{margin-bottom:13px}
-.dgroup .gt{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gc);
-  display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.dgroup .gt .ln{flex:1;height:1px;background:var(--line)}
-.dgroup .gt .gh{color:var(--ink-faint);letter-spacing:0;text-transform:none;font-size:10px}
-.dlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
-.dlist li{display:flex;gap:8px;align-items:baseline;font-size:13px;color:var(--ink-soft);line-height:1.4;
-  padding:3px 5px;border-radius:var(--r-xs);cursor:grab;touch-action:pan-y}
-.dlist li:hover{background:var(--surface-2)}
-.dlist li .dot{width:5px;height:5px;border-radius:1.5px;background:var(--gc);opacity:.75;flex:none;transform:translateY(-1px)}
-.dlist li .dt{flex:1;min-width:0}
-.dlist li .dh{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);white-space:nowrap;font-variant-numeric:tabular-nums}
-.dlist li .dcad{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap}
-.dlist li.moved{background:var(--teal-w)}
-.dlist li.moved .dh{color:var(--teal)}
-.pfoot{padding:11px 16px 14px;border-top:1px dashed var(--line);display:flex;gap:6px 18px;flex-wrap:wrap;
-  font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
-.pfoot b{color:var(--ink-soft);font-weight:500}
-.pnote{margin:0 16px 14px;font-size:12.5px;color:var(--ink-soft);background:var(--surface-2);border-left:2px solid var(--c);
-  border-radius:var(--r-sm);padding:9px 11px;line-height:1.5}
-.cardtools{position:absolute;top:12px;right:13px;display:flex;gap:4px;opacity:0;transition:opacity .13s}
-.pcard:hover .cardtools,.pcard:focus-within .cardtools,.acard:hover .cardtools,.acard:focus-within .cardtools{opacity:1}
-.dropzone.over{outline:2px dashed var(--accent);outline-offset:3px;border-radius:var(--r-sm)}
+/* accounts */
+.accounts{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:16px;align-items:start}
+.acard{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:20px 22px 20px;position:relative}
+.acard .an{font-size:21px;font-weight:800;letter-spacing:-.025em;padding-right:60px}
+.acard .as{font-size:15px;color:var(--ink-faint);margin-top:2px}
+.alist{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.alist li{display:flex;gap:11px;align-items:baseline;font-size:15.5px;line-height:1.5;color:var(--ink-soft)}
+.alist li .bullet{width:6px;height:6px;border-radius:2px;background:var(--c);opacity:.65;flex:none;transform:translateY(-2px)}
+.alist li .txt{flex:1;min-width:0}
+.who{font-size:13px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--ow);color:var(--oc);white-space:nowrap}
+.anote{margin-top:17px;font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:var(--r-sm);
+  padding:13px 15px;border-left:3px solid var(--c);line-height:1.55}
 
-/* ---------- stat strip ---------- */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:22px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px;box-shadow:var(--shadow);position:relative;overflow:hidden}
-.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sc,var(--ink-faint))}
-.stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint)}
-.stat .v{font-size:23px;font-weight:800;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1}
-.stat .s{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:5px}
-.stat .s em{font-style:normal;color:var(--teal)}
-.stat .s em.warn{color:var(--coral)}
-
-/* ---------- the plan ---------- */
-.planlede{font-size:16px;line-height:1.62;color:var(--ink-soft);max-width:68ch;margin-bottom:26px}
-.planlede b{color:var(--ink);font-weight:700}
-.moves{display:flex;flex-direction:column;gap:12px}
+/* plan */
+.inbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:34px}
+.inbox h3{font-size:19px;font-weight:700;margin-bottom:4px}
+.inbox .when{font-size:14px;color:var(--ink-faint);margin-bottom:14px}
+.inbox ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.inbox li{display:flex;gap:11px;align-items:baseline;font-size:16px;color:var(--ink-soft);line-height:1.55}
+.inbox li .bullet{width:6px;height:6px;border-radius:2px;background:var(--accent);opacity:.7;flex:none;transform:translateY(-2px)}
+.inbox li .txt{flex:1;min-width:0}
+.moves{display:flex;flex-direction:column;gap:14px}
 .move{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--mc);border-radius:var(--r);
-  box-shadow:var(--shadow);padding:16px 18px;position:relative}
-.move .mh{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin-bottom:7px}
-.move .mt{font-size:16px;font-weight:800;letter-spacing:-.02em;flex:1;min-width:220px}
-.kind{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:20px;
-  background:var(--mcw);color:var(--mc);white-space:nowrap;font-weight:500}
-.move .mb{font-size:13.5px;color:var(--ink-soft);line-height:1.62;max-width:72ch}
-.move .mb b{color:var(--ink);font-weight:600}
-.move .mim{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:11px;
-  color:var(--ink-faint);display:flex;flex-wrap:wrap;gap:5px 16px}
-.move .mim b{color:var(--mc);font-weight:500}
-
-.seq{counter-reset:step;display:flex;flex-direction:column;gap:2px;margin-top:6px}
-.seqrow{display:grid;grid-template-columns:104px 1fr;gap:16px;padding:13px 0;border-top:1px solid var(--line);align-items:start}
+  box-shadow:var(--shadow);padding:20px 24px;position:relative}
+.move .mh{display:flex;align-items:baseline;gap:13px;flex-wrap:wrap;margin-bottom:9px;padding-right:40px}
+.move .mt{font-size:20px;font-weight:700;letter-spacing:-.022em;flex:1;min-width:230px}
+.kind{font-size:13px;font-weight:600;padding:3px 11px;border-radius:20px;background:var(--mcw);color:var(--mc);white-space:nowrap}
+.move .mb{font-size:16.5px;color:var(--ink-soft);line-height:1.65;max-width:68ch}
+.seq{display:flex;flex-direction:column}
+.seqrow{display:grid;grid-template-columns:190px 1fr;gap:22px;padding:17px 0;border-top:1px solid var(--line);align-items:start}
 .seqrow:last-child{border-bottom:1px solid var(--line)}
-.seqrow .when{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);padding-top:2px}
-.seqrow .what{font-size:13.5px;color:var(--ink-soft);line-height:1.55}
-.seqrow .what b{color:var(--ink);font-weight:600}
-
-.risks{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
-.risk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:15px 17px;position:relative}
-.risk .rt{font-size:14.5px;font-weight:700;letter-spacing:-.01em;padding-right:66px}
-.risk .rb{font-size:12.5px;color:var(--ink-soft);margin-top:6px;line-height:1.55}
-.sev{position:absolute;top:15px;right:16px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
-  padding:2px 8px;border-radius:5px}
+.seqrow .when{font-size:15px;font-weight:700;color:var(--accent)}
+.seqrow .what{font-size:16.5px;color:var(--ink-soft);line-height:1.6}
+.risks{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
+.risk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:19px 21px;position:relative}
+.risk .rt{font-size:17.5px;font-weight:700;letter-spacing:-.018em;padding-right:78px}
+.risk .rb{font-size:15.5px;color:var(--ink-soft);margin-top:8px;line-height:1.58}
+.sev{position:absolute;top:19px;right:20px;font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:20px}
 .sev.high{background:var(--coral-w);color:var(--coral)}
 .sev.med{background:var(--amber-w);color:var(--amber)}
 .sev.low{background:var(--teal-w);color:var(--teal)}
-.risk:hover .cardtools,.move:hover .cardtools,.risk:focus-within .cardtools,.move:focus-within .cardtools{opacity:1}
-.move .cardtools,.risk .cardtools{position:absolute;top:12px;right:13px;opacity:0;transition:opacity .13s;display:flex;gap:4px}
 
-/* ---------- accounts ---------- */
-.accounts{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:13px;align-items:start}
-.acard{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:var(--r);
-  box-shadow:var(--shadow);padding:15px 17px 14px;position:relative;touch-action:pan-y}
-.acard .ah{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;padding-right:52px}
-.acard .an{font-size:17px;font-weight:800;letter-spacing:-.025em}
-.acard .as{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
-.acard .achips{display:flex;gap:6px;margin:10px 0 13px;flex-wrap:wrap}
-.acard .achip{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:7px;background:var(--surface-2);
-  border:1px solid var(--line);color:var(--ink-soft)}
-.acard .achip b{color:var(--c);font-weight:500}
-.alist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
-.alist li{display:flex;gap:9px;align-items:baseline;font-size:13px;line-height:1.45;color:var(--ink-soft)}
-.alist li .dot{width:5px;height:5px;border-radius:1.5px;background:var(--c);opacity:.75;flex:none;transform:translateY(-1px)}
-.alist li .at{flex:1;min-width:0}
-.owner-tag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:20px;background:var(--ow);color:var(--oc);
-  border:1px solid color-mix(in srgb,var(--oc) 24%,transparent);white-space:nowrap}
-.owner-tag.moved{outline:1px dashed var(--teal);outline-offset:1px}
-.acard .anote{margin-top:13px;font-size:12.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:var(--r-sm);
-  padding:9px 11px;border-left:2px solid var(--c);line-height:1.5}
-
-/* ---------- weekly tables ---------- */
-.tcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
-.tcard .th{display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid var(--line);border-left:3px solid var(--c)}
-.tcard .th .tt{font-size:15px;font-weight:800;letter-spacing:-.02em;flex:1;min-width:0}
-.tscroll{overflow-x:auto}
-table.wk{border-collapse:collapse;width:100%;min-width:520px;font-size:13px}
-table.wk th{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint);font-weight:500;
-  text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);background:var(--surface-2)}
-table.wk td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-soft)}
-table.wk tbody tr:hover{background:var(--surface-2)}
-table.wk td:first-child{font-weight:600;color:var(--ink)}
-td.rowtools{width:34px;text-align:right;padding-right:11px}
-.tfoot{padding:11px 14px;display:flex;gap:8px;flex-wrap:wrap}
-
-/* ---------- org chart ---------- */
-.orgwrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:30px 20px;overflow-x:auto}
-.orginner{min-width:min(100%,800px);display:inline-block;width:100%}
-.otop{display:flex;justify-content:center}
-.onode{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:12px;padding:11px 15px;
-  text-align:center;box-shadow:var(--shadow);min-width:180px;max-width:222px}
-.onode.cut{opacity:.5;border-style:dashed}
-.onode .orole{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--c);line-height:1.35}
-.onode .onm{font-size:15px;font-weight:800;letter-spacing:-.025em;margin-top:2px}
-.onode .ometa{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:5px;font-variant-numeric:tabular-nums}
-.onode .opill{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;
-  border-radius:20px;background:var(--cw);color:var(--c);margin-top:7px}
-.vline{width:2px;height:24px;background:var(--line-2);margin:0 auto}
-.orow{display:flex;gap:20px;position:relative;padding-top:24px;align-items:flex-start;justify-content:center;flex-wrap:nowrap}
-.obar{position:absolute;top:0;height:2px;background:var(--line-2);display:none}
-.obr{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;position:relative}
-.obr::before{content:"";position:absolute;top:-24px;left:calc(50% - 1px);width:2px;height:24px;background:var(--line-2)}
-.orow.solo>.obr::before{display:none}
-.obr>.kidrow{width:100%}
-.orgfoot{margin-top:22px;padding-top:17px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink-soft);text-align:center;max-width:70ch;margin-inline:auto}
-.reassign{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.reassign .ra{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 10px}
-.reassign .ra .n{font-size:12.5px;font-weight:600;white-space:nowrap}
-.reassign .ra select{font-size:11.5px;padding:4px 6px;border-radius:7px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);font-family:var(--sans)}
-.locknote{font-family:var(--mono);font-size:10.5px;color:var(--violet);margin-top:12px}
-
-/* ---------- modal / toast ---------- */
-.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 44%,transparent);backdrop-filter:blur(3px);
-  display:none;align-items:flex-start;justify-content:center;padding:5vh 15px;z-index:200;overflow-y:auto}
+/* modal + toast */
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 42%,transparent);backdrop-filter:blur(3px);
+  display:none;align-items:flex-start;justify-content:center;padding:5vh 16px;z-index:200;overflow-y:auto}
 .overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--line-2);border-radius:17px;box-shadow:var(--shadow-lift);width:100%;max-width:540px;padding:23px}
-.modal h3{font-size:18px;font-weight:800}
-.modal .msub{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);margin:4px 0 18px}
-.field{margin-bottom:13px}
-.field label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--line-2);
-  background:var(--surface-2);color:var(--ink);font-size:14px;font-family:var(--sans)}
-.field textarea{resize:vertical;min-height:58px;line-height:1.5}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.swatches{display:flex;gap:6px;flex-wrap:wrap}
-.sw{width:28px;height:28px;border-radius:8px;border:2px solid transparent;cursor:pointer;padding:0}
+.modal{background:var(--surface);border:1px solid var(--line-2);border-radius:20px;box-shadow:var(--shadow-lift);width:100%;max-width:560px;padding:26px}
+.modal h3{font-size:21px;font-weight:700}
+.modal .msub{font-size:14.5px;color:var(--ink-faint);margin:4px 0 20px}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:14px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border-radius:11px;border:1px solid var(--line-2);
+  background:var(--surface-2);color:var(--ink);font-size:16px;font-family:var(--sans)}
+.field textarea{resize:vertical;min-height:64px;line-height:1.55}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.swatches{display:flex;gap:7px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:9px;border:2px solid transparent;cursor:pointer;padding:0}
 .sw[aria-pressed="true"]{border-color:var(--ink)}
-.mactions{display:flex;gap:9px;margin-top:18px;align-items:center}
+.mactions{display:flex;gap:10px;margin-top:20px;align-items:center}
 .mactions .grow{flex:1}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--ground);
-  padding:11px 17px;border-radius:11px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lift);opacity:0;pointer-events:none;
-  transition:opacity .2s,transform .2s;z-index:300;display:flex;align-items:center;gap:12px;max-width:min(92vw,540px)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--ground);
+  padding:12px 19px;border-radius:13px;font-size:15px;font-weight:600;box-shadow:var(--shadow-lift);opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;z-index:300;display:flex;align-items:center;gap:13px;max-width:min(92vw,560px)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-.toast button{background:transparent;border-color:color-mix(in srgb,var(--ground) 42%,transparent);color:var(--ground);padding:4px 9px;font-size:12px}
-.toast button:hover{border-color:var(--ground)}
-.empty{text-align:center;padding:52px 20px;color:var(--ink-faint)}
-.drag-ghost{position:fixed;z-index:900;pointer-events:none;width:280px;background:var(--surface);border:1px solid var(--accent);
-  border-radius:var(--r-sm);padding:8px 11px;box-shadow:var(--shadow-lift);font-size:13px;transform:rotate(-1.2deg)}
+.toast button{background:transparent;border-color:color-mix(in srgb,var(--ground) 40%,transparent);color:var(--ground);padding:4px 10px;font-size:14px}
+.ghost-card{position:fixed;z-index:900;pointer-events:none;max-width:300px;background:var(--surface);border:1px solid var(--accent);
+  border-radius:var(--r-sm);padding:9px 13px;box-shadow:var(--shadow-lift);font-size:15px;transform:rotate(-1deg)}
 .ghosted{opacity:.3}
 
 @media print{
-  .topbar,.cardtools,.rowdel,.tfoot,.reassign,.toast,.overlay,.addrow{display:none!important}
+  .topbar,.cardtools,.rowdel,.reassign,.toast,.overlay{display:none!important}
   body{background:#fff}
   .view{display:block!important;page-break-before:always;padding-top:0}
   .view:first-of-type{page-break-before:auto}
-  .pcard,.acard,.tcard,.move,.risk{break-inside:avoid;box-shadow:none}
+  .pcard,.acard,.move,.risk{break-inside:avoid;box-shadow:none}
 }
-@media (max-width:760px){
-  .tb-spacer:first-of-type{display:none}
-  .hud{order:3;width:100%}
-  .grid2,.grid3{grid-template-columns:1fr}
-  .roster{grid-template-columns:1fr}
-  .seqrow{grid-template-columns:1fr;gap:4px}
+@media (max-width:780px){
+  body{font-size:16px}
+  .roster,.accounts{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .seqrow{grid-template-columns:1fr;gap:5px}
 }
 </style>
 
@@ -349,162 +265,106 @@ td.rowtools{width:34px;text-align:right;padding-right:11px}
         <span class="mark">RM</span>
         <div>
           <h1>Org Blueprint</h1>
-          <div class="sub" id="scLabel">The team as it stands today</div>
+          <div class="sub">RET Media, who does what</div>
         </div>
       </div>
-
-      <div class="tb-spacer"></div>
-
-      <div class="hud">
-        <div class="scenario" id="scSwitch">
-          <button data-sc="current" class="on">Today</button>
-          <button data-sc="proposed">Proposed</button>
-        </div>
-        <div class="hud-block" title="Seats on the org chart">
-          <div class="k"><span>Seats</span><b id="hSeats">—</b></div>
-        </div>
-        <div class="hud-block" title="Total hours of work a week across the team">
-          <div class="k"><span>Hours / week</span><b id="hHours">—</b></div>
-        </div>
-        <div class="hud-block" title="Monthly payroll for everyone but the founder">
-          <div class="k"><span>Team cost</span><b id="hCost">—</b></div>
-        </div>
-      </div>
-
-      <div class="tb-spacer"></div>
-
+      <div class="tb-grow"></div>
       <span class="savechip" id="saveChip"><span class="pip"></span><span id="saveTxt">Saved</span></span>
-      <button class="quiet icon" id="themeBtn" title="Light / dark / match device">◐</button>
+      <button class="quiet icon" id="themeBtn" title="Light, dark or match your device">◐</button>
       <button class="quiet icon" id="menuBtn" title="Backup, restore, reset">⋯</button>
     </div>
-
     <div class="tabs" role="tablist">
-      <button class="tab" role="tab" data-view="roster" aria-selected="true">Roster <span class="cnt" id="cnt-roster">0</span></button>
+      <button class="tab" role="tab" data-view="roster" aria-selected="true">The team</button>
       <button class="tab" role="tab" data-view="org" aria-selected="false">Org chart</button>
-      <button class="tab" role="tab" data-view="accounts" aria-selected="false">Accounts <span class="cnt" id="cnt-accounts">0</span></button>
-      <button class="tab" role="tab" data-view="plan" aria-selected="false">The plan <span class="cnt" id="cnt-plan">0</span></button>
-      <button class="tab" role="tab" data-view="weekly" aria-selected="false">Weekly output</button>
+      <button class="tab" role="tab" data-view="accounts" aria-selected="false">Accounts</button>
+      <button class="tab" role="tab" data-view="plan" aria-selected="false">The plan</button>
     </div>
   </div>
 
-  <!-- ================= ROSTER ================= -->
   <section class="view on" id="view-roster">
-    <div class="sechead">
-      <div>
-        <p class="eyebrow">Who does what, and how much of it</p>
-        <h2>The roster</h2>
-        <p class="note" id="rosterNote"></p>
-      </div>
-      <div class="grow"></div>
-      <span class="hint">Drag a deliverable onto another person to move it</span>
-      <button class="dashed" id="addPerson">＋ Add seat</button>
+    <div class="lead">
+      <h2>The team</h2>
+      <p class="cell" contenteditable="true" data-copy="rosterLede" data-ph="Intro"></p>
     </div>
-    <div class="stats" id="rosterStats"></div>
+    <div class="headrow">
+      <div class="grow"></div>
+      <span class="tip">Drag any line of work onto somebody else to move it</span>
+      <button class="soft" id="addPerson">Add a seat</button>
+    </div>
     <div id="rosterZone"></div>
   </section>
 
-  <!-- ================= ORG ================= -->
   <section class="view" id="view-org">
-    <div class="sechead">
-      <div>
-        <p class="eyebrow">Who reports to whom</p>
-        <h2>Org chart</h2>
-        <p class="note" id="orgNote2"></p>
-      </div>
+    <div class="lead">
+      <h2>Org chart</h2>
+      <p class="cell" contenteditable="true" data-copy="orgLede" data-ph="Intro"></p>
     </div>
     <div class="orgwrap">
       <div class="orginner" id="orgZone"></div>
-      <div class="orgfoot"><span class="cell" contenteditable="true" data-orgnote="1" data-ph="How work flows through the team…"></span></div>
+      <div class="orgfoot"><span class="cell" contenteditable="true" data-copy="orgFoot" data-ph="How work flows"></span></div>
     </div>
     <div class="reassign" id="reassignZone"></div>
     <p class="locknote" id="lockNote"></p>
   </section>
 
-  <!-- ================= ACCOUNTS ================= -->
   <section class="view" id="view-accounts">
-    <div class="sechead">
-      <div>
-        <p class="eyebrow">What we owe, per account</p>
-        <h2>Client deliverables</h2>
-        <p class="note">The delivery contract, with the owner on every line. Owners follow whichever scenario you have selected.</p>
-      </div>
-      <div class="grow"></div>
-      <button class="dashed" id="addClient">＋ Add account</button>
+    <div class="lead">
+      <h2>Accounts</h2>
+      <p class="cell" contenteditable="true" data-copy="acctLede" data-ph="Intro"></p>
     </div>
+    <div class="headrow"><div class="grow"></div><button class="soft" id="addClient">Add an account</button></div>
     <div class="accounts" id="accountZone"></div>
   </section>
 
-  <!-- ================= PLAN ================= -->
   <section class="view" id="view-plan">
-    <div class="sechead">
-      <div>
-        <p class="eyebrow">My recommendation</p>
-        <h2>How I'd organise the company</h2>
-      </div>
+    <div class="lead">
+      <h2>The plan</h2>
+      <p class="cell" contenteditable="true" data-copy="planLede" data-ph="Summary"></p>
     </div>
-    <p class="planlede cell" contenteditable="true" data-plan="lede" data-ph="Summary…"></p>
-    <div class="stats" id="planStats"></div>
 
-    <div class="sechead" style="margin-top:34px"><div><p class="eyebrow">The changes</p><h2>Seven moves</h2></div>
-      <div class="grow"></div><button class="dashed" id="addMove">＋ Add a move</button></div>
+    <div class="inbox">
+      <h3>What changed this week</h3>
+      <div class="when">Pulled from your inbox</div>
+      <ul id="inboxZone"></ul>
+      <button class="soft tiny" id="addInbox" style="margin-top:14px">Add a line</button>
+    </div>
+
+    <div class="headrow"><div><h3 class="block">What I would change</h3>
+      <p class="blocknote">Each one stands on its own, but they are in the order I would do them.</p></div>
+      <div class="grow"></div><button class="soft" id="addMove">Add a change</button></div>
     <div class="moves" id="moveZone"></div>
 
-    <div class="sechead" style="margin-top:38px"><div><p class="eyebrow">In this order — each step pays for the next</p><h2>Sequence</h2></div>
-      <div class="grow"></div><button class="dashed" id="addStep">＋ Add a step</button></div>
+    <div class="headrow" style="margin-top:44px"><div><h3 class="block">In what order</h3>
+      <p class="blocknote">Nothing here waits on money. It waits on the Lead Editor seat being filled.</p></div>
+      <div class="grow"></div><button class="soft" id="addStep">Add a step</button></div>
     <div class="seq" id="seqZone"></div>
 
-    <div class="sechead" style="margin-top:38px"><div><p class="eyebrow">What could break it</p><h2>Risks</h2></div>
-      <div class="grow"></div><button class="dashed" id="addRisk">＋ Add a risk</button></div>
+    <div class="headrow" style="margin-top:44px"><div><h3 class="block">What could break it</h3></div>
+      <div class="grow"></div><button class="soft" id="addRisk">Add a risk</button></div>
     <div class="risks" id="riskZone"></div>
-  </section>
-
-  <!-- ================= WEEKLY ================= -->
-  <section class="view" id="view-weekly">
-    <div class="sechead">
-      <div>
-        <p class="eyebrow">What goes out every week, per account</p>
-        <h2>Weekly output</h2>
-        <p class="note">Reference tables from the original breakdown. Click any cell to edit it.</p>
-      </div>
-      <div class="grow"></div>
-      <button class="dashed" id="addTable">＋ Add table</button>
-    </div>
-    <div id="tableZone"></div>
   </section>
 </div>
 
-<!-- person editor -->
 <div class="overlay" id="personOverlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pTitle">
     <h3 id="pTitle">Edit seat</h3>
-    <div class="msub" id="pSub">Roster</div>
+    <div class="msub">The team</div>
     <form id="personForm">
       <div class="grid2">
-        <div class="field"><label for="p-name">Name</label><input id="p-name" required maxlength="60"></div>
-        <div class="field"><label for="p-cap">Capacity (hrs/wk)</label><input id="p-cap" type="number" min="1" max="80" step="1"></div>
+        <div class="field"><label for="p-name">Name</label><input id="p-name" maxlength="60" placeholder="Leave blank for an open seat"></div>
+        <div class="field"><label for="p-role">Role</label><input id="p-role" required maxlength="60"></div>
       </div>
       <div class="grid2">
-        <div class="field"><label for="p-role">Role today</label><input id="p-role" maxlength="60"></div>
-        <div class="field"><label for="p-role2">Role in the proposal</label><input id="p-role2" maxlength="60" placeholder="same"></div>
+        <div class="field"><label for="p-layer">Layer</label><select id="p-layer"></select></div>
+        <div class="field"><label for="p-reports">Reports to</label><select id="p-reports"></select></div>
       </div>
       <div class="grid2">
-        <div class="field"><label for="p-rate">Pay today ($/mo)</label><input id="p-rate" type="number" min="0" max="99999" placeholder="not set"></div>
-        <div class="field"><label for="p-rate2">Pay in the proposal ($/mo)</label><input id="p-rate2" type="number" min="0" max="99999" placeholder="same"></div>
+        <div class="field"><label for="p-tag">Tag</label><input id="p-tag" maxlength="40" placeholder="Open seat, hiring now, locked"></div>
+        <div class="field"><label for="p-locked">Locked</label><select id="p-locked">
+          <option value="0">No, this seat can change</option>
+          <option value="1">Yes, leave this seat alone</option></select></div>
       </div>
-      <div class="grid3">
-        <div class="field"><label for="p-tier">Layer</label><select id="p-tier"></select></div>
-        <div class="field"><label for="p-reports">Reports to today</label><select id="p-reports"></select></div>
-        <div class="field"><label for="p-reports2">Reports to (proposal)</label><select id="p-reports2"></select></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label for="p-status">Status tag</label><input id="p-status" maxlength="40" placeholder="e.g. Hiring now"></div>
-        <div class="field"><label for="p-keep">In the proposal?</label><select id="p-keep">
-          <option value="1">Yes — keep this seat</option>
-          <option value="0">No — don't fill this seat</option>
-          <option value="lock">Locked — leave exactly as is</option>
-        </select></div>
-      </div>
-      <div class="field"><label for="p-note">Note on this seat</label><textarea id="p-note" maxlength="600"></textarea></div>
+      <div class="field"><label for="p-note">Note</label><textarea id="p-note" maxlength="600"></textarea></div>
       <div class="field"><label>Colour</label><div class="swatches" id="p-colors"></div></div>
       <div class="mactions">
         <button type="button" class="danger" id="pDelete" hidden>Delete seat</button>
@@ -516,25 +376,22 @@ td.rowtools{width:34px;text-align:right;padding-right:11px}
   </div>
 </div>
 
-<!-- deliverable editor -->
 <div class="overlay" id="workOverlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wTitle">
-    <h3 id="wTitle">Deliverable</h3>
-    <div class="msub" id="wSub">Recurring work</div>
+    <h3 id="wTitle">Work</h3>
+    <div class="msub" id="wSub">A line of work</div>
     <form id="workForm">
-      <div class="field"><label for="w-title">What it is</label><input id="w-title" required maxlength="140"></div>
+      <div class="field"><label for="w-title">What it is</label><input id="w-title" required maxlength="160"></div>
       <div class="grid2">
         <div class="field"><label for="w-client">Account</label><select id="w-client"></select></div>
-        <div class="field"><label for="w-cad">Cadence</label><select id="w-cad">
-          <option value="daily">Daily</option><option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option><option value="ongoing">Ongoing</option></select></div>
+        <div class="field"><label for="w-owner">Who owns it</label><select id="w-owner"></select></div>
       </div>
-      <div class="grid3">
-        <div class="field"><label for="w-owner">Owner today</label><select id="w-owner"></select></div>
-        <div class="field"><label for="w-owner2">Owner (proposal)</label><select id="w-owner2"></select></div>
-        <div class="field"><label for="w-hours">Hours / week</label><input id="w-hours" type="number" min="0" max="60" step="0.5"></div>
+      <div class="grid2">
+        <div class="field"><label for="w-beat">Rhythm</label><select id="w-beat">
+          <option value="Daily">Daily</option><option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option><option value="Ongoing">Ongoing</option></select></div>
+        <div class="field"><label for="w-plat">Where it goes</label><input id="w-plat" maxlength="90"></div>
       </div>
-      <div class="field"><label for="w-plat">Platforms</label><input id="w-plat" maxlength="90" placeholder="YouTube · TikTok · Facebook"></div>
       <div class="mactions">
         <button type="button" class="danger" id="wDelete" hidden>Delete</button>
         <div class="grow"></div>
@@ -545,15 +402,14 @@ td.rowtools{width:34px;text-align:right;padding-right:11px}
   </div>
 </div>
 
-<!-- account editor -->
 <div class="overlay" id="clientOverlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cTitle">
     <h3 id="cTitle">Edit account</h3>
     <div class="msub">Client</div>
     <form id="clientForm">
       <div class="field"><label for="c-name">Account name</label><input id="c-name" required maxlength="70"></div>
-      <div class="field"><label for="c-sub">Descriptor</label><input id="c-sub" maxlength="70"></div>
-      <div class="field"><label for="c-note">Live note</label><textarea id="c-note" maxlength="800"></textarea></div>
+      <div class="field"><label for="c-sub">What they do</label><input id="c-sub" maxlength="70"></div>
+      <div class="field"><label for="c-note">Note</label><textarea id="c-note" maxlength="900"></textarea></div>
       <div class="field"><label>Colour</label><div class="swatches" id="c-colors"></div></div>
       <div class="mactions">
         <button type="button" class="danger" id="cDelete" hidden>Delete</button>
@@ -565,21 +421,19 @@ td.rowtools{width:34px;text-align:right;padding-right:11px}
   </div>
 </div>
 
-<!-- data menu -->
 <div class="overlay" id="menuOverlay">
-  <div class="modal" role="dialog" aria-modal="true" style="max-width:430px">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:450px">
     <h3>Your data</h3>
-    <div class="msub">Saved in this browser, automatically</div>
-    <p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 17px;line-height:1.55">
-      Every edit writes to this browser as you type — there is no save button. Take a backup file
-      before switching machines, or to hand the blueprint to someone else.
+    <div class="msub">Saved in this browser as you type</div>
+    <p style="font-size:16px;color:var(--ink-soft);margin:0 0 20px;line-height:1.6">
+      There is no save button. Take a backup file before switching machines, or to hand the blueprint to somebody else.
     </p>
-    <div style="display:flex;flex-direction:column;gap:9px">
-      <button class="quiet" id="exportBtn">⭳ Download backup (.json)</button>
-      <button class="quiet" id="importBtn">⭱ Restore from backup</button>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="quiet" id="exportBtn">Download a backup</button>
+      <button class="quiet" id="importBtn">Restore from a backup</button>
       <input type="file" id="importFile" accept="application/json" hidden>
-      <button class="quiet" id="printBtn">⎙ Print / save as PDF</button>
-      <button class="danger" id="resetBtn">↺ Reset to the original plan</button>
+      <button class="quiet" id="printBtn">Print or save as a PDF</button>
+      <button class="danger" id="resetBtn">Reset back to the original</button>
     </div>
     <div class="mactions"><div class="grow"></div><button type="button" class="quiet" id="menuClose">Close</button></div>
   </div>
@@ -590,267 +444,176 @@ td.rowtools{width:34px;text-align:right;padding-right:11px}
 <script>
 (function(){
 "use strict";
-
-var KEY = "rm_org_blueprint_v1";
+var KEY = "rm_org_blueprint_v2";
 var THEME_KEY = "rm_deck_theme";
 var COLORS = ["coral","amber","teal","indigo","violet","moss"];
-var CADENCE = {daily:"Daily", weekly:"Weekly", monthly:"Monthly", ongoing:"Ongoing"};
+var BEATS = ["Daily","Weekly","Monthly","Ongoing"];
 var KINDS = {
-  cut:      {label:"Don't hire", c:"coral"},
-  promote:  {label:"Promote",    c:"teal"},
-  pay:      {label:"Pay it",     c:"coral"},
-  rescope:  {label:"Rescope",    c:"teal"},
-  hire:     {label:"Hire",       c:"amber"},
-  hold:     {label:"Leave alone",c:"violet"},
-  watch:    {label:"Next problem",c:"amber"}
+  hire:    {label:"Hire",        c:"teal"},
+  cut:     {label:"Do not hire", c:"coral"},
+  rescope: {label:"Rescope",     c:"indigo"},
+  fix:     {label:"Fix now",     c:"amber"},
+  hold:    {label:"Leave alone", c:"violet"},
+  watch:   {label:"Later",       c:"moss"}
 };
 
 function seed(){
 var P = [
- {id:"p_garrett", name:"Garrett", color:"coral", tier:0, cap:45,
-  role:"Founder", role2:"", rate:null, rate2:null, reportsTo:"", reportsTo2:"", status:"", keep:"1",
-  note:"Eight of his twenty-two hours a week are editing. That is the hours nobody else currently has the headroom to take."},
- {id:"p_skylar", name:"Skylar", color:"teal", tier:1, cap:30,
-  role:"Lead Editor", role2:"Head of Production", rate:0, rate2:600, reportsTo:"p_garrett", reportsTo2:"p_garrett", status:"", keep:"1",
-  note:"Owns the quality gate, both long-form edits and editor training — at $0. Every other seat depends on this one."},
- {id:"p_smm", name:"Open Role", color:"amber", tier:1, cap:30,
-  role:"Social Media Manager", role2:"Distribution & Creator Manager", rate:null, rate2:1000,
-  reportsTo:"p_garrett", reportsTo2:"p_garrett", status:"Start by Sept 15", keep:"1", filled:false,
-  note:"The only hire in the plan. Scope is publishing and creator ops — QC comes out of this job and goes to Skylar."},
- {id:"p_julia", name:"Julia", color:"violet", tier:1, cap:12,
-  role:"Account Manager", role2:"", rate:null, rate2:null, reportsTo:"p_garrett", reportsTo2:"p_garrett", status:"", keep:"lock",
-  note:"Locked. Real estate is the part of the org that already works — two accounts, six hours, no dependency on anyone else's output."},
- {id:"p_viktor", name:"Viktor", color:"indigo", tier:2, cap:30,
-  role:"Editor", role2:"Senior Editor", rate:400, rate2:500, reportsTo:"p_skylar", reportsTo2:"p_skylar", status:"", keep:"1",
-  note:"Highest-output editor and the only person who could cover the QC gate if Skylar is out."},
- {id:"p_kingdon", name:"Kingdon", color:"indigo", tier:2, cap:25,
-  role:"Intern Editor", role2:"Editor", rate:150, rate2:400, reportsTo:"p_skylar", reportsTo2:"p_skylar", status:"", keep:"1",
-  note:"Absorbs Man Eats Wild short form instead of you hiring a second editor for it."},
- {id:"p_mewed", name:"MEW Editor", color:"coral", tier:2, cap:25,
-  role:"Editor — OPEN", role2:"", rate:null, rate2:0, reportsTo:"p_skylar", reportsTo2:"p_skylar", status:"Hiring now", keep:"0", filled:false,
-  note:"Nine hours a week of vault mining. Not a seat — it's a second account for Kingdon."}
+ {id:"p_garrett", name:"Garrett", role:"Founder", layer:0, reportsTo:"", color:"coral", tag:"", locked:false,
+  duties:["Client strategy and creative direction","Sales, partnerships and new business","Titles, hooks and caption strategy","Shane Dorian and the Surf Longevity course"],
+  note:"Editing is the last thing to come off his plate, not the first. It comes off once the Lead Editor is in and trusted."},
+ {id:"p_smm", name:"", role:"Social Media Manager", layer:1, reportsTo:"p_garrett", color:"amber",
+  tag:"Starting by the middle of September", locked:false,
+  duties:["Quality check on every clip before it posts","Titles, captions and the posting schedule across every account","Trybe and the TikTok Shop seller centre","File organisation, and keeping account access in the agency's hands","Part time to begin with, on a written path to full time"],
+  note:"Offers are out and a candidate has accepted. They have already asked what the performance markers are for converting to full time, so those need writing down before day one."},
+ {id:"p_julia", name:"Julia", role:"Account Manager", layer:1, reportsTo:"p_garrett", color:"violet",
+  tag:"Locked, left exactly as is", locked:true,
+  duties:["Real estate accounts end to end","Editing, building, captioning and the compliance pass"],
+  note:"The part of the agency that already works. Recurring retainers, nothing waiting on anybody else's output, nothing queued behind the editing gate."},
+ {id:"p_lead", name:"", role:"Lead Editor", layer:2, reportsTo:"p_smm", color:"teal",
+  tag:"Open seat, fill this one first", locked:false,
+  duties:["Sets the standard for every cut that leaves the agency","Trains the editors on format, hooks and pacing","Signs work off before it goes to posting","Cuts the Man Eats Wild weekly long form"],
+  note:"The seat everything downstream depends on. Until it is filled, quality is whatever the editor on shift decides it is."},
+ {id:"p_viktor", name:"Viktor", role:"Editor", layer:2, reportsTo:"p_lead", color:"indigo", tag:"", locked:false,
+  duties:["Xander midforms for YouTube","Xander daily short form, one that teaches and one that entertains"], note:""},
+ {id:"p_kingdon", name:"Kingdon", role:"Intern Editor", layer:2, reportsTo:"p_lead", color:"indigo", tag:"", locked:false,
+  duties:["Blair Conklin, the monthly run of cuts from the iCloud footage","Man Eats Wild short form pulled from the vault","Delivers to the shared folder, named to format"],
+  note:"Picks up Man Eats Wild short form instead of the agency hiring a second editor for it. His work sits behind the Lead Editor's sign off for the first month."}
 ];
 
 var C = [
- {id:"c_mew",    name:"Man Eats Wild",   sub:"Mario Kalpou",            color:"coral",  note:"Built from the existing vault: three seasons of episodes plus raw drives. The weekly long form is Skylar's; everything else is short form."},
- {id:"c_xander", name:"Xander Budnick",  sub:"Outdoor / survival",      color:"indigo", note:""},
- {id:"c_blair",  name:"Blair Conklin",   sub:"Skimboarding / Skid Kids", color:"indigo", note:"The biggest revenue line in the business and it is a 35% revenue share, not a retainer — so it moves with output, and the editor on it is the cheapest seat on the roster."},
- {id:"c_yy",     name:"Yeah You Podcast",sub:"Athletes, creators, the business of sport", color:"teal",
-  note:"Booked: James Ferrell (10 Sep), Paulo Prietto (14 Sep), Amber Torrealba (29 Sep), plus Austin Keen. Outreach out to Mark Healey, Bob Hurley, Clark Little, Taylor Steele, Rusty Preisendorfer and Matt Biolos. Studio is Dana Point."},
- {id:"c_fw",     name:"Foreign Waters",  sub:"Energy Flow — TikTok Shop", color:"amber",
-  note:"Daily rhythm, unlike everything else here. Trybe digests run 12–14 items a day with creators mid-conversation and submissions in review. Left uncapped it will eat a publishing schedule whole."},
- {id:"c_paulo",  name:"Paulo Prietto",   sub:"Compass, Laguna Beach",   color:"violet", note:""},
- {id:"c_tara",   name:"Tara Bunker",     sub:"Compass / Alcove Collective", color:"violet", note:""},
- {id:"c_lucas",  name:"Lucas Fink",      sub:"New account",             color:"amber",
-  note:"One deliverable, and it is publishing rather than editing — so it belongs to the Distribution Manager, which settles the open question in the original breakdown. Lucas sent the Facebook Business Portfolio invite on 19 Aug; accept it before it expires."},
- {id:"c_shane",  name:"Shane Dorian",    sub:"Surf Longevity",          color:"moss",   note:""},
- {id:"c_int",    name:"RET Media",       sub:"Running the agency itself", color:"moss",  note:"Internal work. It is real hours and it belongs on the chart — leaving it off is how founders end up wondering where the week went."}
+ {id:"c_mew", name:"Man Eats Wild", sub:"Mario Kalpou", color:"coral",
+  note:"Access is the blocker. Partner access in Meta Business Suite for the Facebook page and Instagram, the TikTok login with somebody reachable for the verification code, and Manager on the YouTube channel. Nothing starts on cadence until those land. A second Instagram and Facebook for clips is worth opening a few months in, and X is worth firing up for repurposed clips and written posts."},
+ {id:"c_xander", name:"Xander Budnick", sub:"Outdoor and survival", color:"indigo", note:""},
+ {id:"c_blair", name:"Blair Conklin", sub:"Skimboarding, Skid Kids", color:"indigo",
+  note:"The biggest line in the business, and it moves with output rather than a retainer. That makes the editor on it worth protecting."},
+ {id:"c_fw", name:"Foreign Waters", sub:"Energy Flow on TikTok Shop", color:"amber",
+  note:"The Trybe digest arrives every morning with a dozen or more items and creators waiting mid conversation. It runs on a daily rhythm nothing else here has, so it needs a fixed window or it takes the whole day."},
+ {id:"c_paulo", name:"Paulo Prietto", sub:"Compass, Laguna Beach", color:"violet", note:""},
+ {id:"c_tara", name:"Tara Bunker", sub:"Compass and Alcove Collective", color:"violet", note:""},
+ {id:"c_lucas", name:"Lucas Fink", sub:"New account", color:"amber",
+  note:"The Facebook business portfolio invite is sitting in the inbox and needs accepting before it expires. One line of work, and it is publishing rather than editing, so it belongs with the Social Media Manager."},
+ {id:"c_shane", name:"Shane Dorian", sub:"Surf Longevity", color:"moss", note:""}
 ];
 
-/* title, client, owner today, owner proposed (null = same), hrs/wk, cadence, platforms */
 var WD = [
- ["Instagram feed — 7 posts","c_mew","p_smm",null,2.5,"weekly","Instagram"],
- ["Instagram stories — 21","c_mew","p_smm",null,1.5,"weekly","Instagram"],
- ["Facebook mirror + 1 YouTube repost","c_mew","p_smm",null,1,"weekly","Facebook"],
- ["TikTok — 21–35 clips","c_mew","p_mewed","p_kingdon",5,"weekly","TikTok"],
- ["YouTube Shorts — 14–21","c_mew","p_mewed","p_kingdon",4,"weekly","YouTube Shorts"],
- ["YouTube long form — 1 video","c_mew","p_skylar",null,8,"weekly","YouTube"],
- ["X — 5 written + 10–15 repurposed","c_mew","p_smm",null,1.5,"weekly","X"],
- ["1–2 midforms (8–20 min)","c_xander","p_viktor",null,8,"weekly","YouTube"],
- ["Short-form bangers — 1–2 a day","c_xander","p_viktor",null,7,"daily","YouTube Shorts · TikTok"],
- ["Midforms repurposed to TikTok","c_xander","p_smm",null,1,"weekly","TikTok"],
- ["Midforms repurposed to Facebook","c_xander","p_smm",null,1,"weekly","Facebook"],
- ["Raw river long form — 2–3 vertical","c_blair","p_kingdon",null,4,"weekly","Facebook"],
- ["iCloud cuts — ~7 of the monthly 30","c_blair","p_kingdon",null,6,"weekly","TikTok · YT Shorts · Facebook"],
- ["YouTube long form → Facebook","c_blair","p_smm",null,1,"weekly","Facebook"],
- ["Full episode — edit, thumbnail, title","c_yy","p_garrett",null,8,"weekly","YouTube · Podcast"],
- ["Film and produce the episode","c_yy","p_skylar",null,5,"weekly","Studio — Dana Point"],
- ["2 YouTube Shorts — main channel","c_yy","p_viktor",null,2.5,"weekly","YouTube Shorts"],
- ["3 shorts — Garrett Abdulla personal","c_yy","p_viktor",null,3,"weekly","YouTube Shorts"],
- ["2 midforms","c_yy","p_viktor",null,4,"weekly","YouTube"],
- ["Repost — TikTok, Facebook, X","c_yy","p_smm",null,2,"weekly","TikTok · Facebook · X"],
- ["Instagram — bangers only","c_yy","p_smm",null,.5,"weekly","Instagram"],
- ["2 organic posts","c_fw","p_smm",null,1.5,"weekly","Instagram · TikTok"],
- ["Trybe — clear the creator digest","c_fw","p_smm",null,5,"daily","Trybe"],
- ["TikTok Shop Seller Center","c_fw","p_smm",null,3,"daily","TikTok Shop"],
- ["UGC briefs, feedback and approvals","c_fw","p_smm",null,2,"ongoing",""],
- ["Athlete roster posts, product linked","c_fw","p_smm",null,1.5,"ongoing",""],
- ["2–3 real-estate posts","c_paulo","p_julia",null,3.5,"weekly","Instagram"],
- ["2 real-estate posts","c_tara","p_julia",null,2.5,"weekly","Instagram"],
- ["Repurpose posted videos to Facebook","c_lucas","p_smm",null,1.5,"weekly","Facebook"],
- ["Skool course build and management","c_shane","p_garrett",null,5,"weekly","Skool"],
- ["QC gate — nothing posts without a sign-off","c_int","p_smm","p_skylar",4,"daily",""],
- ["Train the editors — format, hooks, pacing","c_int","p_skylar",null,2,"ongoing",""],
- ["File organisation and access hygiene","c_int","p_smm",null,1.5,"ongoing",""],
- ["Client strategy, creative direction, titles","c_int","p_garrett",null,4,"ongoing",""],
- ["Sales, partnerships and new business","c_int","p_garrett",null,5,"ongoing",""]
+ ["The weekly long form for YouTube","c_mew","p_lead","Weekly","YouTube"],
+ ["Short form for TikTok, several a day","c_mew","p_kingdon","Daily","TikTok"],
+ ["YouTube Shorts, a few a day","c_mew","p_kingdon","Daily","YouTube Shorts"],
+ ["Instagram feed, a post a day","c_mew","p_smm","Daily","Instagram"],
+ ["Instagram stories through the day","c_mew","p_smm","Daily","Instagram"],
+ ["Facebook, the full Instagram mirror plus a YouTube repost","c_mew","p_smm","Weekly","Facebook"],
+ ["Written posts and repurposed clips on X","c_mew","p_smm","Weekly","X"],
+ ["Midforms for YouTube, one or two a week","c_xander","p_viktor","Weekly","YouTube"],
+ ["Short form bangers, one that teaches and one that entertains","c_xander","p_viktor","Daily","YouTube Shorts, TikTok"],
+ ["The midforms repurposed to TikTok","c_xander","p_smm","Weekly","TikTok"],
+ ["The midforms repurposed to Facebook","c_xander","p_smm","Weekly","Facebook"],
+ ["Raw river long form for Facebook, shot vertical","c_blair","p_kingdon","Weekly","Facebook"],
+ ["The monthly run of cuts from the iCloud footage","c_blair","p_kingdon","Weekly","TikTok, YouTube Shorts, Facebook"],
+ ["The YouTube long form repurposed to Facebook","c_blair","p_smm","Weekly","Facebook"],
+ ["Organic posts for the brand","c_fw","p_smm","Weekly","Instagram, TikTok"],
+ ["Clear the Trybe creator digest","c_fw","p_smm","Daily","Trybe"],
+ ["The TikTok Shop seller centre","c_fw","p_smm","Daily","TikTok Shop"],
+ ["Creator briefs, feedback and approvals","c_fw","p_smm","Ongoing",""],
+ ["Roster athlete posts with the product linked","c_fw","p_smm","Ongoing",""],
+ ["Real estate posts through the week","c_paulo","p_julia","Weekly","Instagram"],
+ ["Real estate posts through the week","c_tara","p_julia","Weekly","Instagram"],
+ ["Repurpose the already posted videos to Facebook","c_lucas","p_smm","Weekly","Facebook"],
+ ["The Surf Longevity course build","c_shane","p_garrett","Ongoing","Skool"],
+ ["Running the Skool community","c_shane","p_garrett","Ongoing","Skool"]
 ];
-var W = WD.map(function(r,i){
-  return {id:"w"+i, title:r[0], clientId:r[1], ownerId:r[2], ownerId2:r[3], hrs:r[4], cadence:r[5], platform:r[6], ord:i};
-});
+var W = WD.map(function(r,i){ return {id:"w"+i, title:r[0], clientId:r[1], ownerId:r[2], beat:r[3], platform:r[4], ord:i}; });
+
+var COPY = {
+ rosterLede:"Six seats. Garrett at the top, a Social Media Manager and Julia underneath him, and the editing bench below that. Two of those seats are open right now, and the Lead Editor is the one to fill first.",
+ orgLede:"One line from footage to published post. The Lead Editor approves, the Social Media Manager publishes, and real estate runs on its own track off to the side.",
+ orgFoot:"Footage comes in, an editor cuts it, the Lead Editor signs it off, the Social Media Manager titles it and posts it. Julia runs real estate end to end without touching that line.",
+ acctLede:"What every account is owed, and who owns each line of it.",
+ planLede:"Skylar is out and the Lead Editor seat is open, which means the shape of the company is genuinely up for grabs. Two things matter more than the rest. The Lead Editor is the seat every other editor depends on, so it gets filled before anything else moves. And you are currently hiring a manager and an editor at the same time, which is one hire too many, because Kingdon can carry Man Eats Wild alongside Blair."
+};
+
+var INBOX = [
+ {id:"i1", text:"Offers are out for the Social Media Manager. A candidate has accepted, and wants to know what the performance markers are for converting to full time."},
+ {id:"i2", text:"The Man Eats Wild access request is still outstanding across Meta, TikTok and YouTube. Posting cannot start on cadence until it lands."},
+ {id:"i3", text:"The Lucas Fink Facebook business portfolio invite is still sitting unaccepted."},
+ {id:"i4", text:"The Foreign Waters Trybe digest is still arriving every morning with a dozen or more items to clear."},
+ {id:"i5", text:"Kingdon has had his call, so the intern editor seat is live."},
+ {id:"i6", text:"Man Eats Wild has broadcast and e-commerce conversations running alongside the posting work, so that account is about to get louder."}
+];
 
 var PLAN = {
- lede:"Nobody here has been in their seat long, so this is the cheapest moment you will ever get to change it. Three things are wrong with the structure as written: <b>you are hiring two people at once</b>, <b>the quality gate is assigned to two different people</b>, and <b>the person that gate depends on is unpaid</b>. Fixing it takes one hire instead of two and leaves the workload exactly where it is — the same 118.5 hours a week, redistributed. It does cost more. You are paying $550 a month today; a properly staffed version of this org is $2,500. So phase it: +$850 this month, the one hire in September, +$100 in October.",
  moves:[
-  {id:"m1", kind:"pay", title:"Pay Skylar — before you hire anybody else",
-   body:"Skylar is the quality gate, the long-form editor on Man Eats Wild, the producer on Yeah You and the person who trains every other editor. That is four jobs at <b>$0 a month</b>. It is the most fragile thing in the company: every seat below depends on someone with no reason to stay. This is the first cheque you write, not the last.",
-   impact:"$0 → $600/mo · protects 4 accounts · unblocks every other move"},
-  {id:"m2", kind:"cut", title:"Don't hire the Man Eats Wild editor",
-   body:"The role is <b>9 hours a week</b> of TikTok and Shorts cut from a vault that already exists — no shoot to run, no client to manage. Kingdon sits at 10 hours on Blair. Folding the two together gives one editor at 19 hours, still lighter than Viktor, and you skip a second search, a second onboarding and a second person to chase for files.",
-   impact:"−1 seat · Kingdon 10 → 19 hrs/wk · one hiring loop instead of two"},
-  {id:"m3", kind:"promote", title:"Promote Kingdon off “intern” and pay him for two accounts",
-   body:"He goes from one account to two. <b>$150 a month is not a rate anyone stays at</b> once they are carrying real volume, and losing him costs you the Blair pipeline — your biggest revenue line. $400 keeps him, and it is still cheaper than the separate editor you were about to hire.",
-   impact:"$150 → $400/mo · +9 hrs/wk · saves $150/mo against hiring separately"},
-  {id:"m4", kind:"rescope", title:"One quality gate, and it is Skylar's",
-   body:"The original breakdown gives QC to Skylar <i>and</i> to the Social Media Manager. Two gates is the same as none — when something bad ships, nobody owns it, and the fix is a conversation instead of a correction. Take the 4 hours out of the new hire's job and put the sign-off with the person who trains the editors.",
-   impact:"4 hrs/wk moves to Skylar · one accountable owner · new hire's job gets describable"},
-  {id:"m5", kind:"hire", title:"Hire a Distribution & Creator Manager — not a “social media manager”",
-   body:"What is left once QC comes out is publishing across nine accounts plus the Foreign Waters creator queue: <b>28 hours a week</b>. Scheduling, captions, cross-posting, Trybe and TikTok Shop, file and access hygiene. Name the job that and you can hire for it and measure it. “Social media manager” gets you vague candidates and a scope that quietly grows.",
-   impact:"28 hrs/wk · ~$1,000/mo · the only hire in the plan"},
-  {id:"m6", kind:"rescope", title:"Make Viktor senior, and Skylar's backup on the gate",
-   body:"He is the highest-output editor at 24.5 hours and the only person on the roster who could sign off other people's work. Right now, <b>if Skylar is unavailable nothing ships</b> — the fix in move 4 creates a single point of failure unless you give it a backup in the same breath.",
-   impact:"$400 → $500/mo · removes a single point of failure"},
+  {id:"m1", kind:"hire", title:"Fill the Lead Editor seat before anything else",
+   body:"This is the seat that sets the standard for every cut, trains the editors, and signs work off before it reaches posting. With Skylar gone, nobody is holding that line, which means quality is currently whatever the editor on shift decides it is. Every other decision on this page waits behind this one."},
+  {id:"m2", kind:"cut", title:"Do not hire a separate Man Eats Wild editor",
+   body:"The Man Eats Wild short form comes out of a vault that already exists. There is no shoot to run and no client on the phone. Kingdon is already delivering Blair to format, and this is the same job with different footage. One editor, one brief, one person to chase."},
+  {id:"m3", kind:"rescope", title:"One sign off, and it belongs to the Lead Editor",
+   body:"The Social Media Manager job description includes quality checking, and so does the editing lead. Two gates is the same as none, because when something bad goes out the answer is a conversation instead of a correction. The Lead Editor approves. The Social Media Manager publishes. Nothing crosses that line."},
+  {id:"m4", kind:"fix", title:"Put the manager's performance markers in writing before day one",
+   body:"The offer sells a part time engagement that converts to a full time manager role on performance, and the candidate who accepted has already asked what performance means. Answer it in writing before they start. Publishing on cadence, nothing lost, a clean pass rate through the editing gate, and every account access held by the agency rather than a personal login. A growth path nobody can measure is a growth path nobody believes."},
+  {id:"m5", kind:"fix", title:"Get the Man Eats Wild access before you promise a cadence",
+   body:"Partner access in Meta Business Suite, the TikTok login with somebody reachable for the code, and Manager on the YouTube channel. Until all three land, the Man Eats Wild column on this page is a plan rather than a schedule, and it is the account with the most eyes on it."},
+  {id:"m6", kind:"rescope", title:"Give Foreign Waters a fixed window",
+   body:"The Trybe digest lands every morning with a dozen or more items and creators waiting on replies. It runs on a daily rhythm that nothing else on the roster has. Put it in a set block at the top of the day with a hard stop, or it quietly becomes the whole job and every other account slips a week at a time."},
   {id:"m7", kind:"hold", title:"Leave Julia exactly where she is",
-   body:"Real estate is the one part of the org that already works: two accounts, six hours a week, recurring retainers, and no dependency on anybody else's output. It is not a candidate for consolidation — it is the thing you copy when you add the next vertical.",
-   impact:"no change · 2 accounts · 6 hrs/wk"},
-  {id:"m8", kind:"watch", title:"Garrett keeps the Yeah You edit — and that is the next problem, not this one",
-   body:"Eight of his twenty-two hours are editing. The honest answer is that <b>nobody has the headroom to take it</b>: Viktor is full at 24.5 and Skylar is full at 19 once QC lands. So the next hire after Distribution is a second editor bought with Man Eats Wild revenue or a new account — not now, and not instead of the Distribution seat.",
-   impact:"22 hrs/wk · 8 of them are not founder work · unlocks in Q4"}
+   body:"Real estate already works. Recurring retainers, nothing waiting on anybody else's output, nothing queued behind the editing gate. It is not a candidate for consolidation. It is the pattern to copy when you add the next vertical."},
+  {id:"m8", kind:"watch", title:"Garrett is the last thing you fix, not the first",
+   body:"The instinct is to get editing off your own plate first. It has to come off last. Until the Lead Editor is in and trusted, handing your work down just moves the quality problem somewhere you cannot see it. Fill the seat, watch a full cycle of output, then hand over."}
  ],
  seq:[
-  {id:"s1", when:"This week", what:"<b>Pay Skylar $600</b> and move the QC sign-off to her. Costs one conversation and protects everything downstream."},
-  {id:"s2", when:"This week", what:"<b>Promote Kingdon, hand him Man Eats Wild short form, raise him to $400.</b> Cancel the separate MEW editor search before you take another call."},
-  {id:"s3", when:"By 15 Sept", what:"<b>Distribution &amp; Creator Manager starts.</b> Hand over one account a week, in this order: Man Eats Wild reposting, Xander, Blair, Yeah You, Lucas Fink — Foreign Waters last, because it is the one that can swallow the day."},
-  {id:"s4", when:"September", what:"<b>Accept the Lucas Fink Facebook Business Portfolio invite</b> before it expires, and route Lucas to the Distribution seat. One deliverable, and it is publishing, not editing."},
-  {id:"s5", when:"October", what:"<b>Viktor to Senior Editor at $500</b> and two weeks shadowing Skylar on QC, so the gate has a backup before anyone takes a holiday."},
-  {id:"s6", when:"Q4 — gated", what:"<b>Only if Man Eats Wild or a new account funds it:</b> hire a second editor and hand them the Yeah You episode. That is the hire that buys Garrett back eight hours a week."},
-  {id:"s7", when:"Ongoing", what:"Re-run this page every time an account lands. <b>When a seat crosses its capacity line, that is the hire signal</b> — a number, not a feeling."}
+  {id:"s1", when:"This week", what:"Make the Lead Editor offer. It is the seat that unblocks everything else on this page."},
+  {id:"s2", when:"This week", what:"Reply to the manager candidate who accepted with the performance markers in writing, then confirm the start."},
+  {id:"s3", when:"This week", what:"Push the Man Eats Wild access request again and keep it at the top of the thread until all three platforms are handed over."},
+  {id:"s4", when:"This week", what:"Accept the Lucas Fink Facebook business portfolio invite before it expires."},
+  {id:"s5", when:"Before the manager starts", what:"Cancel the separate Man Eats Wild editor search, and tell Kingdon he is picking it up."},
+  {id:"s6", when:"First fortnight", what:"Hand the manager one account at a time. Man Eats Wild reposting, then Xander, then Blair, then Lucas. Foreign Waters last, because it is the one that can swallow a whole day."},
+  {id:"s7", when:"First month", what:"Sit the Lead Editor alongside Viktor and Kingdon through a full cycle, so the standard is shown rather than described."},
+  {id:"s8", when:"After that", what:"Only once the Lead Editor is trusted, hand over the editing still sitting with Garrett."}
  ],
  risks:[
-  {id:"r1", sev:"high", title:"Everyone is new at the same time",
-   body:"Most of this roster is weeks old and two seats change scope in the same month. Stagger it — Skylar and Kingdon now, Distribution in September, Viktor in October. Never change two people's scope in the same week; you lose the ability to tell which change caused the problem."},
-  {id:"r2", sev:"high", title:"These rates only work offshore",
-   body:"$400–$1,000 a month across 19–28 hour weeks is $4.70–$8.25 an hour. That is a real overseas contractor market and it is not a domestic one. If you are hiring in the US, roughly triple every number here and only the Distribution seat survives the first pass."},
-  {id:"r3", sev:"med", title:"Kingdon is an intern picking up a second account",
-   body:"Man Eats Wild short form is the lowest-risk work on the board — vault mining, no shoot, no client on the phone. Keep it behind Skylar's gate for the first month and watch the ratio of cuts sent back. If it climbs, the separate editor hire comes back on the table with evidence."},
-  {id:"r4", sev:"med", title:"Foreign Waters runs daily; everything else runs weekly",
-   body:"A 12–14 item Trybe digest every single day will quietly consume a publishing schedule. Give it a fixed window at the top of the day with a hard cap, or it becomes the whole job and the nine other accounts slip a week at a time."},
-  {id:"r5", sev:"med", title:"Your biggest revenue line sits on your cheapest seat",
-   body:"Blair is a 35% revenue share rather than a retainer, so income moves with output — and the editor producing that output is the lowest-paid person on the roster. Move 3 is not generosity, it is protecting the largest line on the P&amp;L."},
-  {id:"r6", sev:"low", title:"One gate is a bottleneck as well as a fix",
-   body:"Skylar signing off everything is right at this volume and wrong at twice it. Viktor as backup buys the next step. Past that, QC has to move into the Distribution seat with a written checklist — and that is a documentation job you should start now, while the volume is still small enough to write it down."}
+  {id:"r1", sev:"high", title:"Nobody is holding quality right now",
+   body:"Skylar has gone and the Lead Editor seat is empty, so every cut currently ships on the editor's own judgement. That is survivable for a week. It is not survivable for a month. Treat it as an open wound rather than a vacancy to fill at leisure."},
+  {id:"r2", sev:"high", title:"Almost everybody is new at the same time",
+   body:"Most of this roster is weeks old and two seats are still being filled. Stagger the changes so you can tell which one caused a problem. Never change two people's scope in the same week."},
+  {id:"r3", sev:"med", title:"The manager offer promises mentorship",
+   body:"It is sold as an engagement with real mentorship and real account experience. That is a promise of your time, at exactly the moment you are trying to get time back. If the mentorship does not actually happen, they leave early and you are hiring again in the middle of your busiest account."},
+  {id:"r4", sev:"med", title:"Man Eats Wild is growing commercially faster than it is on the content side",
+   body:"There are broadcast and e-commerce conversations running alongside the posting plan. If that side moves first, the cadence you have promised becomes public before the account access has even been handed over."},
+  {id:"r5", sev:"med", title:"Your biggest account sits on your newest editor",
+   body:"Blair moves with output rather than a retainer, and Kingdon is the intern. Adding Man Eats Wild on top is still the right call, but it goes behind the Lead Editor's sign off for the first month, not afterwards."},
+  {id:"r6", sev:"low", title:"One gate becomes a bottleneck",
+   body:"A single approver is right at this volume and wrong at twice it. Once the Lead Editor is settled, the standard has to be written down, so the Social Media Manager can hold it too."}
  ]
 };
 
-var TABLES = [
- {id:"t1", color:"coral", title:"Man Eats Wild", headers:["Platform","Per week","Who — proposed"], rows:[
-   ["Instagram feed","7 posts (1/day)","Distribution Manager"],
-   ["Instagram stories","21 (3/day)","Distribution Manager"],
-   ["Facebook","Full IG mirror + 1 YouTube repost","Distribution Manager"],
-   ["TikTok","21–35 (3–5/day)","Kingdon"],
-   ["YouTube Shorts","14–21 (2–3/day)","Kingdon"],
-   ["YouTube long form","1 video","Skylar"],
-   ["X","5 written + 10–15 repurposed","Distribution Manager"]]},
- {id:"t2", color:"indigo", title:"Xander Budnick", headers:["Platform","Per week","Who"], rows:[
-   ["YouTube — midform","1–2 midforms (8–20 min)","Viktor"],
-   ["YouTube / TikTok — short form","7–14 (1–2/day): one educational, one entertaining","Viktor"],
-   ["TikTok — repurposed","2 (the midforms)","Distribution Manager"],
-   ["Facebook — repurposed","2 (the midforms)","Distribution Manager"]]},
- {id:"t3", color:"indigo", title:"Blair Conklin", headers:["Platform","Per week","Who"], rows:[
-   ["Facebook — raw long form","2–3 river videos (4–20 min, vertical) · 10/month","Kingdon"],
-   ["TikTok / YT Shorts / Facebook","~7 posts of 1 min+ from iCloud footage · 30/month","Kingdon"],
-   ["Facebook — repurposed","All YouTube long form, as published","Distribution Manager"]]},
- {id:"t4", color:"teal", title:"Yeah You Podcast", headers:["Output","Per week","Owner"], rows:[
-   ["Full episode","1 (4/month)","Garrett edits · Skylar films + produces"],
-   ["YouTube Shorts — main channel","2","Viktor"],
-   ["Shorts — Garrett Abdulla personal","3","Viktor"],
-   ["Midforms","2","Viktor"],
-   ["Reposts — TikTok, Facebook, X","All of the above","Distribution Manager"],
-   ["Instagram","Bangers only","Distribution Manager"]]},
- {id:"t5", color:"amber", title:"Foreign Waters", headers:["Task","Cadence","Owner"], rows:[
-   ["Organic posts","2 per week","Distribution Manager"],
-   ["Trybe — creator DMs and UGC approvals","Daily (digest runs 12–14 items)","Distribution Manager"],
-   ["TikTok Shop Seller Center","Daily","Distribution Manager"],
-   ["UGC coordination — briefs and feedback","Ongoing","Distribution Manager"],
-   ["Athlete roster posts, product linked","As scripts go out","Distribution Manager"]]},
- {id:"t6", color:"violet", title:"Real estate — Paulo & Tara", headers:["Account","Per week","Owner"], rows:[
-   ["Paulo Prietto","2–3 real-estate posts","Julia"],
-   ["Tara Bunker","2 real-estate posts","Julia"]]},
- {id:"t7", color:"amber", title:"Lucas Fink", headers:["Platform","Per week","Owner"], rows:[
-   ["Facebook — repurposed from already-posted videos","Cadence TBD — set it on the intro call","Distribution Manager"]]}
-];
-
-return {
-  v:1, scenario:"current",
-  people:P, clients:C, work:W, plan:PLAN, tables:TABLES,
-  tierNames:["Ownership","Leads","Production"],
-  orgNote:"Footage comes in, an editor cuts it, Skylar signs it off, the Distribution Manager titles and posts it. One gate, one publisher, and Garrett only in the room for strategy and the podcast.",
-  ui:{view:"roster"}
-};
+return {v:2, people:P, clients:C, work:W, copy:COPY, inbox:INBOX, plan:PLAN,
+        layers:["Ownership","Managers","Editors"], ui:{view:"roster"}};
 }
 
-/* ══════════════ helpers ══════════════ */
+/* helpers */
 var $  = function(s,r){ return (r||document).querySelector(s); };
 var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
-var seq2 = 0;
-function uid(p){ return (p||"x") + Date.now().toString(36) + (seq2++).toString(36); }
+var n0 = 0;
+function uid(p){ return (p||"x") + Date.now().toString(36) + (n0++).toString(36); }
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
 function cvar(c){ return "var(--" + (COLORS.indexOf(c)>=0 ? c : "indigo") + ")"; }
 function cwash(c){ return "var(--" + (COLORS.indexOf(c)>=0 ? c : "indigo") + "-w)"; }
-function initials(n){
-  var a = String(n||"?").trim().split(/\s+/);
-  return (a.length===1 ? a[0].slice(0,2) : a[0][0] + a[a.length-1][0]).toUpperCase();
+function initials(p){
+  var src = p.name || p.role || "?";
+  var a = String(src).trim().split(/\s+/);
+  return (a.length === 1 ? a[0].slice(0,2) : a[0][0] + a[1][0]).toUpperCase();
 }
-function hrs(n){ return (Math.round(n*10)/10).toFixed(1).replace(/\.0$/,""); }
-function money(n){ return n == null ? "—" : "$" + Number(n).toLocaleString(); }
-function payLabel(p){
-  var r = rateOf(p);
-  if(p.tier === 0) return "founder";
-  if(p.filled === false) return (prop() && p.keep !== "0" && r) ? money(r) + "/mo — to hire" : "not hired yet";
-  if(r == null) return "rate not set";
-  return r ? money(r) + "/mo" : "$0 — unpaid";
-}
+function bigName(p){ return p.name || p.role; }
+function subName(p){ return p.name ? p.role : "Open seat"; }
 
 var S = null, saveTimer = null, undoStack = [];
-
 function person(id){ for(var i=0;i<S.people.length;i++) if(S.people[i].id===id) return S.people[i]; return null; }
 function client(id){ for(var i=0;i<S.clients.length;i++) if(S.clients[i].id===id) return S.clients[i]; return null; }
-function workItem(id){ for(var i=0;i<S.work.length;i++) if(S.work[i].id===id) return S.work[i]; return null; }
+function work(id){ for(var i=0;i<S.work.length;i++) if(S.work[i].id===id) return S.work[i]; return null; }
+function findBy(arr,id){ for(var i=0;i<arr.length;i++) if(arr[i].id===id) return arr[i]; return null; }
+function workOf(pid){ return S.work.filter(function(w){ return w.ownerId === pid; }).sort(function(a,b){ return (a.ord||0)-(b.ord||0); }); }
 
-/* scenario resolution ------------------------------------------------ */
-function prop(sc){ return (sc || S.scenario) === "proposed"; }
-function alive(p, sc){ return !(prop(sc) && p.keep === "0"); }
-function people(sc){ return S.people.filter(function(p){ return alive(p, sc); }); }
-function roleOf(p, sc){ return (prop(sc) && p.role2) ? p.role2 : p.role; }
-function rateOf(p, sc){
-  if(prop(sc)) return p.keep === "0" ? 0 : (p.rate2 != null ? p.rate2 : p.rate);
-  return p.rate;
-}
-function bossOf(p, sc){ return prop(sc) ? (p.reportsTo2 != null && p.reportsTo2 !== "" ? p.reportsTo2 : p.reportsTo) : p.reportsTo; }
-function ownerOf(w, sc){ return (prop(sc) && w.ownerId2) ? w.ownerId2 : w.ownerId; }
-function moved(w, sc){ return prop(sc) && w.ownerId2 && w.ownerId2 !== w.ownerId; }
-function workOf(pid, sc){
-  return S.work.filter(function(w){ return ownerOf(w, sc) === pid; })
-               .sort(function(a,b){ return (a.ord||0)-(b.ord||0); });
-}
-function loadOf(pid, sc){ return workOf(pid, sc).reduce(function(a,w){ return a + Number(w.hrs||0); }, 0); }
-function directsOf(pid, sc){ return people(sc).filter(function(p){ return bossOf(p, sc) === pid; }); }
-
-function totals(sc){
-  var ppl = people(sc);
-  var t = {seats:ppl.length, hours:0, cost:0, top:0, topName:"—", over:0};
-  S.work.forEach(function(w){ t.hours += Number(w.hrs||0); });
-  ppl.forEach(function(p){
-    var r = rateOf(p, sc); if(r) t.cost += Number(r);
-    var l = loadOf(p.id, sc);
-    if(l > t.top){ t.top = l; t.topName = p.name; }
-    if(l > (p.cap||30)) t.over++;
-  });
-  return t;
-}
-
-/* ══════════════ persistence ══════════════ */
+/* storage */
 function load(){
   var raw = null;
   try { raw = localStorage.getItem(KEY); } catch(e){}
@@ -859,36 +622,32 @@ function load(){
 }
 function migrate(d){
   d.people = d.people||[]; d.clients = d.clients||[]; d.work = d.work||[];
-  d.tables = d.tables||[]; d.tierNames = d.tierNames||["Ownership","Leads","Production"];
-  d.plan = d.plan||{lede:"",moves:[],seq:[],risks:[]};
-  d.plan.moves = d.plan.moves||[]; d.plan.seq = d.plan.seq||[]; d.plan.risks = d.plan.risks||[];
+  d.inbox = d.inbox||[]; d.copy = d.copy||{}; d.layers = d.layers||["Ownership","Managers","Editors"];
+  d.plan = d.plan||{}; d.plan.moves = d.plan.moves||[]; d.plan.seq = d.plan.seq||[]; d.plan.risks = d.plan.risks||[];
   d.ui = d.ui||{view:"roster"};
-  d.scenario = d.scenario === "proposed" ? "proposed" : "current";
-  d.work.forEach(function(w,i){ if(w.ord == null) w.ord = i; w.hrs = Number(w.hrs||0); });
-  d.people.forEach(function(p){ if(p.keep == null) p.keep = "1"; if(!p.cap) p.cap = 30; if(p.filled == null) p.filled = true; });
+  d.people.forEach(function(p){ p.duties = p.duties||[]; if(p.locked == null) p.locked = false; });
+  d.work.forEach(function(w,i){ if(w.ord == null) w.ord = i; });
   return d;
 }
 function save(){
-  markDirty();
-  clearTimeout(saveTimer);
+  markDirty(); clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){
     try { localStorage.setItem(KEY, JSON.stringify(S)); markSaved(); }
-    catch(e){ markSaved("Storage full — take a backup"); }
+    catch(e){ markSaved("Storage full, take a backup"); }
   }, 260);
 }
-function markDirty(){ $("#saveChip").classList.add("dirty"); $("#saveTxt").textContent = "Saving…"; }
+function markDirty(){ $("#saveChip").classList.add("dirty"); $("#saveTxt").textContent = "Saving"; }
 function markSaved(m){ $("#saveChip").classList.remove("dirty"); $("#saveTxt").textContent = m || "Saved"; }
-function snapshot(label){ undoStack.push({label:label, json:JSON.stringify(S)}); if(undoStack.length>40) undoStack.shift(); }
+function snapshot(l){ undoStack.push({label:l, json:JSON.stringify(S)}); if(undoStack.length>40) undoStack.shift(); }
 function undo(){
   var s = undoStack.pop();
   if(!s){ toast("Nothing left to undo"); return; }
   S = JSON.parse(s.json); save(); renderAll(); toast("Undid " + s.label);
 }
-
 var toastTimer = null;
 function toast(msg, action){
   var t = $("#toast");
-  $("#toastMsg").innerHTML = msg;
+  $("#toastMsg").textContent = msg;
   $$("button", t).forEach(function(b){ b.remove(); });
   if(action){
     var b = document.createElement("button");
@@ -898,253 +657,98 @@ function toast(msg, action){
   }
   t.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(hideToast, action ? 6500 : 2600);
+  toastTimer = setTimeout(hideToast, action ? 6500 : 2800);
 }
 function hideToast(){ $("#toast").classList.remove("show"); }
 
-/* ══════════════ top bar ══════════════ */
-function renderHud(){
-  var t = totals();
-  $("#hSeats").textContent = t.seats;
-  $("#hHours").textContent = hrs(t.hours) + " hrs";
-  $("#hCost").textContent  = money(t.cost) + "/mo";
-  $("#scLabel").textContent = prop() ? "My proposed structure" : "The team as it stands today";
-  $$("#scSwitch button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-sc") === S.scenario); });
-  $("#cnt-roster").textContent   = t.seats;
-  $("#cnt-accounts").textContent = S.clients.length;
-  $("#cnt-plan").textContent     = S.plan.moves.length;
-}
-
-function statCard(k, v, s, color){
-  return '<div class="stat" style="--sc:' + cvar(color||"indigo") + '"><div class="k">' + esc(k) + '</div>' +
-         '<div class="v">' + v + '</div><div class="s">' + s + '</div></div>';
-}
-function delta(now, then, unit, lowerIsBetter){
-  if(now === then) return "no change";
-  var better = lowerIsBetter ? now < then : now > then;
-  var arrow = now > then ? "▲" : "▼";
-  return '<em class="' + (better ? "" : "warn") + '">' + arrow + " " + unit + "</em>";
-}
-function renderRosterStats(){
-  var a = totals("current"), b = totals("proposed"), t = totals();
-  $("#rosterStats").innerHTML =
-    statCard("Seats", t.seats, prop() ? "one fewer than today" : "two of them still unfilled", "indigo") +
-    statCard("Hours a week", hrs(t.hours), "the same work, moved around", "teal") +
-    statCard("Team cost", money(t.cost) + "<span style='font-size:13px;font-weight:500'>/mo</span>",
-             prop() ? "up from " + money(a.cost) + " — two unpaid seats get paid" : "two seats unpaid, two unfilled", "amber") +
-    statCard("Heaviest seat", hrs(t.top) + "<span style='font-size:13px;font-weight:500'> hrs</span>",
-             esc(t.topName) + (t.over ? " · " + t.over + " over capacity" : " · nobody over capacity"),
-             t.over ? "coral" : "moss");
-  $("#rosterNote").innerHTML = prop()
-    ? "Six seats instead of seven. The same 118.5 hours of work, redistributed — with the Man Eats Wild editor folded into Kingdon and QC moved off the new hire. Drag any line to a different person to test your own version."
-    : "Seven seats — two of them unfilled, two of them unpaid — and " + hrs(a.top) + " hours a week piled onto a role nobody has taken yet. Switch to <b>Proposed</b> to see what I would do instead.";
-}
-
-/* ══════════════ roster ══════════════ */
-function flagsFor(p){
-  var out = [];
-  if(p.keep === "lock"){ out.push('<span class="flag locked">Unchanged — locked</span>'); return out.join(""); }
-  if(prop()){
-    if(p.keep === "0"){ out.push('<span class="flag cut">Don\'t fill this seat</span>'); return out.join(""); }
-    if(p.role2 && p.role2 !== p.role) out.push('<span class="flag change">New title</span>');
-    var r1 = p.rate, r2 = rateOf(p, "proposed");
-    if(r2 != null && r1 !== r2 && p.tier !== 0){
-      out.push('<span class="flag change">Pay ' + (r1 == null ? "" : money(r1) + " → ") + money(r2) + '/mo</span>');
-    }
-    var d = loadOf(p.id, "proposed") - loadOf(p.id, "current");
-    if(Math.abs(d) > 0.01) out.push('<span class="flag change">' + (d>0?"+":"") + hrs(d) + ' hrs</span>');
-    if(p.id === "p_smm") out.push('<span class="flag hire">The one hire</span>');
-    if(!out.length) out.push('<span class="flag keep">Unchanged</span>');
-  } else if(p.status){
-    out.push('<span class="flag hire">' + esc(p.status) + '</span>');
-  }
-  return out.join("");
-}
-
+/* roster */
 function personCard(p){
-  var load = loadOf(p.id), cap = p.cap || 30;
-  var other = loadOf(p.id, prop() ? "current" : "proposed");
-  var d = load - other;
-  var boss = person(bossOf(p));
-  var directs = directsOf(p.id);
-  var items = workOf(p.id);
-
-  /* group deliverables by account */
-  var byClient = {}, order = [];
-  items.forEach(function(w){
+  var jobs = workOf(p.id), byClient = {}, order = [];
+  jobs.forEach(function(w){
     if(!byClient[w.clientId]){ byClient[w.clientId] = []; order.push(w.clientId); }
     byClient[w.clientId].push(w);
   });
   var groups = order.map(function(cid){
-    var c = client(cid), list = byClient[cid];
-    var gh = list.reduce(function(a,w){ return a + Number(w.hrs||0); }, 0);
-    return '<div class="dgroup" style="--gc:' + cvar(c?c.color:"indigo") + '">' +
-      '<div class="gt"><span>' + esc(c ? c.name : "Unassigned") + '</span><span class="ln"></span><span class="gh">' + hrs(gh) + ' hrs</span></div>' +
-      '<ul class="dlist">' + list.map(function(w){
-        return '<li data-w="' + w.id + '"' + (moved(w) ? ' class="moved"' : '') + '>' +
-          '<span class="dot"></span>' +
-          '<span class="dt">' + esc(w.title) + (moved(w) ? ' <span class="dcad" style="color:var(--teal)">moved here</span>' : '') + '</span>' +
-          '<span class="dcad">' + esc(CADENCE[w.cadence]||"") + '</span>' +
-          '<span class="dh">' + hrs(w.hrs) + 'h</span></li>';
+    var c = client(cid);
+    return '<div class="jgroup" style="--gc:' + cvar(c?c.color:"indigo") + '">' +
+      '<div class="gname">' + esc(c ? c.name : "Unassigned") + '</div>' +
+      '<ul class="jlist">' + byClient[cid].map(function(w){
+        return '<li data-w="' + w.id + '"><span class="bullet"></span>' +
+          '<span class="txt">' + esc(w.title) + '</span>' +
+          '<span class="beat">' + esc(w.beat||"") + '</span></li>';
       }).join("") + '</ul></div>';
   }).join("");
 
-  return '<article class="pcard dropzone' + (prop() && p.keep === "0" ? " cut" : "") + '" data-p="' + p.id + '"' +
-    ' style="--c:' + cvar(p.color) + ';--cw:' + cwash(p.color) + '">' +
-    '<div class="cardtools"><button class="tiny" data-editp="' + p.id + '" title="Edit seat">✎</button></div>' +
-    '<div class="phead">' +
-      '<div class="avatar">' + esc(initials(p.name)) + '</div>' +
+  var boss = person(p.reportsTo);
+  var directs = S.people.filter(function(x){ return x.reportsTo === p.id; });
+
+  return '<article class="pcard" data-p="' + p.id + '" style="--c:' + cvar(p.color) + ';--cw:' + cwash(p.color) + '">' +
+    '<div class="cardtools"><button class="tiny" data-editp="' + p.id + '" title="Edit this seat">Edit</button></div>' +
+    '<div class="phead"><div class="avatar">' + esc(initials(p)) + '</div>' +
       '<div style="min-width:0;flex:1">' +
-        '<div class="pname">' + esc(p.name) + '</div>' +
-        '<div class="prole">' + (prop() && p.role2 && p.role2 !== p.role ? '<span class="was">' + esc(p.role) + '</span>' : '') + esc(roleOf(p)) + '</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:5px">' + flagsFor(p) + '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="loadwrap">' +
-      '<div class="loadrow"><span>Weekly load</span>' +
-        '<b>' + hrs(load) + ' <span style="font-size:10px;color:var(--ink-faint);font-weight:500">of ' + cap + ' hrs</span>' +
-        (Math.abs(d) > 0.01 ? ' <span class="delta ' + (d>0?"up":"down") + '">' + (d>0?"+":"") + hrs(d) + '</span>' : '') + '</b></div>' +
-      '<div class="bar' + (load > cap ? " over" : "") + '"><i style="width:' + clamp((load/Math.max(cap,load))*100,0,100) + '%"></i>' +
-        (load > cap ? '<span class="capmark" style="left:' + clamp((cap/load)*100,0,100) + '%"></span>' : '') + '</div>' +
-    '</div>' +
-    '<div class="delivs">' + (groups || '<div style="color:var(--ink-faint);font-size:13px;padding:4px 0 10px">No deliverables — drag some over.</div>') + '</div>' +
+        '<div class="pname">' + esc(bigName(p)) + '</div>' +
+        '<div class="prole">' + esc(subName(p)) + '</div>' +
+        (p.tag ? '<span class="tag" style="--tc:' + cvar(p.color) + ';--tw:' + cwash(p.color) + '">' + esc(p.tag) + '</span>' : '') +
+      '</div></div>' +
+    (p.duties.length || true ? '<div class="psec"><h4>What this seat owns</h4><ul class="plist">' +
+      p.duties.map(function(d,i){
+        return '<li><span class="bullet"></span><span class="txt cell" contenteditable="true" data-duty="' + p.id + ':' + i + '" data-ph="Responsibility">' + esc(d) + '</span>' +
+               '<button class="tiny quiet rowdel" data-deldu="' + p.id + ':' + i + '" title="Remove">Remove</button></li>';
+      }).join("") + '</ul>' +
+      '<button class="soft tiny" data-adddu="' + p.id + '" style="margin-top:11px">Add one</button></div>' : '') +
+    (groups ? '<div class="jobs"><div class="psec" style="padding:0 0 4px"><h4>Accounts they work on</h4></div>' + groups + '</div>'
+            : '<div class="psec"><h4>Accounts they work on</h4><p style="color:var(--ink-faint);font-size:15px;margin:0">Nothing yet. Drag a line of work over.</p></div>') +
     '<div class="pfoot">' +
-      '<span>Reports to <b>' + esc(boss ? boss.name : "nobody") + '</b></span>' +
-      '<span>Directs <b>' + (directs.length ? directs.map(function(x){ return esc(x.name); }).join(", ") : "—") + '</b></span>' +
-      '<span>Pay <b>' + payLabel(p) + '</b></span>' +
+      '<span>Reports to <b>' + esc(boss ? bigName(boss) : "nobody") + '</b></span>' +
+      '<span>Manages <b>' + (directs.length ? directs.map(function(x){ return esc(bigName(x)); }).join(", ") : "nobody") + '</b></span>' +
     '</div>' +
-    (p.note ? '<div class="pnote"><span class="cell" contenteditable="true" data-pnote="' + p.id + '" data-ph="Note…">' + esc(p.note) + '</span></div>' : '') +
+    (p.note ? '<div class="pnote"><span class="cell" contenteditable="true" data-pnote="' + p.id + '" data-ph="Note">' + esc(p.note) + '</span></div>' : '') +
   '</article>';
 }
-
 function renderRoster(){
-  renderRosterStats();
-  var ppl = people(), html = "", seen = {};
-  (S.tierNames||[]).forEach(function(tn, t){
-    var list = ppl.filter(function(p){ return (p.tier|0) === t; });
+  var html = "", seen = {};
+  (S.layers||[]).forEach(function(ln, i){
+    var list = S.people.filter(function(p){ return (p.layer|0) === i; });
     list.forEach(function(p){ seen[p.id] = 1; });
     if(!list.length) return;
-    var h = list.reduce(function(a,p){ return a + loadOf(p.id); }, 0);
-    html += '<div class="tierbar"><span>' + esc(tn) + '</span><span class="ln"></span>' +
-            '<span>' + list.length + ' · ' + hrs(h) + ' hrs/wk</span></div>' +
-            '<div class="roster" data-tier="' + t + '">' + list.map(personCard).join("") + '</div>';
+    html += '<div class="layer"><span class="name">' + esc(ln) + '</span><span class="ln"></span></div>' +
+            '<div class="roster">' + list.map(personCard).join("") + '</div>';
   });
-  var rest = ppl.filter(function(p){ return !seen[p.id]; });
-  if(rest.length){
-    html += '<div class="tierbar"><span>Other</span><span class="ln"></span></div>' +
-            '<div class="roster" data-tier="' + S.tierNames.length + '">' + rest.map(personCard).join("") + '</div>';
-  }
+  var rest = S.people.filter(function(p){ return !seen[p.id]; });
+  if(rest.length) html += '<div class="layer"><span class="name">Other</span><span class="ln"></span></div>' +
+                          '<div class="roster">' + rest.map(personCard).join("") + '</div>';
   $("#rosterZone").innerHTML = html;
 }
 
-/* ══════════════ accounts ══════════════ */
-function ownerTag(pid, w){
+/* accounts */
+function whoTag(pid){
   var p = person(pid);
-  if(!p) return '<span class="owner-tag" style="--oc:var(--ink-faint);--ow:var(--surface-2)">unassigned</span>';
-  return '<span class="owner-tag' + (w && moved(w) ? " moved" : "") + '" style="--oc:' + cvar(p.color) + ';--ow:' + cwash(p.color) + '">' + esc(p.name) + '</span>';
+  if(!p) return '<span class="who" style="--oc:var(--ink-faint);--ow:var(--surface-2)">unassigned</span>';
+  return '<span class="who" style="--oc:' + cvar(p.color) + ';--ow:' + cwash(p.color) + '">' + esc(bigName(p)) + '</span>';
 }
 function renderAccounts(){
   $("#accountZone").innerHTML = S.clients.map(function(c){
     var items = S.work.filter(function(w){ return w.clientId === c.id; }).sort(function(a,b){ return (a.ord||0)-(b.ord||0); });
-    var h = items.reduce(function(a,w){ return a + Number(w.hrs||0); }, 0);
-    var owners = {};
-    items.forEach(function(w){ owners[ownerOf(w)] = 1; });
     return '<article class="acard" data-c="' + c.id + '" style="--c:' + cvar(c.color) + '">' +
-      '<div class="cardtools"><button class="tiny" data-editc="' + c.id + '" title="Edit account">✎</button>' +
-        '<button class="tiny" data-addw="' + c.id + '" title="Add a deliverable">＋</button></div>' +
-      '<div class="ah"><span class="an">' + esc(c.name) + '</span><span class="as">' + esc(c.sub||"") + '</span></div>' +
-      '<div class="achips">' +
-        '<span class="achip"><b>' + items.length + '</b> deliverables</span>' +
-        '<span class="achip"><b>' + hrs(h) + '</b> hrs/wk</span>' +
-        '<span class="achip"><b>' + Object.keys(owners).length + '</b> people</span>' +
-      '</div>' +
+      '<div class="cardtools"><button class="tiny" data-editc="' + c.id + '" title="Edit">Edit</button>' +
+        '<button class="tiny" data-addw="' + c.id + '" title="Add a line of work">Add</button></div>' +
+      '<div class="an">' + esc(c.name) + '</div><div class="as">' + esc(c.sub||"") + '</div>' +
       '<ul class="alist">' + items.map(function(w){
-        return '<li data-editw="' + w.id + '" style="cursor:pointer"><span class="dot"></span>' +
-          '<span class="at">' + esc(w.title) +
-            (w.platform ? ' <span style="font-family:var(--mono);font-size:10px;color:var(--ink-faint)">' + esc(w.platform) + '</span>' : '') +
-          '</span>' +
-          ownerTag(ownerOf(w), w) +
-          '<span class="dh" style="font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)">' + hrs(w.hrs) + 'h</span></li>';
+        return '<li data-editw="' + w.id + '" style="cursor:pointer"><span class="bullet"></span>' +
+          '<span class="txt">' + esc(w.title) + '</span>' + whoTag(w.ownerId) + '</li>';
       }).join("") + '</ul>' +
       (c.note ? '<div class="anote"><span class="cell" contenteditable="true" data-cnote="' + c.id + '">' + esc(c.note) + '</span></div>' : '') +
     '</article>';
   }).join("");
 }
 
-/* ══════════════ the plan ══════════════ */
-function renderPlan(){
-  var a = totals("current"), b = totals("proposed");
-  $('[data-plan="lede"]').innerHTML = S.plan.lede || "";
-  $("#planStats").innerHTML =
-    statCard("Seats", a.seats + " → " + b.seats, "one fewer person to find, brief and chase", "indigo") +
-    statCard("Hours a week", hrs(a.hours), "identical — this is redistribution, not extra work", "teal") +
-    statCard("Team cost", money(a.cost) + " → " + money(b.cost),
-             "phase it: +$850 now, the hire in September, +$100 in October", "amber") +
-    statCard("Heaviest seat", hrs(a.top) + " → " + hrs(b.top) + " hrs", "the unfilled role stops being a two-person job", "moss");
-
-  $("#moveZone").innerHTML = S.plan.moves.map(function(m,i){
-    var k = KINDS[m.kind] || KINDS.rescope;
-    return '<article class="move" data-move="' + m.id + '" style="--mc:' + cvar(k.c) + ';--mcw:' + cwash(k.c) + '">' +
-      '<div class="cardtools"><button class="tiny" data-delmove="' + m.id + '" title="Remove">×</button></div>' +
-      '<div class="mh"><span class="mt cell" contenteditable="true" data-mv="' + m.id + ':title" data-ph="What the move is…">' + esc(m.title) + '</span>' +
-        '<span class="kind">' + esc(k.label) + '</span></div>' +
-      '<div class="mb cell" contenteditable="true" data-html="1" data-mv="' + m.id + ':body" data-ph="Why…">' + (m.body||"") + '</div>' +
-      '<div class="mim"><b>Impact</b><span class="cell" contenteditable="true" data-mv="' + m.id + ':impact" data-ph="numbers…">' + esc(m.impact||"") + '</span></div>' +
-    '</article>';
-  }).join("");
-  $("#moveZone").previousElementSibling.querySelector("h2").textContent =
-    S.plan.moves.length + " move" + (S.plan.moves.length === 1 ? "" : "s");
-
-  $("#seqZone").innerHTML = S.plan.seq.map(function(s){
-    return '<div class="seqrow" data-step="' + s.id + '">' +
-      '<div class="when cell" contenteditable="true" data-sq="' + s.id + ':when" data-ph="When">' + esc(s.when) + '</div>' +
-      '<div class="what"><span class="cell" contenteditable="true" data-html="1" data-sq="' + s.id + ':what" data-ph="What happens">' + (s.what||"") + '</span>' +
-        ' <button class="tiny quiet rowdel" data-delstep="' + s.id + '" title="Remove">×</button></div>' +
-    '</div>';
-  }).join("");
-
-  $("#riskZone").innerHTML = S.plan.risks.map(function(r){
-    return '<article class="risk" data-risk="' + r.id + '">' +
-      '<div class="cardtools"><button class="tiny" data-delrisk="' + r.id + '" title="Remove">×</button></div>' +
-      '<span class="sev ' + esc(r.sev) + '">' + (r.sev === "high" ? "High" : r.sev === "med" ? "Medium" : "Low") + '</span>' +
-      '<div class="rt cell" contenteditable="true" data-rk="' + r.id + ':title">' + esc(r.title) + '</div>' +
-      '<div class="rb cell" contenteditable="true" data-html="1" data-rk="' + r.id + ':body">' + (r.body||"") + '</div>' +
-    '</article>';
-  }).join("");
-}
-
-/* ══════════════ weekly tables ══════════════ */
-function renderTables(){
-  var z = $("#tableZone");
-  if(!S.tables.length){ z.innerHTML = '<div class="empty">No tables yet.</div>'; return; }
-  z.innerHTML = S.tables.map(function(t,ti){
-    return '<div class="tcard" style="--c:' + cvar(t.color) + '">' +
-      '<div class="th"><span class="tt cell" contenteditable="true" data-ttl="' + ti + '">' + esc(t.title) + '</span>' +
-        '<button class="tiny quiet" data-delt="' + ti + '" title="Delete table">×</button></div>' +
-      '<div class="tscroll"><table class="wk"><thead><tr>' +
-        t.headers.map(function(h,hi){ return '<th><span class="cell" contenteditable="true" data-th="' + ti + ':' + hi + '">' + esc(h) + '</span></th>'; }).join("") +
-        '<th class="rowtools"></th></tr></thead><tbody>' +
-        t.rows.map(function(r,ri){
-          return '<tr>' + r.map(function(cell,ci){
-            return '<td><span class="cell" contenteditable="true" data-ph="—" data-td="' + ti + ':' + ri + ':' + ci + '">' + esc(cell) + '</span></td>';
-          }).join("") + '<td class="rowtools"><button class="tiny quiet rowdel" data-delr="' + ti + ':' + ri + '" title="Delete row">×</button></td></tr>';
-        }).join("") +
-      '</tbody></table></div>' +
-      '<div class="tfoot"><button class="dashed tiny" data-addr="' + ti + '">＋ row</button>' +
-        '<button class="dashed tiny" data-addc="' + ti + '">＋ column</button></div>' +
-    '</div>';
-  }).join("");
-}
-
-/* ══════════════ org chart ══════════════ */
-function kidsOf(id){ return people().filter(function(p){ return bossOf(p) === id; }); }
+/* org chart */
+function kidsOf(id){ return S.people.filter(function(p){ return p.reportsTo === id; }); }
 function orgNode(p){
-  var load = loadOf(p.id), cut = prop() && p.keep === "0";
-  return '<div class="onode' + (cut ? " cut" : "") + '" style="--c:' + cvar(p.color) + ';--cw:' + cwash(p.color) + '">' +
-    '<div class="orole">' + esc(roleOf(p)) + '</div>' +
-    '<div class="onm">' + esc(p.name) + '</div>' +
-    '<div class="ometa">' + hrs(load) + ' hrs/wk · ' + payLabel(p) + '</div>' +
-    (p.keep === "lock" ? '<span class="opill">locked</span>' : (!prop() && p.status ? '<span class="opill">' + esc(p.status) + '</span>' : '')) +
+  return '<div class="onode' + (p.name ? "" : " open") + '" style="--c:' + cvar(p.color) + ';--cw:' + cwash(p.color) + '">' +
+    '<div class="orole">' + esc(p.role) + '</div>' +
+    '<div class="onm">' + esc(p.name || "Open seat") + '</div>' +
+    (p.tag ? '<span class="otag">' + esc(p.tag) + '</span>' : '') +
   '</div>';
 }
 function branch(p, guard){
@@ -1156,30 +760,28 @@ function branch(p, guard){
       k.map(function(x){ return branch(x, guard); }).join("") + '</div>' : "") + '</div>';
 }
 function renderOrg(){
-  var z = $("#orgZone"), ppl = people();
-  var roots = ppl.filter(function(p){ return !bossOf(p) || !person(bossOf(p)) || !alive(person(bossOf(p))); });
-  if(!roots.length){ z.innerHTML = '<div class="empty">Set someone to report to nobody.</div>'; }
+  var z = $("#orgZone");
+  var roots = S.people.filter(function(p){ return !p.reportsTo || !person(p.reportsTo); });
+  if(!roots.length){ z.innerHTML = '<p style="text-align:center;color:var(--ink-faint)">Set somebody to report to nobody.</p>'; }
   else {
     var root = roots[0], others = roots.slice(1), k = kidsOf(root.id);
     z.innerHTML = '<div class="otop">' + orgNode(root) + '</div>' +
       (k.length ? '<div class="vline"></div><div class="orow ' + (k.length===1?"solo":"") + '"><i class="obar"></i>' +
         k.map(function(x){ return branch(x, [root.id]); }).join("") + '</div>' : "") +
-      (others.length ? '<div class="orow solo" style="margin-top:28px">' + others.map(function(x){ return branch(x, []); }).join("") + '</div>' : "");
+      (others.length ? '<div class="orow solo" style="margin-top:30px">' + others.map(function(x){ return branch(x, []); }).join("") + '</div>' : "");
     requestAnimationFrame(layoutBars);
   }
-  $('[data-orgnote]').innerHTML = esc(S.orgNote || "");
-  $("#orgNote2").innerHTML = prop()
-    ? "The proposed shape: one lead over production, one over distribution, real estate ring-fenced. The Man Eats Wild editor seat is gone."
-    : "As the breakdown has it today. Two of these seats are still empty and one of them is doing two jobs.";
-  $("#reassignZone").innerHTML = ppl.map(function(p){
-    var locked = p.keep === "lock";
-    return '<label class="ra"><span class="n">' + esc(p.name) + '</span>' +
-      '<select data-reports="' + p.id + '"' + (locked ? " disabled" : "") + '><option value="">— reports to nobody —</option>' +
-      ppl.filter(function(x){ return x.id !== p.id; }).map(function(x){
-        return '<option value="' + x.id + '"' + (x.id === bossOf(p) ? " selected" : "") + '>' + esc(x.name) + '</option>';
+  $("#reassignZone").innerHTML = S.people.map(function(p){
+    return '<label class="ra"><span class="n">' + esc(bigName(p)) + '</span>' +
+      '<select data-reports="' + p.id + '"' + (p.locked ? " disabled" : "") + '><option value="">reports to nobody</option>' +
+      S.people.filter(function(x){ return x.id !== p.id; }).map(function(x){
+        return '<option value="' + x.id + '"' + (x.id === p.reportsTo ? " selected" : "") + '>' + esc(bigName(x)) + '</option>';
       }).join("") + '</select></label>';
   }).join("");
-  $("#lockNote").textContent = "Julia's seat is locked — reporting line, scope and pay stay exactly as they are in both scenarios.";
+  var locked = S.people.filter(function(p){ return p.locked; }).map(function(p){ return bigName(p); });
+  $("#lockNote").textContent = locked.length
+    ? locked.join(" and ") + " is locked. That seat stays exactly as it is."
+    : "";
 }
 function layoutBars(){
   $$(".orow").forEach(function(row){
@@ -1193,19 +795,53 @@ function layoutBars(){
   });
 }
 
-function renderAll(){ renderHud(); renderRoster(); renderAccounts(); renderPlan(); renderTables(); renderOrg(); }
+/* plan */
+function renderPlan(){
+  $("#inboxZone").innerHTML = S.inbox.map(function(it){
+    return '<li data-in="' + it.id + '"><span class="bullet"></span>' +
+      '<span class="txt cell" contenteditable="true" data-inbox="' + it.id + '" data-ph="What changed">' + esc(it.text) + '</span>' +
+      '<button class="tiny quiet rowdel" data-delin="' + it.id + '">Remove</button></li>';
+  }).join("");
+  $("#moveZone").innerHTML = S.plan.moves.map(function(m){
+    var k = KINDS[m.kind] || KINDS.rescope;
+    return '<article class="move" style="--mc:' + cvar(k.c) + ';--mcw:' + cwash(k.c) + '">' +
+      '<div class="cardtools"><button class="tiny" data-delmove="' + m.id + '">Remove</button></div>' +
+      '<div class="mh"><span class="mt cell" contenteditable="true" data-mv="' + m.id + ':title" data-ph="The change">' + esc(m.title) + '</span>' +
+        '<span class="kind">' + esc(k.label) + '</span></div>' +
+      '<div class="mb cell" contenteditable="true" data-mv="' + m.id + ':body" data-ph="Why">' + esc(m.body) + '</div>' +
+    '</article>';
+  }).join("");
+  $("#seqZone").innerHTML = S.plan.seq.map(function(s){
+    return '<div class="seqrow">' +
+      '<div class="when cell" contenteditable="true" data-sq="' + s.id + ':when" data-ph="When">' + esc(s.when) + '</div>' +
+      '<div class="what"><span class="cell" contenteditable="true" data-sq="' + s.id + ':what" data-ph="What happens">' + esc(s.what) + '</span> ' +
+        '<button class="tiny quiet rowdel" data-delstep="' + s.id + '">Remove</button></div></div>';
+  }).join("");
+  $("#riskZone").innerHTML = S.plan.risks.map(function(r){
+    return '<article class="risk">' +
+      '<div class="cardtools" style="top:auto;bottom:14px;right:18px"><button class="tiny" data-delrisk="' + r.id + '">Remove</button></div>' +
+      '<span class="sev ' + esc(r.sev) + '">' + (r.sev === "high" ? "High" : r.sev === "med" ? "Medium" : "Low") + '</span>' +
+      '<div class="rt cell" contenteditable="true" data-rk="' + r.id + ':title">' + esc(r.title) + '</div>' +
+      '<div class="rb cell" contenteditable="true" data-rk="' + r.id + ':body">' + esc(r.body) + '</div>' +
+    '</article>';
+  }).join("");
+}
+function renderCopy(){
+  $$("[data-copy]").forEach(function(el){ el.textContent = S.copy[el.getAttribute("data-copy")] || ""; });
+}
+function renderAll(){ renderCopy(); renderRoster(); renderAccounts(); renderPlan(); renderOrg(); }
 
-/* ══════════════ drag a deliverable onto a person ══════════════ */
+/* drag a line of work onto another seat */
 (function(){
   var drag = null;
   document.addEventListener("pointerdown", function(e){
     if(e.button != null && e.button !== 0) return;
     if(e.target.closest("button, a, input, select, textarea, [contenteditable='true']")) return;
-    var li = e.target.closest(".dlist li[data-w]");
+    var li = e.target.closest(".jlist li[data-w]");
     if(!li) return;
     drag = {li:li, x0:e.clientX, y0:e.clientY, live:false, ghost:null, box:null,
-            touch:e.pointerType === "touch", holdOk:e.pointerType !== "touch"};
-    if(drag.touch){ var d0 = drag; d0.timer = setTimeout(function(){ if(drag === d0) d0.holdOk = true; }, 340); }
+            holdOk:e.pointerType !== "touch"};
+    if(!drag.holdOk){ var d0 = drag; d0.timer = setTimeout(function(){ if(drag === d0) d0.holdOk = true; }, 340); }
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
     document.addEventListener("pointercancel", up);
@@ -1215,11 +851,19 @@ function renderAll(){ renderHud(); renderRoster(); renderAccounts(); renderPlan(
     if(!drag.live){
       if(Math.abs(e.clientX-drag.x0) < 6 && Math.abs(e.clientY-drag.y0) < 6) return;
       if(!drag.holdOk){ up(); return; }
-      start();
+      drag.live = true;
+      var w = work(drag.li.getAttribute("data-w"));
+      var g = document.createElement("div");
+      g.className = "ghost-card";
+      g.textContent = w ? w.title : "";
+      document.body.appendChild(g);
+      drag.ghost = g;
+      drag.li.classList.add("ghosted");
+      document.body.style.userSelect = "none";
     }
     e.preventDefault();
-    drag.ghost.style.left = (e.clientX + 12) + "px";
-    drag.ghost.style.top  = (e.clientY + 12) + "px";
+    drag.ghost.style.left = (e.clientX + 14) + "px";
+    drag.ghost.style.top  = (e.clientY + 14) + "px";
     var under = document.elementFromPoint(e.clientX, e.clientY);
     var card = under && under.closest ? under.closest(".pcard[data-p]") : null;
     if(card !== drag.box){
@@ -1227,19 +871,8 @@ function renderAll(){ renderHud(); renderRoster(); renderAccounts(); renderPlan(
       if(card) card.classList.add("over");
       drag.box = card;
     }
-    if(e.clientY < 90) window.scrollBy(0,-14);
-    else if(e.clientY > window.innerHeight - 90) window.scrollBy(0,14);
-  }
-  function start(){
-    drag.live = true;
-    var w = workItem(drag.li.getAttribute("data-w"));
-    var g = document.createElement("div");
-    g.className = "drag-ghost";
-    g.textContent = w ? w.title : "";
-    document.body.appendChild(g);
-    drag.ghost = g;
-    drag.li.classList.add("ghosted");
-    document.body.style.userSelect = "none";
+    if(e.clientY < 100) window.scrollBy(0,-16);
+    else if(e.clientY > window.innerHeight - 100) window.scrollBy(0,16);
   }
   function up(){
     document.removeEventListener("pointermove", move);
@@ -1254,25 +887,19 @@ function renderAll(){ renderHud(); renderRoster(); renderAccounts(); renderPlan(
     d.li.classList.remove("ghosted");
     if(d.box) d.box.classList.remove("over");
     if(!d.box) return;
-    var w = workItem(d.li.getAttribute("data-w")), target = d.box.getAttribute("data-p");
-    if(!w || ownerOf(w) === target) return;
-    var to = person(target);
-    if(to && to.keep === "lock"){ toast("Julia's seat is locked — nothing moves in or out of it"); return; }
-    var fromName = (person(ownerOf(w))||{}).name || "nobody";
-    snapshot("moving “" + w.title + "”");
-    if(prop()){
-      w.ownerId2 = (target === w.ownerId) ? null : target;
-    } else {
-      w.ownerId = target;
-      if(w.ownerId2 === target) w.ownerId2 = null;
-    }
+    var w = work(d.li.getAttribute("data-w")), targetId = d.box.getAttribute("data-p");
+    if(!w || w.ownerId === targetId) return;
+    var to = person(targetId), from = person(w.ownerId);
+    if(to && to.locked){ toast(bigName(to) + " is locked, nothing moves in or out of that seat"); return; }
+    if(from && from.locked){ toast(bigName(from) + " is locked, nothing moves in or out of that seat"); return; }
+    snapshot("moving that line of work");
+    w.ownerId = targetId;
     save(); renderAll();
-    toast("“" + esc(w.title) + "” · " + esc(fromName) + " → " + esc(to ? to.name : "?") +
-          (prop() ? " <span style='opacity:.7'>in the proposal only</span>" : ""));
+    toast((from ? bigName(from) : "Nobody") + " to " + (to ? bigName(to) : "nobody"));
   }
 })();
 
-/* ══════════════ modals ══════════════ */
+/* modals */
 function openOverlay(sel, focusSel){
   closeOverlays(); $(sel).classList.add("open");
   setTimeout(function(){ var f = focusSel && $(focusSel); if(f) f.focus(); }, 30);
@@ -1283,7 +910,7 @@ $$(".overlay").forEach(function(o){ o.addEventListener("mousedown", function(e){
 
 function swatches(host, current, onPick){
   host.innerHTML = COLORS.map(function(c){
-    return '<button type="button" class="sw" data-col="' + c + '" aria-pressed="' + (c===current) + '" title="' + c + '" style="background:' + cvar(c) + '"></button>';
+    return '<button type="button" class="sw" data-col="' + c + '" aria-pressed="' + (c===current) + '" style="background:' + cvar(c) + '"></button>';
   }).join("");
   $$(".sw", host).forEach(function(b){
     b.addEventListener("click", function(){
@@ -1297,23 +924,16 @@ var editingPerson = null, pColor = "indigo";
 function openPerson(id){
   editingPerson = id || null;
   var p = id ? person(id) : null;
-  $("#pTitle").textContent = p ? "Edit seat" : "Add seat";
-  $("#pSub").textContent = p ? roleOf(p) : "New";
-  $("#p-tier").innerHTML = (S.tierNames||[]).map(function(t,i){ return '<option value="' + i + '">' + esc(t) + '</option>'; }).join("");
-  var opts = '<option value="">— nobody —</option>' + S.people.filter(function(x){ return !p || x.id !== p.id; })
-    .map(function(x){ return '<option value="' + x.id + '">' + esc(x.name) + '</option>'; }).join("");
-  $("#p-reports").innerHTML = opts; $("#p-reports2").innerHTML = opts;
+  $("#pTitle").textContent = p ? "Edit seat" : "Add a seat";
+  $("#p-layer").innerHTML = (S.layers||[]).map(function(l,i){ return '<option value="' + i + '">' + esc(l) + '</option>'; }).join("");
+  $("#p-reports").innerHTML = '<option value="">nobody</option>' + S.people.filter(function(x){ return !p || x.id !== p.id; })
+    .map(function(x){ return '<option value="' + x.id + '">' + esc(bigName(x)) + '</option>'; }).join("");
   $("#p-name").value    = p ? p.name : "";
-  $("#p-cap").value     = p ? (p.cap||30) : 30;
   $("#p-role").value    = p ? p.role : "";
-  $("#p-role2").value   = p ? (p.role2||"") : "";
-  $("#p-rate").value    = p && p.rate  != null ? p.rate  : "";
-  $("#p-rate2").value   = p && p.rate2 != null ? p.rate2 : "";
-  $("#p-tier").value    = p ? clamp(p.tier|0, 0, S.tierNames.length-1) : S.tierNames.length-1;
+  $("#p-layer").value   = p ? Math.min(p.layer|0, S.layers.length-1) : S.layers.length-1;
   $("#p-reports").value = p ? (p.reportsTo||"") : ((S.people[0]||{}).id||"");
-  $("#p-reports2").value= p ? (p.reportsTo2||"") : "";
-  $("#p-status").value  = p ? (p.status||"") : "";
-  $("#p-keep").value    = p ? (p.keep||"1") : "1";
+  $("#p-tag").value     = p ? (p.tag||"") : "";
+  $("#p-locked").value  = p && p.locked ? "1" : "0";
   $("#p-note").value    = p ? (p.note||"") : "";
   pColor = p ? p.color : "indigo";
   swatches($("#p-colors"), pColor, function(c){ pColor = c; });
@@ -1322,61 +942,45 @@ function openPerson(id){
 }
 $("#personForm").addEventListener("submit", function(e){
   e.preventDefault();
-  var name = $("#p-name").value.trim(); if(!name) return;
+  var role = $("#p-role").value.trim(); if(!role) return;
   snapshot(editingPerson ? "editing a seat" : "adding a seat");
   var p = editingPerson ? person(editingPerson) : null;
-  if(!p){ p = {id:uid("p"), note:""}; S.people.push(p); }
-  p.name = name;
-  p.cap = clamp(Number($("#p-cap").value)||30, 1, 80);
-  p.role = $("#p-role").value.trim() || "Team";
-  p.role2 = $("#p-role2").value.trim();
-  var r1 = $("#p-rate").value.trim(), r2 = $("#p-rate2").value.trim();
-  p.rate  = r1 === "" ? null : clamp(Number(r1)||0, 0, 99999);
-  p.rate2 = r2 === "" ? null : clamp(Number(r2)||0, 0, 99999);
-  p.tier = Number($("#p-tier").value)||0;
-  p.reportsTo  = $("#p-reports").value;
-  p.reportsTo2 = $("#p-reports2").value;
-  p.status = $("#p-status").value.trim();
-  p.keep = $("#p-keep").value;
+  if(!p){ p = {id:uid("p"), duties:[], note:""}; S.people.push(p); }
+  p.name = $("#p-name").value.trim();
+  p.role = role;
+  p.layer = Number($("#p-layer").value)||0;
+  p.reportsTo = $("#p-reports").value;
+  p.tag = $("#p-tag").value.trim();
+  p.locked = $("#p-locked").value === "1";
   p.note = $("#p-note").value.trim();
   p.color = pColor;
   if(p.reportsTo === p.id) p.reportsTo = "";
-  if(p.reportsTo2 === p.id) p.reportsTo2 = "";
   closeOverlays(); save(); renderAll(); toast("Saved");
 });
 $("#pDelete").addEventListener("click", function(){
   if(!editingPerson) return;
   var p = person(editingPerson), keep = JSON.stringify(S);
-  snapshot("deleting " + p.name);
+  snapshot("deleting a seat");
   S.people = S.people.filter(function(x){ return x.id !== editingPerson; });
-  S.people.forEach(function(x){
-    if(x.reportsTo === editingPerson) x.reportsTo = "";
-    if(x.reportsTo2 === editingPerson) x.reportsTo2 = "";
-  });
-  S.work.forEach(function(w){
-    if(w.ownerId === editingPerson) w.ownerId = "";
-    if(w.ownerId2 === editingPerson) w.ownerId2 = null;
-  });
+  S.people.forEach(function(x){ if(x.reportsTo === editingPerson) x.reportsTo = ""; });
+  S.work.forEach(function(w){ if(w.ownerId === editingPerson) w.ownerId = ""; });
   closeOverlays(); save(); renderAll();
-  toast("Removed " + esc(p.name), {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
+  toast("Removed " + bigName(p), {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
 });
 
 var editingWork = null;
 function openWork(id, clientId){
   editingWork = id || null;
-  var w = id ? workItem(id) : null;
-  $("#wTitle").textContent = w ? "Deliverable" : "New deliverable";
+  var w = id ? work(id) : null;
+  $("#wTitle").textContent = w ? "Edit this line of work" : "Add a line of work";
   $("#wSub").textContent = w ? (client(w.clientId)||{}).name || "" : "New";
   $("#w-client").innerHTML = S.clients.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join("");
-  var opts = S.people.map(function(p){ return '<option value="' + p.id + '">' + esc(p.name) + ' — ' + esc(p.role) + '</option>'; }).join("");
-  $("#w-owner").innerHTML = opts;
-  $("#w-owner2").innerHTML = '<option value="">same as today</option>' + opts;
+  $("#w-owner").innerHTML  = S.people.map(function(p){ return '<option value="' + p.id + '">' + esc(bigName(p)) + ', ' + esc(p.role) + '</option>'; }).join("");
+  $("#w-beat").innerHTML   = BEATS.map(function(b){ return '<option value="' + b + '">' + b + '</option>'; }).join("");
   $("#w-title").value  = w ? w.title : "";
   $("#w-client").value = w ? w.clientId : (clientId || (S.clients[0]||{}).id || "");
   $("#w-owner").value  = w ? w.ownerId : (S.people[0]||{}).id || "";
-  $("#w-owner2").value = w ? (w.ownerId2||"") : "";
-  $("#w-cad").value    = w ? w.cadence : "weekly";
-  $("#w-hours").value  = w ? w.hrs : 1;
+  $("#w-beat").value   = w ? (w.beat||"Weekly") : "Weekly";
   $("#w-plat").value   = w ? (w.platform||"") : "";
   $("#wDelete").hidden = !w;
   openOverlay("#workOverlay", "#w-title");
@@ -1384,36 +988,27 @@ function openWork(id, clientId){
 $("#workForm").addEventListener("submit", function(e){
   e.preventDefault();
   var title = $("#w-title").value.trim(); if(!title) return;
-  snapshot(editingWork ? "editing a deliverable" : "adding a deliverable");
-  var w = editingWork ? workItem(editingWork) : null;
-  if(!w){
-    w = {id:uid("w"), ord:(S.work.length ? Math.max.apply(null, S.work.map(function(x){ return x.ord||0; })) + 1 : 0)};
-    S.work.push(w);
-  }
-  w.title = title;
-  w.clientId = $("#w-client").value;
-  w.ownerId = $("#w-owner").value;
-  var o2 = $("#w-owner2").value;
-  w.ownerId2 = (!o2 || o2 === w.ownerId) ? null : o2;
-  w.cadence = $("#w-cad").value;
-  w.hrs = clamp(Number($("#w-hours").value)||0, 0, 60);
-  w.platform = $("#w-plat").value.trim();
+  snapshot(editingWork ? "editing a line of work" : "adding a line of work");
+  var w = editingWork ? work(editingWork) : null;
+  if(!w){ w = {id:uid("w"), ord:(S.work.length ? Math.max.apply(null, S.work.map(function(x){ return x.ord||0; })) + 1 : 0)}; S.work.push(w); }
+  w.title = title; w.clientId = $("#w-client").value; w.ownerId = $("#w-owner").value;
+  w.beat = $("#w-beat").value; w.platform = $("#w-plat").value.trim();
   closeOverlays(); save(); renderAll(); toast("Saved");
 });
 $("#wDelete").addEventListener("click", function(){
   if(!editingWork) return;
-  var w = workItem(editingWork), keep = JSON.stringify(S);
-  snapshot("deleting a deliverable");
+  var keep = JSON.stringify(S);
+  snapshot("deleting a line of work");
   S.work = S.work.filter(function(x){ return x.id !== editingWork; });
   closeOverlays(); save(); renderAll();
-  toast("Deleted “" + esc(w.title) + "”", {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
+  toast("Deleted", {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
 });
 
 var editingClient = null, cColor = "teal";
 function openClient(id){
   editingClient = id || null;
   var c = id ? client(id) : null;
-  $("#cTitle").textContent = c ? "Edit account" : "Add account";
+  $("#cTitle").textContent = c ? "Edit account" : "Add an account";
   $("#c-name").value = c ? c.name : "";
   $("#c-sub").value  = c ? (c.sub||"") : "";
   $("#c-note").value = c ? (c.note||"") : "";
@@ -1434,151 +1029,127 @@ $("#clientForm").addEventListener("submit", function(e){
 $("#cDelete").addEventListener("click", function(){
   if(!editingClient) return;
   var c = client(editingClient), keep = JSON.stringify(S);
-  snapshot("deleting " + c.name);
+  snapshot("deleting an account");
   S.clients = S.clients.filter(function(x){ return x.id !== editingClient; });
   S.work = S.work.filter(function(w){ return w.clientId !== editingClient; });
   closeOverlays(); save(); renderAll();
-  toast("Removed " + esc(c.name) + " and its deliverables", {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
+  toast("Removed " + c.name, {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
 });
 
-/* ══════════════ delegated events ══════════════ */
+/* delegated events */
 function two(v){ var i = String(v).indexOf(":"); return [String(v).slice(0,i), String(v).slice(i+1)]; }
-function findBy(arr, id){ for(var i=0;i<arr.length;i++) if(arr[i].id===id) return arr[i]; return null; }
 
 document.addEventListener("click", function(e){
-  var t = e.target.closest("[data-editp],[data-editc],[data-addw],[data-editw],[data-delmove],[data-delstep],[data-delrisk],[data-delt],[data-addr],[data-addc],[data-delr]");
+  var t = e.target.closest("[data-editp],[data-editc],[data-addw],[data-editw],[data-adddu],[data-deldu],[data-delin],[data-delmove],[data-delstep],[data-delrisk]");
   if(!t) return;
-  var a;
+  var a, o;
   if(t.hasAttribute("data-editp")){ openPerson(t.getAttribute("data-editp")); return; }
   if(t.hasAttribute("data-editc")){ openClient(t.getAttribute("data-editc")); return; }
   if(t.hasAttribute("data-addw")) { openWork(null, t.getAttribute("data-addw")); return; }
   if(t.hasAttribute("data-editw")){ openWork(t.getAttribute("data-editw")); return; }
+  if(t.hasAttribute("data-adddu")){
+    o = person(t.getAttribute("data-adddu")); if(!o) return;
+    snapshot("adding a responsibility"); o.duties.push(""); save(); renderRoster();
+    var cells = $$('[data-duty^="' + o.id + ':"]'); if(cells.length) cells[cells.length-1].focus();
+    return;
+  }
+  if(t.hasAttribute("data-deldu")){
+    a = two(t.getAttribute("data-deldu")); o = person(a[0]); if(!o) return;
+    snapshot("removing a responsibility"); o.duties.splice(Number(a[1]),1); save(); renderRoster(); return;
+  }
+  if(t.hasAttribute("data-delin")){
+    var iid = t.getAttribute("data-delin");
+    snapshot("removing a line"); S.inbox = S.inbox.filter(function(x){ return x.id !== iid; }); save(); renderPlan(); return;
+  }
   if(t.hasAttribute("data-delmove")){
-    var id = t.getAttribute("data-delmove"), keep = JSON.stringify(S);
-    snapshot("removing a move");
-    S.plan.moves = S.plan.moves.filter(function(m){ return m.id !== id; });
-    save(); renderPlan(); renderHud();
-    toast("Move removed", {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }}); return;
+    var mid = t.getAttribute("data-delmove"), keep = JSON.stringify(S);
+    snapshot("removing a change"); S.plan.moves = S.plan.moves.filter(function(m){ return m.id !== mid; });
+    save(); renderPlan();
+    toast("Removed", {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }}); return;
   }
   if(t.hasAttribute("data-delstep")){
     var sid = t.getAttribute("data-delstep");
-    snapshot("removing a step");
-    S.plan.seq = S.plan.seq.filter(function(x){ return x.id !== sid; }); save(); renderPlan(); return;
+    snapshot("removing a step"); S.plan.seq = S.plan.seq.filter(function(x){ return x.id !== sid; }); save(); renderPlan(); return;
   }
   if(t.hasAttribute("data-delrisk")){
     var rid = t.getAttribute("data-delrisk");
-    snapshot("removing a risk");
-    S.plan.risks = S.plan.risks.filter(function(x){ return x.id !== rid; }); save(); renderPlan(); return;
-  }
-  if(t.hasAttribute("data-delt")){
-    var ti = Number(t.getAttribute("data-delt")), kp = JSON.stringify(S), nm = S.tables[ti].title;
-    snapshot("deleting a table"); S.tables.splice(ti,1); save(); renderTables();
-    toast("Deleted “" + esc(nm) + "”", {label:"Undo", run:function(){ S = JSON.parse(kp); save(); renderAll(); }}); return;
-  }
-  if(t.hasAttribute("data-addr")){
-    var i1 = Number(t.getAttribute("data-addr"));
-    snapshot("adding a row"); S.tables[i1].rows.push(S.tables[i1].headers.map(function(){ return ""; })); save(); renderTables(); return;
-  }
-  if(t.hasAttribute("data-addc")){
-    var i2 = Number(t.getAttribute("data-addc"));
-    snapshot("adding a column"); S.tables[i2].headers.push("New");
-    S.tables[i2].rows.forEach(function(r){ r.push(""); }); save(); renderTables(); return;
-  }
-  if(t.hasAttribute("data-delr")){
-    a = two(t.getAttribute("data-delr")); var p2 = a[1].split(":");
-    snapshot("deleting a row"); S.tables[Number(a[0])].rows.splice(Number(p2[0]),1); save(); renderTables(); return;
+    snapshot("removing a risk"); S.plan.risks = S.plan.risks.filter(function(x){ return x.id !== rid; }); save(); renderPlan(); return;
   }
 });
 
 document.addEventListener("input", function(e){
   var el = e.target;
-  if(!el.hasAttribute || !el.classList || !el.classList.contains("cell")) return;
-  var v = el.hasAttribute("data-html") ? el.innerHTML : el.textContent, a, o;
-  if(el.hasAttribute("data-pnote")){ o = person(el.getAttribute("data-pnote")); if(o) o.note = v; }
+  if(!el.classList || !el.classList.contains("cell")) return;
+  var v = el.textContent, a, o;
+  if(el.hasAttribute("data-copy")){ S.copy[el.getAttribute("data-copy")] = v; }
+  else if(el.hasAttribute("data-duty")){ a = two(el.getAttribute("data-duty")); o = person(a[0]); if(o) o.duties[Number(a[1])] = v; }
+  else if(el.hasAttribute("data-pnote")){ o = person(el.getAttribute("data-pnote")); if(o) o.note = v; }
   else if(el.hasAttribute("data-cnote")){ o = client(el.getAttribute("data-cnote")); if(o) o.note = v; }
-  else if(el.hasAttribute("data-orgnote")){ S.orgNote = v; }
-  else if(el.hasAttribute("data-plan")){ S.plan[el.getAttribute("data-plan")] = v; }
+  else if(el.hasAttribute("data-inbox")){ o = findBy(S.inbox, el.getAttribute("data-inbox")); if(o) o.text = v; }
   else if(el.hasAttribute("data-mv")){ a = two(el.getAttribute("data-mv")); o = findBy(S.plan.moves, a[0]); if(o) o[a[1]] = v; }
   else if(el.hasAttribute("data-sq")){ a = two(el.getAttribute("data-sq")); o = findBy(S.plan.seq, a[0]);  if(o) o[a[1]] = v; }
   else if(el.hasAttribute("data-rk")){ a = two(el.getAttribute("data-rk")); o = findBy(S.plan.risks, a[0]); if(o) o[a[1]] = v; }
-  else if(el.hasAttribute("data-ttl")){ S.tables[Number(el.getAttribute("data-ttl"))].title = v; }
-  else if(el.hasAttribute("data-th")){ a = two(el.getAttribute("data-th")); S.tables[Number(a[0])].headers[Number(a[1])] = v; }
-  else if(el.hasAttribute("data-td")){ var q = el.getAttribute("data-td").split(":"); S.tables[+q[0]].rows[+q[1]][+q[2]] = v; }
   else return;
   save();
 });
 document.addEventListener("keydown", function(e){
-  if(e.key === "Enter" && !e.shiftKey && e.target.classList && e.target.classList.contains("cell") && !e.target.hasAttribute("data-html")){
-    e.preventDefault(); e.target.blur();
-  }
+  if(e.key === "Enter" && !e.shiftKey && e.target.classList && e.target.classList.contains("cell")){ e.preventDefault(); e.target.blur(); }
 });
 document.addEventListener("change", function(e){
   if(e.target.hasAttribute && e.target.hasAttribute("data-reports")){
     var p = person(e.target.getAttribute("data-reports"));
     if(!p) return;
-    snapshot("changing who " + p.name + " reports to");
-    if(prop()) p.reportsTo2 = e.target.value; else p.reportsTo = e.target.value;
+    snapshot("changing a reporting line");
+    p.reportsTo = e.target.value;
     save(); renderOrg(); renderRoster();
   }
 });
 
-/* ══════════════ toolbar ══════════════ */
+/* toolbar */
 function setView(v){
   S.ui.view = v; save();
   $$(".tab").forEach(function(t){ t.setAttribute("aria-selected", String(t.getAttribute("data-view") === v)); });
   $$(".view").forEach(function(s){ s.classList.toggle("on", s.id === "view-" + v); });
   if(v === "org") requestAnimationFrame(layoutBars);
+  window.scrollTo({top:0, behavior:"instant"});
 }
 $$(".tab").forEach(function(t){ t.addEventListener("click", function(){ setView(t.getAttribute("data-view")); }); });
-$$("#scSwitch button").forEach(function(b){
-  b.addEventListener("click", function(){
-    S.scenario = b.getAttribute("data-sc"); save(); renderAll();
-    if(S.ui.view === "org") requestAnimationFrame(layoutBars);
-  });
-});
 $("#addPerson").addEventListener("click", function(){ openPerson(null); });
 $("#addClient").addEventListener("click", function(){ openClient(null); });
-$("#addTable").addEventListener("click", function(){
-  snapshot("adding a table");
-  S.tables.push({id:uid("t"), color:"teal", title:"New account", headers:["Platform","Per week","Owner"], rows:[["","",""]]});
-  save(); renderTables();
+$("#addInbox").addEventListener("click", function(){
+  snapshot("adding a line"); S.inbox.push({id:uid("i"), text:""}); save(); renderPlan();
+  var c = $$("[data-inbox]"); if(c.length) c[c.length-1].focus();
 });
 $("#addMove").addEventListener("click", function(){
-  snapshot("adding a move");
-  S.plan.moves.push({id:uid("m"), kind:"rescope", title:"New move", body:"Why this change.", impact:"the numbers"});
-  save(); renderPlan(); renderHud();
-  var els = $$('[data-mv$=":title"]'); if(els.length) els[els.length-1].focus();
+  snapshot("adding a change");
+  S.plan.moves.push({id:uid("m"), kind:"rescope", title:"A new change", body:"Why it matters."});
+  save(); renderPlan();
+  var c = $$('[data-mv$=":title"]'); if(c.length) c[c.length-1].focus();
 });
 $("#addStep").addEventListener("click", function(){
-  snapshot("adding a step");
-  S.plan.seq.push({id:uid("s"), when:"When", what:"What happens."});
-  save(); renderPlan();
+  snapshot("adding a step"); S.plan.seq.push({id:uid("s"), when:"When", what:"What happens."}); save(); renderPlan();
 });
 $("#addRisk").addEventListener("click", function(){
-  snapshot("adding a risk");
-  S.plan.risks.push({id:uid("r"), sev:"med", title:"New risk", body:"What could go wrong, and the fix."});
-  save(); renderPlan();
+  snapshot("adding a risk"); S.plan.risks.push({id:uid("r"), sev:"med", title:"A new risk", body:"What could go wrong, and the fix."}); save(); renderPlan();
 });
 
-/* ══════════════ theme ══════════════ */
+/* theme */
 var themes = ["auto","light","dark"], themeIdx = 0;
 function applyTheme(){
   var m = themes[themeIdx];
   if(m === "auto") document.documentElement.removeAttribute("data-theme");
   else document.documentElement.setAttribute("data-theme", m);
   $("#themeBtn").textContent = m === "auto" ? "◐" : (m === "light" ? "☀" : "☾");
-  $("#themeBtn").title = "Theme: " + m + " — click to change";
+  $("#themeBtn").title = "Theme: " + m + ", click to change";
   try { localStorage.setItem(THEME_KEY, m); } catch(e){}
 }
 $("#themeBtn").addEventListener("click", function(){ themeIdx = (themeIdx+1) % themes.length; applyTheme(); });
 
-/* ══════════════ data menu ══════════════ */
+/* data menu */
 $("#menuBtn").addEventListener("click", function(){ openOverlay("#menuOverlay"); });
 $("#printBtn").addEventListener("click", function(){ closeOverlays(); setTimeout(function(){ window.print(); }, 120); });
 $("#exportBtn").addEventListener("click", function(){
-  var json = JSON.stringify(S, null, 2);
-  var name = "rm-org-blueprint-" + new Date().toISOString().slice(0,10) + ".json";
-  var cl = window.claude;
+  var json = JSON.stringify(S, null, 2), name = "rm-org-blueprint.json", cl = window.claude;
   if(cl && typeof cl.use === "function"){
     cl.use("downloads").then(function(d){
       if(!d) return legacySave(json, name);
@@ -1600,7 +1171,7 @@ function legacySave(json, name){
     toast("Backup downloaded");
   } catch(e){
     if(navigator.clipboard) navigator.clipboard.writeText(json).then(
-      function(){ toast("Download blocked here — backup copied to your clipboard instead"); },
+      function(){ toast("Download blocked here, so the backup is on your clipboard instead"); },
       function(){ toast("Could not export from this view"); });
     else toast("Could not export from this view");
   }
@@ -1615,36 +1186,30 @@ $("#importFile").addEventListener("change", function(){
       if(!d.people || !d.work) throw new Error("bad file");
       snapshot("restoring a backup");
       S = migrate(d); save(); renderAll(); closeOverlays(); toast("Backup restored");
-    } catch(err){ toast("That file isn’t an Org Blueprint backup"); }
+    } catch(err){ toast("That file is not an Org Blueprint backup"); }
   };
   r.readAsText(f); this.value = "";
 });
 $("#resetBtn").addEventListener("click", function(){
   var keep = JSON.stringify(S);
   S = seed(); save(); renderAll(); closeOverlays();
-  toast("Reset to the original plan", {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
+  toast("Reset back to the original", {label:"Undo", run:function(){ S = JSON.parse(keep); save(); renderAll(); }});
 });
 
-/* ══════════════ keyboard ══════════════ */
+/* keyboard */
 document.addEventListener("keydown", function(e){
   var typing = e.target.matches && e.target.matches("input,textarea,select,[contenteditable='true']");
   if(e.key === "Escape"){ closeOverlays(); hideToast(); return; }
   if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z" && !typing){ e.preventDefault(); undo(); return; }
   if(typing) return;
-  if(e.key.toLowerCase() === "p"){
-    e.preventDefault();
-    S.scenario = prop() ? "current" : "proposed"; save(); renderAll();
-    if(S.ui.view === "org") requestAnimationFrame(layoutBars);
-    return;
-  }
-  if(e.key >= "1" && e.key <= "5"){
-    var v = ["roster","org","accounts","plan","weekly"][Number(e.key)-1];
+  if(e.key >= "1" && e.key <= "4"){
+    var v = ["roster","org","accounts","plan"][Number(e.key)-1];
     if(v) setView(v);
   }
 });
 window.addEventListener("resize", function(){ if(S.ui.view === "org") layoutBars(); });
 
-/* ══════════════ boot ══════════════ */
+/* boot */
 try { var tm = localStorage.getItem(THEME_KEY); if(tm && themes.indexOf(tm) >= 0) themeIdx = themes.indexOf(tm); } catch(e){}
 applyTheme();
 S = load();
