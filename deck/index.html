@@ -149,17 +149,17 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 
 /* org chart */
 .orgwrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);
-  padding:38px 24px 32px;overflow-x:auto}
-.orginner{min-width:min(100%,720px);display:inline-block;width:100%}
-.otop{display:flex;justify-content:center}
+  padding:38px 16px 32px;overflow-x:auto}
+.orginner{min-width:min(100%,720px);display:inline-block;width:max-content;min-width:100%}
+.otop{display:flex;justify-content:center;justify-content:safe center}
 .onode{background:var(--surface);border:1.5px solid var(--c);border-radius:14px;padding:14px 20px;text-align:center;
-  box-shadow:var(--shadow);min-width:196px;max-width:250px}
+  box-shadow:var(--shadow);min-width:158px;max-width:190px}
 .onode.open{border-style:dashed}
 .onode .orole{font-size:14px;font-weight:600;color:var(--c)}
 .onode .onm{font-size:19px;font-weight:800;letter-spacing:-.025em;margin-top:2px}
-.onode .otag{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--cw);color:var(--c);margin-top:8px}
+.onode .otag{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--cw);color:var(--c);margin-top:8px}
 .vline{width:2px;height:28px;background:var(--line-2);margin:0 auto}
-.orow{display:flex;gap:26px;position:relative;padding-top:28px;align-items:flex-start;justify-content:center;flex-wrap:nowrap}
+.orow{display:flex;gap:14px;position:relative;padding-top:28px;align-items:flex-start;justify-content:center;justify-content:safe center;flex-wrap:nowrap}
 .obar{position:absolute;top:0;height:2px;background:var(--line-2);display:none}
 .obr{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;position:relative}
 .obr::before{content:"";position:absolute;top:-28px;left:calc(50% - 1px);width:2px;height:28px;background:var(--line-2)}
@@ -462,7 +462,7 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 <script>
 (function(){
 "use strict";
-var KEY = "rm_org_blueprint_v3";
+var KEY = "rm_org_blueprint_v4";
 var THEME_KEY = "rm_deck_theme";
 var COLORS = ["coral","amber","teal","indigo","violet","moss"];
 var BEATS = ["Daily","Weekly","Monthly","Ongoing"];
@@ -479,42 +479,56 @@ function seed(){
 var P = [
  {id:"p_garrett", name:"Garrett", role:"Founder", layer:0, reportsTo:"", color:"coral", tag:"", locked:false,
   duties:["Client strategy and creative direction","Sales, partnerships and new business","The title and hook formulas the whole agency runs on","Shane Dorian and the Surf Longevity course"],
-  note:"The reason for this hire is to get him out of editing and posting and back onto selling. That only works if he trains Olivia on the systems in the first month rather than after it."},
+  note:"Covering the Man Eats Wild long form until the Senior Editor seat is filled. It is the one piece of editing that has to stay with him for now, and the first piece that should come off."},
  {id:"p_olivia", name:"Olivia", role:"Content Manager", layer:1, reportsTo:"p_garrett", color:"amber",
-  tag:"Starting at the turn of the month", locked:false,
-  duties:["The layer between Garrett and the editors. Nothing reaches a client account without passing her","Quality check on every cut. Calls the hook, the crop and the pacing, and sends work back","The posting schedule across every account, and the native posting itself","Titles and thumbnails for YouTube and short form","Builds the software stack from nothing, and gets account access off personal logins","Trybe and the TikTok Shop seller centre for Foreign Waters","Editing when there is room for it, paid on top of the base"],
-  note:"One seat instead of two. The Lead Editor and the Social Media Manager were always the same job split down the middle, and splitting them was what created two gates and no owner. She wants ownership, she has run five accounts at an agency, and she genuinely likes editing, which is rare in a manager."},
+  tag:"Starts end of month", locked:false,
+  duties:["The layer between Garrett and the editors. Nothing reaches a client account without passing her","Quality check on every cut. Calls the hook, the crop and the pacing, and sends work back","The posting schedule across every account, and the native posting itself","Titles and thumbnails for YouTube and short form","Builds the software stack from nothing, and gets account access off personal logins","Editing when there is room for it, paid on top of the base"],
+  note:"One seat instead of two, which is right. Watch the number of people reporting to her though. Once both Man Eats Wild seats are filled she has five reports, every account's publishing, the tool build and a daily creator queue, on a part time contract. That is the next thing that breaks."},
  {id:"p_julia", name:"Julia", role:"Account Manager", layer:1, reportsTo:"p_garrett", color:"violet",
-  tag:"Locked, left exactly as is", locked:true,
+  tag:"Locked", locked:true,
   duties:["Real estate accounts end to end","Editing, building, captioning and the compliance pass"],
   note:"The part of the agency that already works. Recurring retainers, nothing waiting on anybody else's output, nothing queued behind a quality gate."},
+ {id:"p_senior", name:"", role:"Senior Editor", layer:2, reportsTo:"p_olivia", color:"teal",
+  tag:"Open, fill second", locked:false,
+  duties:["The Man Eats Wild weekly long form for YouTube","Sets the look of the account that broadcast people are watching","Backup on Xander midforms, so Viktor is not the only person who can cut one"],
+  note:"Do not fill this with a stranger. Move Viktor across and hire into Xander behind him. Your proven editor goes on your riskiest account, and you hire into the workflow that is already written down."},
  {id:"p_viktor", name:"Viktor", role:"Editor", layer:2, reportsTo:"p_olivia", color:"indigo", tag:"", locked:false,
-  duties:["Xander midforms for YouTube","Xander daily short form, one that teaches and one that entertains","The backup on long form if Man Eats Wild gets ahead of Olivia"], note:""},
- {id:"p_kingdon", name:"Kingdon", role:"Intern Editor", layer:2, reportsTo:"p_olivia", color:"indigo", tag:"", locked:false,
-  duties:["Blair Conklin, the monthly run of cuts from the iCloud footage","Man Eats Wild short form pulled from the vault","Delivers to the shared folder, named to format"],
-  note:"Picks up Man Eats Wild short form rather than the agency hiring a second editor for it. His work sits behind Olivia's sign off for the first month."}
+  duties:["Xander midforms for YouTube","Xander daily short form, one that teaches and one that entertains"],
+  note:"First choice for the Senior Editor seat. A midform and a long form are the same craft, and he is the most proven editor on the roster."},
+ {id:"p_vault", name:"", role:"Vault Editor", layer:2, reportsTo:"p_olivia", color:"amber",
+  tag:"Open, fill first", locked:false,
+  duties:["Man Eats Wild daily short form, cut from footage that already exists","A post a day for Instagram and several a day for TikTok","YouTube Shorts from the same cuts"],
+  note:"Volume rather than craft. The footage already exists, there is no shoot to run and no client on the phone, so the bar is intern tier once Olivia has set the standard on a handful of cuts."},
+ {id:"p_kingdon", name:"Kingdon", role:"Intern Editor", layer:2, reportsTo:"p_olivia", color:"indigo", tag:"Blair only", locked:false,
+  duties:["Blair Conklin, the monthly run of cuts from the iCloud footage","Raw river long form for Facebook, shot vertical","Delivers to the shared folder, named to format"],
+  note:"Capped at Blair by skill, so Man Eats Wild short form cannot go to him. That cap is the entire reason the Vault Editor seat exists."},
+ {id:"p_intern2", name:"New intern", role:"Intern, distribution", layer:2, reportsTo:"p_olivia", color:"indigo",
+  tag:"Add their name", locked:false,
+  duties:["Builds the Lucas Fink posts from his existing videos","Posts them to his Facebook page"],
+  note:"Capped at Lucas Fink by skill, same as Kingdon. Useful, and not a seat that absorbs overflow."}
 ];
 
 var C = [
  {id:"c_mew", name:"Man Eats Wild", sub:"Mario Kalpou", color:"coral",
-  note:"The biggest account on the board and the one still onboarding. Access is the blocker: partner access in Meta Business Suite for the Facebook page and Instagram, the TikTok login with somebody reachable for the verification code, and Manager on the YouTube channel. A post a day on Instagram, several a day on TikTok, and one long form a week on YouTube. Everything else gets repurposed to Facebook and YouTube Shorts."},
- {id:"c_xander", name:"Xander Budnick", sub:"Outdoor and survival", color:"indigo", note:""},
+  note:"The biggest account on the board, still onboarding, and the only one with a manager to publish it and nobody to make it. A post a day on Instagram, several a day on TikTok, one long form a week on YouTube, everything else repurposed. Access is still the blocker: partner access in Meta Business Suite, the TikTok login with somebody reachable for the code, and Manager on the YouTube channel."},
+ {id:"c_xander", name:"Xander Budnick", sub:"Outdoor and survival", color:"indigo",
+  note:"The workflow here is written down and running, which is exactly why this is the easier seat to hire into if Viktor moves across to Man Eats Wild."},
  {id:"c_blair", name:"Blair Conklin", sub:"Skimboarding, Skid Kids", color:"indigo",
-  note:"Covered by an editor already and running fine. Olivia only needs to look at whether a video is good, not run the account."},
+  note:"Covered by Kingdon and running fine. Olivia only needs to look at whether a video is good, not run the account."},
  {id:"c_fw", name:"Foreign Waters", sub:"Energy Flow on TikTok Shop", color:"amber",
-  note:"A creator programme rather than a posting account. The Trybe digest arrives every morning with a dozen or more items and creators waiting mid conversation, so it needs a fixed window or it takes the whole day."},
+  note:"A creator programme rather than a posting account, and a different job from everything else Olivia owns. The digest arrives every morning with a dozen or more items and creators waiting mid conversation. Sitting it next to five reports and every account's publishing is how the publishing slips."},
  {id:"c_paulo", name:"Paulo Prietto", sub:"Compass, Laguna Beach", color:"violet", note:"Julia's. Outside the editing line entirely."},
  {id:"c_tara", name:"Tara Bunker", sub:"Compass and Alcove Collective", color:"violet", note:"Julia's. Outside the editing line entirely."},
- {id:"c_lucas", name:"Lucas Fink", sub:"One off, repurposing only", color:"amber",
-  note:"Ripping the TikTok videos and posting them to Facebook. The Facebook business portfolio invite is sitting in the inbox and needs accepting before it expires."},
+ {id:"c_lucas", name:"Lucas Fink", sub:"Repurposing only", color:"amber",
+  note:"Now run end to end by the second intern, who builds the posts and puts them on his Facebook page. The Facebook business portfolio invite still needs accepting before it expires, and that access should sit with the agency rather than a personal login."},
  {id:"c_shane", name:"Shane Dorian", sub:"Surf Longevity", color:"moss", note:""}
 ];
 
 var WD = [
- ["The weekly long form for YouTube, handing to Olivia after the first month","c_mew","p_garrett","Weekly","YouTube"],
- ["Short form for TikTok, several a day","c_mew","p_kingdon","Daily","TikTok"],
- ["YouTube Shorts, a few a day","c_mew","p_kingdon","Daily","YouTube Shorts"],
- ["Instagram feed, a post a day","c_mew","p_olivia","Daily","Instagram"],
+ ["The weekly long form for YouTube. Garrett covers it until this seat is filled","c_mew","p_senior","Weekly","YouTube"],
+ ["Short form for TikTok, several a day","c_mew","p_vault","Daily","TikTok"],
+ ["YouTube Shorts, a few a day","c_mew","p_vault","Daily","YouTube Shorts"],
+ ["The Instagram cut, a post a day","c_mew","p_vault","Daily","Instagram"],
  ["Instagram stories through the day","c_mew","p_olivia","Daily","Instagram"],
  ["Facebook, the full Instagram mirror plus a YouTube repost","c_mew","p_olivia","Weekly","Facebook"],
  ["Written posts and repurposed clips on X","c_mew","p_olivia","Weekly","X"],
@@ -532,94 +546,95 @@ var WD = [
  ["Roster athlete posts with the product linked","c_fw","p_olivia","Ongoing",""],
  ["Real estate posts through the week","c_paulo","p_julia","Weekly","Instagram"],
  ["Real estate posts through the week","c_tara","p_julia","Weekly","Instagram"],
- ["Repurpose the already posted videos to Facebook","c_lucas","p_olivia","Weekly","Facebook"],
+ ["Build the posts from his existing videos","c_lucas","p_intern2","Weekly","Facebook"],
+ ["Post them to his Facebook page","c_lucas","p_intern2","Weekly","Facebook"],
  ["The Surf Longevity course build","c_shane","p_garrett","Ongoing","Skool"],
  ["Running the Skool community","c_shane","p_garrett","Ongoing","Skool"]
 ];
 var W = WD.map(function(r,i){ return {id:"w"+i, title:r[0], clientId:r[1], ownerId:r[2], beat:r[3], platform:r[4], ord:i}; });
 
 var COPY = {
- rosterLede:"Five seats. Garrett at the top, Olivia and Julia underneath him, and the two editors below Olivia. The Lead Editor and the Social Media Manager have been folded into one Content Manager seat, because they were always the same job cut in half.",
- orgLede:"One line from footage to published post, with one person standing in the middle of it. Olivia signs work off and publishes it. Real estate runs on its own track off to the side.",
+ rosterLede:"Eight seats, two of them open, and both open seats are on Man Eats Wild. Every other account on this roster has somebody making the work. That one has a manager to publish it and nobody to build it.",
+ orgLede:"Garrett at the top, Olivia and Julia underneath him, and everybody who touches an edit reporting to Olivia. Five reports on one part time seat is the thing to keep an eye on.",
  orgFoot:"Footage comes in, an editor cuts it, Olivia checks it, titles it and posts it. Garrett trains her on the systems and then stays out of the line. Julia runs real estate end to end without touching any of it.",
  acctLede:"What every account is owed, and who owns each line of it.",
- planLede:"Hiring Olivia collapses two open seats into one. That is the right call, because the Lead Editor and the Social Media Manager were never two jobs. They were one job split in half, and splitting it is exactly what produced two quality gates with nobody owning either. She has run five accounts at an agency, she has managed clients, she edits by choice rather than obligation, and she is asking for ownership. What is left to decide is not whether to hire her. It is what she does not do, and what the money is."
+ planLede:"Yes, and you need two of them. Both are on Man Eats Wild. Now that both interns are capped by skill, one on Blair and one on Lucas Fink, nothing on this roster can absorb that account. The weekly long form is sitting with you and the daily volume is sitting with nobody, on your biggest client, while broadcast people are in the room. The cheapest version of the fix is not two strangers at once. It is moving Viktor onto Man Eats Wild and hiring into Xander instead, because Xander is the workflow that is already written down."
 };
 
 var FIT = {
  brings:[
   "Has run five accounts at once at an agency, across a bar, a restaurant and a non profit. Juggling different clients in the same week is the actual job here.",
   "Manages two social accounts today across YouTube, Instagram and TikTok, which is the exact platform spread of this roster.",
-  "Edits by choice. She has been cutting YouTube video since she was young and edits a podcast now, so the quality feedback she gives editors will be specific rather than vague.",
+  "Edits by choice. She has been cutting YouTube video since she was young and edits a podcast now, so her feedback to editors will be specific rather than vague.",
   "Makes thumbnails for long form and short form already.",
   "Comes with an opinion on tooling. Monday, Asana and Notion for organisation, Riverside for recording. This agency has no software stack at all, so somebody arriving with preferences is worth more than somebody waiting to be told.",
   "Client facing by habit. She talks about listening to what a client wants and then guiding them, which is the half of the job Garrett will otherwise keep."
  ],
  gaps:[
-  "Light on heavy editing tools. Her own description is a little Adobe mixed with Canva, nothing too technical. She can cut, but she is not the person to hand a weekly long form to in week one.",
-  "Her background is business to business marketing. This roster is surfers, skimboarders and outdoors people, and the tone is a different sport entirely. Give her the title and hook formulas early rather than expecting her to feel it out.",
+  "Light on heavy editing tools. Her own description is a little Adobe mixed with Canva, nothing too technical. She can cut, but she is not the answer to the Man Eats Wild long form.",
+  "Her background is business to business marketing. This roster is surfers, skimboarders and outdoors people, and the tone is a different sport entirely. Give her the title and hook formulas early.",
   "Part time by design, and out for a wedding before she starts. The onboarding month has less time in it than it looks like it does.",
-  "The role as she heard it is quality control and organisation. The role as written here also includes the Foreign Waters creator programme, which is a different kind of work again. Say that out loud before she signs.",
-  "She is not a video editor by trade and the Man Eats Wild long form currently has nobody on it. That gap does not get solved by hiring her, so solve it separately."
+  "The role as she heard it is quality control and organisation. Two new editors and a second intern makes it a people management job as well. Say that out loud before she signs.",
+  "Her seat is the one that quietly absorbs everything nobody else can do. That is how it goes from part time to full time without anybody deciding to make it full time."
  ]
 };
 
 var INBOX = [
- {id:"i1", text:"Olivia can start at the turn of the month. She is out for a wedding the week before, so the onboarding month is shorter than it looks."},
- {id:"i2", text:"The rate discussed was eight hundred a month for the quality control and organisation side, with more on top if she takes editing deliverables. That second number has not been set."},
- {id:"i3", text:"There is no software stack. Everything currently runs off logins on Garrett's phone and inside Meta. She has offered to build it and has been told to go ahead."},
- {id:"i4", text:"A different candidate already accepted the Social Media Manager offer and is waiting on an answer about performance markers. If Olivia takes this seat, that needs closing out honestly rather than going quiet."},
+ {id:"i1", text:"A second intern is now building the Lucas Fink posts and putting them on his Facebook page, so that account is off Olivia entirely."},
+ {id:"i2", text:"Both interns are capped by skill. Kingdon on Blair, the new one on Lucas Fink. Neither can absorb Man Eats Wild, which is what changed the plan."},
+ {id:"i3", text:"Olivia can start at the turn of the month. She is out for a wedding the week before, so the onboarding month is shorter than it looks."},
+ {id:"i4", text:"The editing rate on top of her base has still not been set. Leave it open and it becomes a negotiation every month."},
  {id:"i5", text:"The Man Eats Wild access request is still outstanding across Meta, TikTok and YouTube. Posting cannot start on cadence until it lands."},
- {id:"i6", text:"The Lucas Fink Facebook business portfolio invite is still sitting unaccepted."},
+ {id:"i6", text:"A different candidate already accepted the Social Media Manager offer that no longer exists. That still needs closing out honestly."},
  {id:"i7", text:"Man Eats Wild has broadcast and e-commerce conversations running alongside the posting work, so that account is about to get louder."}
 ];
 
 var PLAN = {
  moves:[
-  {id:"m1", kind:"hire", title:"Hire Olivia into one seat, not two",
-   body:"The Lead Editor and the Social Media Manager were the same job cut in half, and cutting it in half is what created two quality gates with nobody owning either. One Content Manager owns the standard, the schedule and the publishing, sits between you and the editors, and has one name attached when something bad goes out. It is also one salary instead of two, one person to train, and one relationship to keep."},
-  {id:"m2", kind:"fix", title:"Decide what she does not do before she starts",
-   body:"She heard quality control and organisation. The seat as drawn here also carries the Foreign Waters creator programme, which is chasing creators and clearing a daily queue rather than making content. Either that stays with you for now, or you say it out loud and price it in. Scope that grows quietly after the offer is the fastest way to lose somebody in their first month."},
-  {id:"m3", kind:"fix", title:"Put a number on the editing rate now",
-   body:"The base covers management. Editing was left as open to bumping it up depending on deliverables, which turns into a negotiation every single month. Set a per deliverable rate before she starts, so she can choose to take editing work without asking, and you can predict what a month costs."},
-  {id:"m4", kind:"rescope", title:"Solve the Man Eats Wild long form separately",
-   body:"With Skylar gone, the weekly long form on your biggest account has nobody on it, and Olivia is not the answer in week one. Cut the first two yourself so the standard exists on the account with the most eyes on it. Viktor is the backup, because a midform and a long form are the same craft. Hand it to Olivia in month two, at the editing rate, if she wants it."},
-  {id:"m5", kind:"hire", title:"Give her the stack and a ceiling on day one",
-   body:"There is no software anywhere and everything runs off your phone. She named Monday, Asana and Notion unprompted, which means she will actually build it. Give her a monthly spend ceiling and a date, otherwise she will keep asking permission and you will keep being the bottleneck she was hired to remove."},
-  {id:"m6", kind:"rescope", title:"Train her on the formulas in month one, not month three",
-   body:"Your own words are that everything you have learned over a decade works and you need it delegated. That is the whole return on this hire. Block time in the first month to walk her through the title and hook systems on real videos, or she will invent her own and you will end up correcting output instead of selling."},
-  {id:"m7", kind:"hold", title:"Leave Julia exactly where she is",
-   body:"Real estate already works. Recurring retainers, nothing waiting on anybody else's output, nothing queued behind a quality gate. It stays outside the editing line and outside Olivia's remit."},
-  {id:"m8", kind:"watch", title:"Close out the other candidate properly",
-   body:"Somebody already accepted the Social Media Manager offer and asked a fair question about how they would be measured. If this seat is gone, tell them, quickly and plainly. This industry is small, and the same person is worth keeping warm for the next editor seat you open."}
+  {id:"m1", kind:"hire", title:"Yes, you need another role, and it is two",
+   body:"Every account on this roster has somebody making the work except the biggest one. Man Eats Wild needs a weekly long form and it needs daily volume, and right now the long form is on you and the volume is on nobody. With both interns capped by skill, there is no internal move left that fixes it. Two seats, one account, and everything else on this page is smaller than that."},
+  {id:"m2", kind:"hire", title:"Hire the Vault Editor before the Senior Editor",
+   body:"A long form a week is survivable for you personally. A post a day on Instagram and several a day on TikTok is not. Volume is what breaks a founder, and it is the cheaper seat to fill because the footage already exists. No shoot to run, no client on the phone, no story to build from scratch. Once Olivia has set the standard on a handful of cuts, this is an intern tier hire."},
+  {id:"m3", kind:"rescope", title:"Move Viktor onto Man Eats Wild and hire into Xander instead",
+   body:"The instinct is to put a new hire on the new account. Do the opposite. Viktor already cuts midforms, which is the same craft as a long form, and he is the most proven editor you have. Put him on the account with broadcast people watching. Then hire into Xander, where the workflow is already documented and a bad first hire costs you far less than it would on Man Eats Wild."},
+  {id:"m4", kind:"fix", title:"Ask Mario for a lighter first month",
+   body:"You promised a cadence on an account that is not fully onboarded, has no access handed over yet, and has nobody making the work. The cheapest fix on this page is not a hire, it is asking for a lighter first month while access lands and the bench fills. Shipping less in week one and more in week six is a far better story than missing a cadence you announced."},
+  {id:"m5", kind:"rescope", title:"Take Foreign Waters off Olivia",
+   body:"It is a creator programme, not a posting account, and it runs on a daily rhythm nothing else here has. Sitting it beside five reports and every account's publishing is exactly how the publishing slips. Keep it yourself for now, or make it a small separate creator seat later. Do not let it ride quietly on the manager."},
+  {id:"m6", kind:"watch", title:"The interns are useful, and they are not overflow",
+   body:"Two intern seats reads as bench depth on a chart. Both are capped to a single account by skill, which is fine, because interns are supposed to be narrow. Just do not plan as though either can pick up slack. The plan that assumed Kingdon could take Man Eats Wild short form is the plan that just broke, and it broke on exactly that assumption."},
+  {id:"m7", kind:"watch", title:"Five reports on a part time seat is the next thing to break",
+   body:"Once both Man Eats Wild seats are filled, Olivia has five people reporting to her, every account's publishing, the tool build and a creator queue. That is a full time job wearing a part time contract. Either the contract converts or an editing lead comes back underneath her. Better to see it coming than to discover it in month three."},
+  {id:"m8", kind:"hold", title:"Leave Julia exactly where she is",
+   body:"Real estate already works. Recurring retainers, nothing waiting on anybody else's output, nothing queued behind a quality gate. It stays outside the editing line and outside Olivia's remit, and it is the pattern to copy when you add the next vertical."}
  ],
  seq:[
-  {id:"s1", when:"This week", what:"Send Olivia the offer with the scope written down, including Foreign Waters or explicitly not, plus the base and the per deliverable editing rate."},
-  {id:"s2", when:"This week", what:"Reply to the other candidate. Either the seat is gone or it is not, and either answer is better than silence."},
-  {id:"s3", when:"This week", what:"Push the Man Eats Wild access request again and hold the thread until Meta, TikTok and YouTube are all handed over."},
-  {id:"s4", when:"This week", what:"Accept the Lucas Fink Facebook business portfolio invite before it expires."},
-  {id:"s5", when:"Her first week", what:"She picks the stack and gets every account access moved off your personal logins and into something the agency owns."},
-  {id:"s6", when:"Her first week", what:"Hand over one account at a time. Man Eats Wild reposting, then Xander, then Blair, then Lucas. Foreign Waters last, because it is the one that can swallow a whole day."},
-  {id:"s7", when:"Her first month", what:"Sit with her on real videos and teach the title and hook formulas. This is the part that actually buys your time back, and it is the part that gets skipped."},
-  {id:"s8", when:"Month two", what:"Review whether she takes the Man Eats Wild long form at the editing rate, and whether the base moves now that the stack is live."}
+  {id:"s1", when:"This week", what:"Ask Mario for a lighter cadence for the first month while access lands and the bench fills. This costs one conversation and buys you a month."},
+  {id:"s2", when:"This week", what:"Open the Vault Editor role for Man Eats Wild short form. Volume is the thing that breaks you first, and it is the cheaper of the two seats."},
+  {id:"s3", when:"This week", what:"Get the second intern properly set up on Lucas Fink, with the Facebook business portfolio invite accepted and the access held by the agency."},
+  {id:"s4", when:"This week", what:"Push the Man Eats Wild access request again and hold the thread until Meta, TikTok and YouTube are all handed over."},
+  {id:"s5", when:"Olivia's first week", what:"She sets the Man Eats Wild short form standard on a handful of cuts, so whoever you hire has something to copy rather than a description to interpret."},
+  {id:"s6", when:"Within the month", what:"Move Viktor onto the Man Eats Wild long form and open the Xander seat behind him. Hire into the documented workflow, not the risky one."},
+  {id:"s7", when:"Within the month", what:"Decide where Foreign Waters lives. It should not still be sitting quietly on Olivia at the end of her first month."},
+  {id:"s8", when:"Month two", what:"Review Olivia's contract. If she is carrying five reports and all the publishing, part time stopped being true and pretending otherwise is how you lose her."}
  ],
  risks:[
-  {id:"r1", sev:"high", title:"Nobody is cutting the Man Eats Wild long form",
-   body:"Skylar has gone, Olivia is not a long form editor in week one, and this is the account onboarding right now with broadcast people in the room. It is the sharpest hole on the page and hiring a manager does not close it."},
-  {id:"r2", sev:"high", title:"The training never happens",
-   body:"The entire case for this hire is delegating a decade of systems. If the first month is spent on access requests and tool setup instead, she ends up guessing, you end up correcting, and you have paid for a manager while still doing the managing."},
-  {id:"r3", sev:"med", title:"Scope creep before she has finished onboarding",
-   body:"She agreed to quality control and organisation. The seat on this page also carries publishing across every account, thumbnails, titles, the tool build and a daily creator queue. Every one of those is defensible. All of them at once, part time, in month one, is not."},
-  {id:"r4", sev:"med", title:"Her editing instinct is the reason to hire her and the reason she could stall",
-   body:"She said plainly that she loves the editing and the execution more than the strategy. That makes her feedback to editors sharp, and it also means she will be pulled toward cutting video instead of running the schedule. Watch which one slips in month one."},
-  {id:"r5", sev:"med", title:"Two people think they have the same job",
-   body:"An offer has already been accepted for the Social Media Manager seat that this hire replaces. Leaving that unresolved risks a public mess in a small industry, and it costs you a candidate you may want for the next opening."},
-  {id:"r6", sev:"low", title:"One gate becomes a bottleneck",
-   body:"A single approver is right at this volume and wrong at twice it. Once she is settled, the standard has to be written down so it survives her being on holiday, and so the next hire inherits a document rather than a habit."}
+  {id:"r1", sev:"high", title:"Man Eats Wild has a manager and no makers",
+   body:"Both production seats on your biggest account are empty, the interns cannot absorb it, and the account is onboarding in front of broadcast people. This is the only real hole on the page and everything else is small next to it."},
+  {id:"r2", sev:"high", title:"You are the fallback, which is the thing this was meant to stop",
+   body:"Every unstaffed line quietly lands back on you. The long form already has. If the volume seat stays empty, the daily posts land there too, and you are editing instead of selling with a payroll you did not have before."},
+  {id:"r3", sev:"med", title:"Two strangers on one account at the same time",
+   body:"Two new editors, one account, and no written standard yet. Moving Viktor across removes half of that risk, because at least one of the two people on your flagship has already been trained by you."},
+  {id:"r4", sev:"med", title:"The interns look like capacity on a chart and are not",
+   body:"Two intern seats make the bench look deeper than it is. Both are capped to one account by skill. Plan the workload as though your editing bench is Viktor and whoever you hire next, because that is what it actually is."},
+  {id:"r5", sev:"med", title:"Olivia's span of control",
+   body:"Five reports, every account's publishing, the tool build and a daily creator queue, on a part time contract. That is not a criticism of her, it is arithmetic, and it arrives in month two rather than month six."},
+  {id:"r6", sev:"low", title:"The standard is still in your head",
+   body:"Everything you know about titles, hooks and pacing is undocumented. Two new editors and a new manager is the moment that stops being tolerable. Write it down once and every hire after this one costs a fraction of what this one is costing."}
  ]
 };
 
-return {v:3, people:P, clients:C, work:W, copy:COPY, fit:FIT, inbox:INBOX, plan:PLAN,
+return {v:4, people:P, clients:C, work:W, copy:COPY, fit:FIT, inbox:INBOX, plan:PLAN,
         layers:["Ownership","Managers","Editors"], ui:{view:"roster"}};
 }
 

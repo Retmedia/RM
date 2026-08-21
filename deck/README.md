@@ -7,8 +7,9 @@ owns, the reporting lines, and the recommendation for what to change next.
 
 - **The team**: a card per seat with its responsibilities and the accounts it works on.
   Drag any line of work onto somebody else to move it.
-- **Org chart**: Garrett at the top, Olivia and Julia beneath him, Viktor and Kingdon
-  under Olivia. Redraws from the reporting controls below it.
+- **Org chart**: Garrett at the top, Olivia and Julia beneath him, and everybody who
+  touches an edit reporting to Olivia. Redraws from the reporting controls below it.
+  Open seats render with a dashed outline.
 - **Accounts**: every client with its lines of work and the owner on each one.
 - **The plan**: what changed this week, an honest read on Olivia from the call, the
   changes worth making, the order to make them in, and the risks. All of it editable.
@@ -24,7 +25,7 @@ of her card.
 
 ## Saving
 
-Every edit writes to `localStorage` under `rm_org_blueprint_v3` as you type. There is no
+Every edit writes to `localStorage` under `rm_org_blueprint_v4` as you type. There is no
 save button. The menu takes a backup file and restores one.
 
 ## Keyboard
