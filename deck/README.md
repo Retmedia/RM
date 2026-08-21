@@ -25,7 +25,7 @@ of her card.
 
 ## Saving
 
-Every edit writes to `localStorage` under `rm_org_blueprint_v4` as you type. There is no
+Every edit writes to `localStorage` under `rm_org_blueprint_v5` as you type. There is no
 save button. The menu takes a backup file and restores one.
 
 ## Keyboard
