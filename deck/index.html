@@ -389,15 +389,12 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
         <div class="field"><label for="p-role">Role</label><input id="p-role" required maxlength="60"></div>
       </div>
       <div class="grid2">
-        <div class="field"><label for="p-layer">Layer</label><select id="p-layer"></select></div>
         <div class="field"><label for="p-reports">Reports to</label><select id="p-reports"></select></div>
-      </div>
-      <div class="grid2">
         <div class="field"><label for="p-tag">Tag</label><input id="p-tag" maxlength="40" placeholder="Open seat, hiring now, locked"></div>
-        <div class="field"><label for="p-locked">Locked</label><select id="p-locked">
-          <option value="0">No, this seat can change</option>
-          <option value="1">Yes, leave this seat alone</option></select></div>
       </div>
+      <div class="field"><label for="p-locked">Locked</label><select id="p-locked">
+        <option value="0">No, this seat can change</option>
+        <option value="1">Yes, leave this seat alone</option></select></div>
       <div class="field"><label for="p-note">Note</label><textarea id="p-note" maxlength="600"></textarea></div>
       <div class="field"><label>Colour</label><div class="swatches" id="p-colors"></div></div>
       <div class="mactions">
@@ -478,7 +475,7 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 <script>
 (function(){
 "use strict";
-var KEY = "rm_org_blueprint_v5";
+var KEY = "rm_org_blueprint_v6";
 var THEME_KEY = "rm_deck_theme";
 var COLORS = ["coral","amber","teal","indigo","violet","moss"];
 var BEATS = ["Daily","Weekly","Monthly","Ongoing"];
@@ -493,29 +490,29 @@ var KINDS = {
 
 function seed(){
 var P = [
- {id:"p_garrett", name:"Garrett", role:"Founder", layer:0, reportsTo:"", color:"coral", tag:"", locked:false,
+ {id:"p_garrett", name:"Garrett", role:"Founder", reportsTo:"", color:"coral", tag:"", locked:false,
   duties:["Client strategy and creative direction","Sales, partnerships and new business","The title and hook formulas the whole agency runs on","Shane Dorian and the Surf Longevity course"],
   note:"Cuts the first Man Eats Wild long form himself so a standard exists before anybody is hired into it. After that it comes off his plate and stays off."},
- {id:"p_olivia", name:"Olivia", role:"Content Manager", layer:1, reportsTo:"p_garrett", color:"amber",
+ {id:"p_olivia", name:"Olivia", role:"Content Manager", reportsTo:"p_garrett", color:"amber",
   tag:"Starts end of month", locked:false,
   duties:["The layer between Garrett and the editors. Nothing reaches a client account without passing her","Quality check on every cut. Calls the hook, the crop and the pacing, and sends work back","The posting schedule across every account, and the native posting itself","Titles and thumbnails for YouTube and short form","Builds the software stack from nothing, and gets account access off personal logins","Editing when there is room for it, paid on top of the base"],
-  note:"With one editor carrying the whole of Man Eats Wild, her gate matters more than it did. For the first month nothing from that account posts without her looking at it."},
- {id:"p_julia", name:"Julia", role:"Account Manager", layer:1, reportsTo:"p_garrett", color:"violet",
+  note:"With one editor carrying the whole of Man Eats Wild, her gate matters more than it did. For the first month nothing from that account posts without her looking at it. Her direct reports are the Senior Editor and the distribution intern, which is a far healthier number than having every editor hanging off her."},
+ {id:"p_julia", name:"Julia", role:"Account Manager", reportsTo:"p_garrett", color:"violet",
   tag:"Locked", locked:true,
   duties:["Real estate accounts end to end","Editing, building, captioning and the compliance pass"],
   note:"The part of the agency that already works. Recurring retainers, nothing waiting on anybody else's output, nothing queued behind a quality gate."},
- {id:"p_senior", name:"", role:"Senior Editor", layer:2, reportsTo:"p_olivia", color:"teal",
+ {id:"p_senior", name:"", role:"Senior Editor", reportsTo:"p_olivia", color:"teal",
   tag:"Open, the only hire", locked:false,
-  duties:["Man Eats Wild end to end. The weekly long form for YouTube plus the short form that comes out of it","The Instagram cut a day and the TikToks, pulled from the same session as the long form","Sets the look of the account that broadcast people are watching","Backup on Xander midforms, so Viktor is not the only person who can cut one"],
-  note:"One seat rather than two, and there is a craft argument for that as well as a money one. Whoever cuts the long form is already inside the footage, so the clips come out of the same session. Two separate editors would both have to ingest and learn the same material."},
- {id:"p_viktor", name:"Viktor", role:"Editor", layer:2, reportsTo:"p_olivia", color:"indigo",
+  duties:["Man Eats Wild end to end. The weekly long form for YouTube plus the short form that comes out of it","The Instagram cut a day and the TikToks, pulled from the same session as the long form","Runs the two editors day to day. Sets the standard, trains them, and reviews before Olivia sees it","Sets the look of the account that broadcast people are watching"],
+  note:"One seat rather than two, and there is a craft argument for that as well as a money one. Whoever cuts the long form is already inside the footage, so the clips come out of the same session. Two separate editors would both have to ingest and learn the same material. This seat also sits between Olivia and the two editors, which is what keeps her span of control sane."},
+ {id:"p_viktor", name:"Viktor", role:"Editor", reportsTo:"p_senior", color:"indigo",
   tag:"Named backup on long form", locked:false,
   duties:["Xander midforms for YouTube","Xander daily short form, one that teaches and one that entertains","Named backup on the Man Eats Wild long form, so the account does not stop if one person is away"],
-  note:"Stays on Xander. He is also the free contingency: if the new hire struggles on long form, swap the two of them and it costs a conversation rather than money."},
- {id:"p_kingdon", name:"Kingdon", role:"Intern Editor", layer:2, reportsTo:"p_olivia", color:"indigo", tag:"Blair only", locked:false,
+  note:"Stays on Xander, and now reports to the Senior Editor rather than straight to Olivia. He is also the free contingency: if the new hire struggles on long form, swap the two of them and it costs a conversation rather than money."},
+ {id:"p_kingdon", name:"Kingdon", role:"Intern Editor", reportsTo:"p_senior", color:"indigo", tag:"Blair only", locked:false,
   duties:["Blair Conklin, the monthly run of cuts from the iCloud footage","Raw river long form for Facebook, shot vertical","Delivers to the shared folder, named to format"],
   note:"Capped at Blair by skill, so nothing from Man Eats Wild can land here. That cap is why the new seat has to carry the whole account."},
- {id:"p_intern2", name:"New intern", role:"Intern, distribution", layer:2, reportsTo:"p_olivia", color:"indigo",
+ {id:"p_intern2", name:"New intern", role:"Intern, distribution", reportsTo:"p_olivia", color:"indigo",
   tag:"Add their name", locked:false,
   duties:["Builds the Lucas Fink posts from his existing videos","Posts them to his Facebook page"],
   note:"Capped at Lucas Fink by skill, same as Kingdon. Useful, and not a seat that absorbs overflow."}
@@ -567,9 +564,9 @@ var WD = [
 var W = WD.map(function(r,i){ return {id:"w"+i, title:r[0], clientId:r[1], ownerId:r[2], beat:r[3], platform:r[4], ord:i}; });
 
 var COPY = {
- rosterLede:"Seven seats, one of them open. The open seat is a Senior Editor who takes Man Eats Wild end to end, the long form and the short form that comes out of it. That is the only hire the budget stretches to, so the account has to be built around one person rather than two.",
- orgLede:"Garrett at the top, Olivia and Julia underneath him, and everybody who touches an edit reporting to Olivia. One open seat, and it is the biggest one on the board.",
- orgFoot:"Footage comes in, an editor cuts it, Olivia checks it, titles it and posts it. Garrett trains her on the systems and then stays out of the line. Julia runs real estate end to end without touching any of it.",
+ rosterLede:"Seven seats, one of them open. The two editors sit under a Senior Editor, the Senior Editor sits under Olivia, and Julia runs real estate off to the side. The open seat is that Senior Editor, who takes Man Eats Wild end to end and runs the bench underneath.",
+ orgLede:"Two editors at the bottom, a Senior Editor over them, Olivia over that, Julia off to the side, and Garrett at the top. One open seat, and it is the biggest one on the board.",
+ orgFoot:"Footage comes in, an editor cuts it, the Senior Editor reviews it, Olivia titles it and posts it. Garrett trains her on the systems and then stays out of the line. Julia runs real estate end to end without touching any of it.",
  acctLede:"What every account is owed, and who owns each line of it.",
  planLede:"One seat it is. That is tighter than I would like, and it is more defensible than it first looks. Whoever cuts the long form is already inside that footage, so the clips fall out of the same session rather than being a second job for a second person. Two editors would both have to ingest and learn the same material. What one seat does not survive is the cadence you promised. A weekly long form plus a post a day plus several TikToks a day was written for a bench that does not exist. Either that number comes down for the first months or the quality does, and only one of those is a decision you get to make."
 };
@@ -642,8 +639,8 @@ var PLAN = {
    body:"If the long form and the clips get run as separate queues, one person is doing two people's ingest and review. Batching them into a single weekly session is what keeps the seat honest. Watch for the week where the clips start getting chased separately."},
   {id:"r5", sev:"med", title:"The interns look like capacity on a chart and are not",
    body:"Two intern seats make the bench look deeper than it is. Both are capped to one account by skill. Your editing bench is Viktor and whoever you hire next, and that is the whole of it."},
-  {id:"r6", sev:"med", title:"Olivia's span of control",
-   body:"Four reports, every account's publishing, the tool build, a daily creator queue, and now a hard gate on your biggest client, on a part time contract. That is not a criticism of her, it is arithmetic, and it arrives in month two."},
+  {id:"r6", sev:"med", title:"Olivia still carries a lot for a part time seat",
+   body:"Putting the Senior Editor between her and the editors fixes the worst of it, since she now has two direct reports rather than four. What is left is every account's publishing, the tool build, a daily creator queue and the final gate. Moving Foreign Waters off her is what finishes the job."},
   {id:"r7", sev:"low", title:"The standard is still in your head",
    body:"Everything you know about titles, hooks and pacing is undocumented. A new manager and a new senior editor in the same month is the moment that stops being tolerable. Write it down once and every hire after this one costs a fraction of what this one is costing."}
  ]
@@ -769,18 +766,26 @@ function personCard(p){
     (p.note ? '<div class="pnote"><span class="cell" contenteditable="true" data-pnote="' + p.id + '" data-ph="Note">' + esc(p.note) + '</span></div>' : '') +
   '</article>';
 }
+function rosterGroup(label, list){
+  return '<div class="layer"><span class="name">' + esc(label) + '</span><span class="ln"></span></div>' +
+         '<div class="roster">' + list.map(personCard).join("") + '</div>';
+}
 function renderRoster(){
-  var html = "", seen = {};
-  (S.layers||[]).forEach(function(ln, i){
-    var list = S.people.filter(function(p){ return (p.layer|0) === i; });
-    list.forEach(function(p){ seen[p.id] = 1; });
-    if(!list.length) return;
-    html += '<div class="layer"><span class="name">' + esc(ln) + '</span><span class="ln"></span></div>' +
-            '<div class="roster">' + list.map(personCard).join("") + '</div>';
-  });
+  var html = "", seen = {}, queue = [];
+  var roots = S.people.filter(function(p){ return !p.reportsTo || !person(p.reportsTo); });
+  if(roots.length){
+    html += rosterGroup("Ownership", roots);
+    roots.forEach(function(p){ seen[p.id] = 1; queue.push(p); });
+  }
+  for(var i = 0; i < queue.length; i++){
+    var boss = queue[i];
+    var kids = S.people.filter(function(p){ return p.reportsTo === boss.id && !seen[p.id]; });
+    if(!kids.length) continue;
+    kids.forEach(function(p){ seen[p.id] = 1; queue.push(p); });
+    html += rosterGroup("Reports to " + bigName(boss), kids);
+  }
   var rest = S.people.filter(function(p){ return !seen[p.id]; });
-  if(rest.length) html += '<div class="layer"><span class="name">Other</span><span class="ln"></span></div>' +
-                          '<div class="roster">' + rest.map(personCard).join("") + '</div>';
+  if(rest.length) html += rosterGroup("Elsewhere", rest);
   $("#rosterZone").innerHTML = html;
 }
 
@@ -993,8 +998,6 @@ function placeSeat(id, parentId, beforeId){
   var i = indexOfPerson(id); if(i < 0) return;
   var p = S.people.splice(i, 1)[0];
   p.reportsTo = parentId || "";
-  var par = parentId ? person(parentId) : null;
-  p.layer = par ? Math.min((par.layer|0) + 1, S.layers.length - 1) : 0;
   var at = beforeId ? indexOfPerson(beforeId) : -1;
   if(at < 0) S.people.push(p); else S.people.splice(at, 0, p);
 }
@@ -1200,12 +1203,10 @@ function openPerson(id){
   editingPerson = id || null;
   var p = id ? person(id) : null;
   $("#pTitle").textContent = p ? "Edit seat" : "Add a seat";
-  $("#p-layer").innerHTML = (S.layers||[]).map(function(l,i){ return '<option value="' + i + '">' + esc(l) + '</option>'; }).join("");
   $("#p-reports").innerHTML = '<option value="">nobody</option>' + S.people.filter(function(x){ return !p || x.id !== p.id; })
     .map(function(x){ return '<option value="' + x.id + '">' + esc(bigName(x)) + '</option>'; }).join("");
   $("#p-name").value    = p ? p.name : "";
   $("#p-role").value    = p ? p.role : "";
-  $("#p-layer").value   = p ? Math.min(p.layer|0, S.layers.length-1) : S.layers.length-1;
   $("#p-reports").value = p ? (p.reportsTo||"") : ((S.people[0]||{}).id||"");
   $("#p-tag").value     = p ? (p.tag||"") : "";
   $("#p-locked").value  = p && p.locked ? "1" : "0";
@@ -1223,7 +1224,6 @@ $("#personForm").addEventListener("submit", function(e){
   if(!p){ p = {id:uid("p"), duties:[], note:""}; S.people.push(p); }
   p.name = $("#p-name").value.trim();
   p.role = role;
-  p.layer = Number($("#p-layer").value)||0;
   p.reportsTo = $("#p-reports").value;
   p.tag = $("#p-tag").value.trim();
   p.locked = $("#p-locked").value === "1";

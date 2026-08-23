@@ -5,10 +5,11 @@ owns, the reporting lines, and the recommendation for what to change next.
 
 ## Views
 
-- **The team**: a card per seat with its responsibilities and the accounts it works on.
-  Drag any line of work onto somebody else to move it.
-- **Org chart**: Garrett at the top, Olivia and Julia beneath him, and everybody who
-  touches an edit reporting to Olivia. Open seats render with a dashed outline. Drag a
+- **The team**: a card per seat with its responsibilities and the accounts it works on,
+  grouped by who each person reports to so it always matches the chart. Drag any line of
+  work onto somebody else to move it.
+- **Org chart**: two editors at the bottom, a Senior Editor over them, Olivia over that,
+  Julia off to the side, Garrett at the top. Open seats render with a dashed outline. Drag a
   card onto somebody else to change who they report to, or use the controls below the
   chart. Drop a card into the gap beside another card to sit next to them instead of
   under them, which is how siblings get reordered. Drag the space around the chart to pan
@@ -39,7 +40,7 @@ of her card.
 
 ## Saving
 
-Every edit writes to `localStorage` under `rm_org_blueprint_v5` as you type. There is no
+Every edit writes to `localStorage` under `rm_org_blueprint_v6` as you type. There is no
 save button. The menu takes a backup file and restores one.
 
 ## Keyboard
