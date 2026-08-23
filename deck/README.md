@@ -10,7 +10,9 @@ owns, the reporting lines, and the recommendation for what to change next.
 - **Org chart**: Garrett at the top, Olivia and Julia beneath him, and everybody who
   touches an edit reporting to Olivia. Open seats render with a dashed outline. Drag a
   card onto somebody else to change who they report to, or use the controls below the
-  chart. Drag the space around the chart to pan it when it is wider than the screen.
+  chart. Drop a card into the gap beside another card to sit next to them instead of
+  under them, which is how siblings get reordered. Drag the space around the chart to pan
+  it when the chart is wider than the screen.
 - **Accounts**: every client with its lines of work and the owner on each one.
 - **The plan**: what changed this week, an honest read on Olivia from the call, the
   changes worth making, the order to make them in, and the risks. All of it editable.
@@ -22,8 +24,9 @@ and the chart, account names and descriptors, the title of any line of work, not
 everything on the plan. Click it and type. The seat editor behind the Edit button covers
 the rest: layer, reporting line, colour and the locked switch.
 
-Lines of work drag between seats from the roster. A grip appears on hover at the left of
-each line, and the text itself stays clickable for editing.
+Dragging and editing share the same text. Click a line to edit it, drag the same line to
+move it. The rule is that an unfocused line drags and a focused one selects text, so a
+click always edits and a pull always moves. Lines of work also show a grip on hover.
 
 ## Conventions
 

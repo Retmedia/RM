@@ -165,6 +165,7 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 .onode.landing{outline:2px dashed var(--accent);outline-offset:4px}
 .onode .cell{display:inline-block}
 .orgwrap.panning{cursor:grabbing;user-select:none}
+.ins-bar{position:absolute;width:3px;background:var(--accent);border-radius:2px;pointer-events:none;z-index:5}
 .orghint{font-size:14.5px;color:var(--ink-faint);margin-top:12px}
 .onode.open{border-style:dashed}
 .onode .orole{font-size:14px;font-weight:600;color:var(--c)}
@@ -326,7 +327,7 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
       <div class="orginner" id="orgZone"></div>
       <div class="orgfoot"><span class="cell" contenteditable="true" data-copy="orgFoot" data-ph="How work flows"></span></div>
     </div>
-    <p class="orghint">Drag a card onto somebody else to change who they report to. Click any line of text on a card to edit it in place.</p>
+    <p class="orghint">Drag a card <b>onto</b> another card to report to that person. Drag it into the <b>gap</b> beside a card to sit next to them instead. Click any line of text to edit it.</p>
     <div class="reassign" id="reassignZone"></div>
     <p class="locknote" id="lockNote"></p>
   </section>
@@ -823,7 +824,7 @@ function branch(p, guard){
   guard = guard.concat([p.id]);
   var k = kidsOf(p.id).filter(function(x){ return guard.indexOf(x.id) < 0; });
   return '<div class="obr">' + orgNode(p) +
-    (k.length ? '<div class="vline"></div><div class="orow kidrow ' + (k.length===1?"solo":"") + '"><i class="obar"></i>' +
+    (k.length ? '<div class="vline"></div><div class="orow kidrow ' + (k.length===1?"solo":"") + '" data-parent="' + p.id + '"><i class="obar"></i>' +
       k.map(function(x){ return branch(x, guard); }).join("") + '</div>' : "") + '</div>';
 }
 function renderOrg(){
@@ -833,7 +834,7 @@ function renderOrg(){
   else {
     var root = roots[0], others = roots.slice(1), k = kidsOf(root.id);
     z.innerHTML = '<div class="otop">' + orgNode(root) + '</div>' +
-      (k.length ? '<div class="vline"></div><div class="orow ' + (k.length===1?"solo":"") + '"><i class="obar"></i>' +
+      (k.length ? '<div class="vline"></div><div class="orow ' + (k.length===1?"solo":"") + '" data-parent="' + root.id + '"><i class="obar"></i>' +
         k.map(function(x){ return branch(x, [root.id]); }).join("") + '</div>' : "") +
       (others.length ? '<div class="orow solo" style="margin-top:30px">' + others.map(function(x){ return branch(x, []); }).join("") + '</div>' : "");
     requestAnimationFrame(layoutBars);
@@ -912,7 +913,9 @@ function renderAll(){ renderCopy(); renderRoster(); renderAccounts(); renderPlan
   var drag = null;
   document.addEventListener("pointerdown", function(e){
     if(e.button != null && e.button !== 0) return;
-    if(e.target.closest("button, a, input, select, textarea, [contenteditable='true']")) return;
+    if(e.target.closest("button, a, input, select, textarea")) return;
+    var ce0 = e.target.closest("[contenteditable='true']");
+    if(ce0 && ce0 === document.activeElement) return;
     var li = e.target.closest(".jlist li[data-w]");
     if(!li) return;
     drag = {li:li, x0:e.clientX, y0:e.clientY, live:false, ghost:null, box:null,
@@ -928,6 +931,7 @@ function renderAll(){ renderCopy(); renderRoster(); renderAccounts(); renderPlan
       if(Math.abs(e.clientX-drag.x0) < 6 && Math.abs(e.clientY-drag.y0) < 6) return;
       if(!drag.holdOk){ up(); return; }
       drag.live = true;
+      try { if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch(err){}
       var w = work(drag.li.getAttribute("data-w"));
       var g = document.createElement("div");
       g.className = "ghost-card";
@@ -975,7 +979,7 @@ function renderAll(){ renderCopy(); renderRoster(); renderAccounts(); renderPlan
   }
 })();
 
-/* drag a seat onto another to change who it reports to */
+/* drag a seat onto another card to reparent it, or into a gap to sit beside them */
 function reportsUnder(childId, ancestorId){
   var p = person(childId), guard = 0;
   while(p && p.reportsTo && guard++ < 60){
@@ -984,38 +988,80 @@ function reportsUnder(childId, ancestorId){
   }
   return false;
 }
+function indexOfPerson(id){ for(var i=0;i<S.people.length;i++) if(S.people[i].id === id) return i; return -1; }
+function placeSeat(id, parentId, beforeId){
+  var i = indexOfPerson(id); if(i < 0) return;
+  var p = S.people.splice(i, 1)[0];
+  p.reportsTo = parentId || "";
+  var par = parentId ? person(parentId) : null;
+  p.layer = par ? Math.min((par.layer|0) + 1, S.layers.length - 1) : 0;
+  var at = beforeId ? indexOfPerson(beforeId) : -1;
+  if(at < 0) S.people.push(p); else S.people.splice(at, 0, p);
+}
+
 (function(){
   var drag = null;
+
   document.addEventListener("pointerdown", function(e){
     if(e.button != null && e.button !== 0) return;
-    if(e.target.closest("button, a, input, select, textarea, [contenteditable='true']")) return;
+    if(e.target.closest("button, a, input, select, textarea")) return;
+    /* an unfocused line of text still starts a drag; a focused one selects text */
+    var ce = e.target.closest("[contenteditable='true']");
+    if(ce && ce === document.activeElement) return;
     var node = e.target.closest(".onode[data-onode]");
     if(!node) return;
     var p = person(node.getAttribute("data-onode"));
     if(!p) return;
     if(p.locked){ toast(bigName(p) + " is locked, that seat does not move"); return; }
-    drag = {node:node, id:p.id, x0:e.clientX, y0:e.clientY, live:false, ghost:null, box:null,
+    drag = {node:node, id:p.id, x0:e.clientX, y0:e.clientY, live:false, ghost:null,
+            card:null, row:null, before:null, bar:null,
             holdOk: e.pointerType !== "touch"};
     if(!drag.holdOk){ var d0 = drag; d0.timer = setTimeout(function(){ if(drag === d0) d0.holdOk = true; }, 340); }
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
     document.addEventListener("pointercancel", up);
   });
-  function ok(targetId, sourceId){
+
+  function canParent(targetId, sourceId){
     if(!targetId || targetId === sourceId) return false;
     var t = person(targetId);
     if(!t || t.locked) return false;
     return !reportsUnder(targetId, sourceId);
   }
+  function clearHints(){
+    if(drag && drag.card){ drag.card.classList.remove("landing"); drag.card = null; }
+    if(drag && drag.bar){ drag.bar.remove(); drag.bar = null; }
+  }
+  function showBar(row, beforeEl){
+    if(!drag.bar){
+      drag.bar = document.createElement("div");
+      drag.bar.className = "ins-bar";
+    }
+    if(drag.bar.parentNode !== row) row.appendChild(drag.bar);
+    var rr = row.getBoundingClientRect();
+    var ref = row.querySelector(".obr > .onode");
+    var x, top = 26, h = 96;
+    if(ref){ var rb = ref.getBoundingClientRect(); top = rb.top - rr.top; h = rb.height; }
+    if(beforeEl){ var bb = beforeEl.getBoundingClientRect(); x = bb.left - rr.left - 9; }
+    else {
+      var kids = row.querySelectorAll(":scope > .obr");
+      var last = kids[kids.length - 1];
+      x = last ? (last.getBoundingClientRect().right - rr.left + 6) : 0;
+    }
+    drag.bar.style.left = x + "px";
+    drag.bar.style.top = top + "px";
+    drag.bar.style.height = h + "px";
+  }
+
   function move(e){
     if(!drag) return;
     if(!drag.live){
       if(Math.abs(e.clientX-drag.x0) < 6 && Math.abs(e.clientY-drag.y0) < 6) return;
       if(!drag.holdOk){ up(); return; }
       drag.live = true;
+      try { if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch(err){}
       var r = drag.node.getBoundingClientRect();
       var g = drag.node.cloneNode(true);
-      g.classList.add("ghost-node");
       g.style.cssText += ";position:fixed;z-index:900;pointer-events:none;width:" + r.width + "px;" +
         "left:" + r.left + "px;top:" + r.top + "px;box-shadow:var(--shadow-lift);transform:rotate(-1.5deg);opacity:.97";
       document.body.appendChild(g);
@@ -1027,15 +1073,36 @@ function reportsUnder(childId, ancestorId){
     e.preventDefault();
     drag.ghost.style.left = (e.clientX - drag.offX) + "px";
     drag.ghost.style.top  = (e.clientY - drag.offY) + "px";
+
     var under = document.elementFromPoint(e.clientX, e.clientY);
-    var node = under && under.closest ? under.closest(".onode[data-onode]") : null;
-    var id = node && node.getAttribute("data-onode");
-    var target = ok(id, drag.id) ? node : null;
-    if(target !== drag.box){
-      if(drag.box) drag.box.classList.remove("landing");
-      if(target) target.classList.add("landing");
-      drag.box = target;
+    var card = under && under.closest ? under.closest(".onode[data-onode]") : null;
+    var cardId = card && card.getAttribute("data-onode");
+
+    if(canParent(cardId, drag.id)){
+      if(drag.card !== card){ clearHints(); drag.card = card; card.classList.add("landing"); }
+      drag.row = null; drag.before = null;
+    } else {
+      var row = under && under.closest ? under.closest(".orow[data-parent]") : null;
+      var rowParent = row ? row.getAttribute("data-parent") : null;
+      if(row && rowParent && canParent(rowParent, drag.id)){
+        var kids = Array.prototype.filter.call(row.querySelectorAll(":scope > .obr"), function(k){
+          return !k.contains(drag.node);
+        });
+        var before = null;
+        for(var i=0;i<kids.length;i++){
+          var kb = kids[i].getBoundingClientRect();
+          if(e.clientX < kb.left + kb.width/2){ before = kids[i]; break; }
+        }
+        if(drag.card){ drag.card.classList.remove("landing"); drag.card = null; }
+        var beforeNode = before ? before.querySelector(".onode[data-onode]") : null;
+        drag.row = row;
+        drag.before = beforeNode ? beforeNode.getAttribute("data-onode") : null;
+        showBar(row, before);
+      } else {
+        clearHints(); drag.row = null; drag.before = null;
+      }
     }
+
     var wrap = document.querySelector(".orgwrap");
     if(wrap){
       var wr = wrap.getBoundingClientRect();
@@ -1043,25 +1110,43 @@ function reportsUnder(childId, ancestorId){
       else if(e.clientX < wr.left + 70) wrap.scrollLeft -= 16;
     }
   }
+
   function up(){
     document.removeEventListener("pointermove", move);
     document.removeEventListener("pointerup", up);
     document.removeEventListener("pointercancel", up);
     if(!drag) return;
     clearTimeout(drag.timer);
-    var d = drag; drag = null;
+    var d = drag;
+    drag = null;
     document.body.style.userSelect = "";
+    if(d.card) d.card.classList.remove("landing");
+    if(d.bar) d.bar.remove();
     if(!d.live) return;
     if(d.ghost) d.ghost.remove();
     d.node.classList.remove("lifting");
-    if(d.box) d.box.classList.remove("landing");
-    if(!d.box) return;
-    var moved = person(d.id), boss = person(d.box.getAttribute("data-onode"));
-    if(!moved || !boss || moved.reportsTo === boss.id) return;
-    snapshot("changing who " + bigName(moved) + " reports to");
-    moved.reportsTo = boss.id;
-    save(); renderOrg(); renderRoster();
-    toast(bigName(moved) + " now reports to " + bigName(boss));
+
+    var moved = person(d.id);
+    if(!moved) return;
+
+    if(d.card){
+      var boss = person(d.card.getAttribute("data-onode"));
+      if(!boss || moved.reportsTo === boss.id) return;
+      snapshot("moving " + bigName(moved));
+      placeSeat(moved.id, boss.id, null);
+      save(); renderOrg(); renderRoster();
+      toast(bigName(moved) + " now reports to " + bigName(boss));
+      return;
+    }
+    if(d.row){
+      var parentId = d.row.getAttribute("data-parent");
+      var par = parentId ? person(parentId) : null;
+      snapshot("moving " + bigName(moved));
+      placeSeat(moved.id, parentId, d.before);
+      save(); renderOrg(); renderRoster();
+      toast(par ? bigName(moved) + " now sits beside the others under " + bigName(par)
+                : bigName(moved) + " moved");
+    }
   }
 })();
 
