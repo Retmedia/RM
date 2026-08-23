@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RM OS — RET Media</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23b0452f'/%3E%3Ctext x='16' y='21' font-family='sans-serif' font-size='13' font-weight='700' fill='white' text-anchor='middle'%3ERM%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="mark">RM</span> <span class="wordmark">OS</span></div>
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-view="today">Today</button>
+    <button class="tab" data-view="board">Board</button>
+    <button class="tab" data-view="capacity">Capacity</button>
+    <button class="tab" data-view="accounts">Accounts</button>
+    <button class="tab" data-view="access">Access</button>
+    <button class="tab" data-view="standards">Standards</button>
+  </nav>
+  <div class="topright">
+    <select id="who" title="Whose view"></select>
+    <button id="genweek" class="btn">Build the week</button>
+  </div>
+</header>
+
+<main id="app"><p class="loading">Loading…</p></main>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheetcard" role="dialog" aria-modal="true">
+    <button class="close" id="sheetClose" aria-label="Close">×</button>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

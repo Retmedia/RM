@@ -1,0 +1,16 @@
+{
+  "name": "rmos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RM OS: the operating system for RET Media. Commitments in, scheduled work out, nothing posts unreviewed.",
+  "main": "server/server.js",
+  "bin": { "rmos": "cli/rmos.js" },
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
+    "test": "node test/run.js",
+    "brief": "node cli/rmos.js brief",
+    "doctor": "node cli/rmos.js doctor"
+  },
+  "engines": { "node": ">=18" }
+}
