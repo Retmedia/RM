@@ -122,6 +122,8 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 .pname{font-size:21px;font-weight:800;letter-spacing:-.025em;line-height:1.15}
 .prole{font-size:15.5px;font-weight:600;color:var(--c);margin-top:2px}
 .tag{display:inline-block;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;margin-top:9px;background:var(--tw);color:var(--tc)}
+.tag:has(.cell:empty){opacity:0;transition:opacity .12s}
+.pcard:hover .tag:has(.cell:empty),.pcard:focus-within .tag:has(.cell:empty){opacity:1}
 .psec{padding:0 22px 18px}
 .psec h4{margin:0 0 9px;font-size:14px;font-weight:700;color:var(--ink-faint);letter-spacing:0}
 .plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
@@ -132,8 +134,11 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 .jgroup{margin-bottom:16px}
 .jgroup .gname{font-size:14px;font-weight:700;color:var(--gc);margin-bottom:7px}
 .jlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
-.jlist li{display:flex;gap:10px;align-items:baseline;font-size:15.5px;color:var(--ink-soft);line-height:1.5;
+.jlist li{display:flex;gap:8px;align-items:baseline;font-size:15.5px;color:var(--ink-soft);line-height:1.5;
   padding:5px 7px;margin:0 -7px;border-radius:var(--r-xs);cursor:grab;touch-action:pan-y}
+.grip{width:11px;flex:none;align-self:center;opacity:0;transition:opacity .12s;color:var(--ink-faint);
+  font-size:13px;line-height:1;letter-spacing:-1px;cursor:grab}
+.jlist li:hover .grip{opacity:.7}
 .jlist li:hover{background:var(--surface-2)}
 .jlist li .bullet{width:6px;height:6px;border-radius:2px;background:var(--gc);opacity:.65;flex:none;transform:translateY(-2px)}
 .jlist li .txt{flex:1;min-width:0}
@@ -153,11 +158,20 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
 .orginner{min-width:min(100%,720px);display:inline-block;width:max-content;min-width:100%}
 .otop{display:flex;justify-content:center;justify-content:safe center}
 .onode{background:var(--surface);border:1.5px solid var(--c);border-radius:14px;padding:14px 20px;text-align:center;
-  box-shadow:var(--shadow);min-width:158px;max-width:190px}
+  box-shadow:var(--shadow);min-width:158px;max-width:190px;cursor:grab;touch-action:pan-y;transition:box-shadow .12s,opacity .12s}
+.onode:hover{box-shadow:var(--shadow-lift)}
+.onode.pinned{cursor:default}
+.onode.lifting{opacity:.3}
+.onode.landing{outline:2px dashed var(--accent);outline-offset:4px}
+.onode .cell{display:inline-block}
+.orgwrap.panning{cursor:grabbing;user-select:none}
+.orghint{font-size:14.5px;color:var(--ink-faint);margin-top:12px}
 .onode.open{border-style:dashed}
 .onode .orole{font-size:14px;font-weight:600;color:var(--c)}
 .onode .onm{font-size:19px;font-weight:800;letter-spacing:-.025em;margin-top:2px}
 .onode .otag{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--cw);color:var(--c);margin-top:8px}
+.onode .otag:has(.cell:empty){opacity:0;transition:opacity .12s}
+.onode:hover .otag:has(.cell:empty),.onode:focus-within .otag:has(.cell:empty){opacity:1}
 .vline{width:2px;height:28px;background:var(--line-2);margin:0 auto}
 .orow{display:flex;gap:14px;position:relative;padding-top:28px;align-items:flex-start;justify-content:center;justify-content:safe center;flex-wrap:nowrap}
 .obar{position:absolute;top:0;height:2px;background:var(--line-2);display:none}
@@ -312,6 +326,7 @@ li:hover .rowdel,li:focus-within .rowdel{opacity:1}
       <div class="orginner" id="orgZone"></div>
       <div class="orgfoot"><span class="cell" contenteditable="true" data-copy="orgFoot" data-ph="How work flows"></span></div>
     </div>
+    <p class="orghint">Drag a card onto somebody else to change who they report to. Click any line of text on a card to edit it in place.</p>
     <div class="reassign" id="reassignZone"></div>
     <p class="locknote" id="lockNote"></p>
   </section>
@@ -720,8 +735,8 @@ function personCard(p){
     return '<div class="jgroup" style="--gc:' + cvar(c?c.color:"indigo") + '">' +
       '<div class="gname">' + esc(c ? c.name : "Unassigned") + '</div>' +
       '<ul class="jlist">' + byClient[cid].map(function(w){
-        return '<li data-w="' + w.id + '"><span class="bullet"></span>' +
-          '<span class="txt">' + esc(w.title) + '</span>' +
+        return '<li data-w="' + w.id + '"><span class="grip" title="Drag to another seat">::</span><span class="bullet"></span>' +
+          '<span class="txt cell" contenteditable="true" data-wtitle="' + w.id + '" data-ph="What it is">' + esc(w.title) + '</span>' +
           '<span class="beat">' + esc(w.beat||"") + '</span></li>';
       }).join("") + '</ul></div>';
   }).join("");
@@ -733,9 +748,10 @@ function personCard(p){
     '<div class="cardtools"><button class="tiny" data-editp="' + p.id + '" title="Edit this seat">Edit</button></div>' +
     '<div class="phead"><div class="avatar">' + esc(initials(p)) + '</div>' +
       '<div style="min-width:0;flex:1">' +
-        '<div class="pname">' + esc(bigName(p)) + '</div>' +
-        '<div class="prole">' + esc(subName(p)) + '</div>' +
-        (p.tag ? '<span class="tag" style="--tc:' + cvar(p.color) + ';--tw:' + cwash(p.color) + '">' + esc(p.tag) + '</span>' : '') +
+        '<div class="pname"><span class="cell" contenteditable="true" data-pname="' + p.id + '" data-ph="Open seat">' + esc(p.name) + '</span></div>' +
+        '<div class="prole"><span class="cell" contenteditable="true" data-prole="' + p.id + '" data-ph="Role">' + esc(p.role) + '</span></div>' +
+        '<span class="tag" style="--tc:' + cvar(p.color) + ';--tw:' + cwash(p.color) + '">' +
+          '<span class="cell" contenteditable="true" data-ptag="' + p.id + '" data-ph="Add a tag">' + esc(p.tag||"") + '</span></span>' +
       '</div></div>' +
     (p.duties.length || true ? '<div class="psec"><h4>What this seat owns</h4><ul class="plist">' +
       p.duties.map(function(d,i){
@@ -779,10 +795,13 @@ function renderAccounts(){
     return '<article class="acard" data-c="' + c.id + '" style="--c:' + cvar(c.color) + '">' +
       '<div class="cardtools"><button class="tiny" data-editc="' + c.id + '" title="Edit">Edit</button>' +
         '<button class="tiny" data-addw="' + c.id + '" title="Add a line of work">Add</button></div>' +
-      '<div class="an">' + esc(c.name) + '</div><div class="as">' + esc(c.sub||"") + '</div>' +
+      '<div class="an"><span class="cell" contenteditable="true" data-cname="' + c.id + '" data-ph="Account name">' + esc(c.name) + '</span></div>' +
+      '<div class="as"><span class="cell" contenteditable="true" data-csub="' + c.id + '" data-ph="What they do">' + esc(c.sub||"") + '</span></div>' +
       '<ul class="alist">' + items.map(function(w){
-        return '<li data-editw="' + w.id + '" style="cursor:pointer"><span class="bullet"></span>' +
-          '<span class="txt">' + esc(w.title) + '</span>' + whoTag(w.ownerId) + '</li>';
+        return '<li><span class="bullet"></span>' +
+          '<span class="txt cell" contenteditable="true" data-wtitle="' + w.id + '" data-ph="What it is">' + esc(w.title) + '</span>' +
+          whoTag(w.ownerId) +
+          '<button class="tiny quiet rowdel" data-editw="' + w.id + '" title="Owner, rhythm and platforms">Edit</button></li>';
       }).join("") + '</ul>' +
       (c.note ? '<div class="anote"><span class="cell" contenteditable="true" data-cnote="' + c.id + '">' + esc(c.note) + '</span></div>' : '') +
     '</article>';
@@ -792,10 +811,11 @@ function renderAccounts(){
 /* org chart */
 function kidsOf(id){ return S.people.filter(function(p){ return p.reportsTo === id; }); }
 function orgNode(p){
-  return '<div class="onode' + (p.name ? "" : " open") + '" style="--c:' + cvar(p.color) + ';--cw:' + cwash(p.color) + '">' +
-    '<div class="orole">' + esc(p.role) + '</div>' +
-    '<div class="onm">' + esc(p.name || "Open seat") + '</div>' +
-    (p.tag ? '<span class="otag">' + esc(p.tag) + '</span>' : '') +
+  return '<div class="onode' + (p.name ? "" : " open") + (p.locked ? " pinned" : "") + '" data-onode="' + p.id + '"' +
+    ' style="--c:' + cvar(p.color) + ';--cw:' + cwash(p.color) + '">' +
+    '<div class="orole"><span class="cell" contenteditable="true" data-prole="' + p.id + '" data-ph="Role">' + esc(p.role) + '</span></div>' +
+    '<div class="onm"><span class="cell" contenteditable="true" data-pname="' + p.id + '" data-ph="Open seat">' + esc(p.name) + '</span></div>' +
+    '<span class="otag"><span class="cell" contenteditable="true" data-ptag="' + p.id + '" data-ph="Add a tag">' + esc(p.tag||"") + '</span></span>' +
   '</div>';
 }
 function branch(p, guard){
@@ -952,6 +972,120 @@ function renderAll(){ renderCopy(); renderRoster(); renderAccounts(); renderPlan
     w.ownerId = targetId;
     save(); renderAll();
     toast((from ? bigName(from) : "Nobody") + " to " + (to ? bigName(to) : "nobody"));
+  }
+})();
+
+/* drag a seat onto another to change who it reports to */
+function reportsUnder(childId, ancestorId){
+  var p = person(childId), guard = 0;
+  while(p && p.reportsTo && guard++ < 60){
+    if(p.reportsTo === ancestorId) return true;
+    p = person(p.reportsTo);
+  }
+  return false;
+}
+(function(){
+  var drag = null;
+  document.addEventListener("pointerdown", function(e){
+    if(e.button != null && e.button !== 0) return;
+    if(e.target.closest("button, a, input, select, textarea, [contenteditable='true']")) return;
+    var node = e.target.closest(".onode[data-onode]");
+    if(!node) return;
+    var p = person(node.getAttribute("data-onode"));
+    if(!p) return;
+    if(p.locked){ toast(bigName(p) + " is locked, that seat does not move"); return; }
+    drag = {node:node, id:p.id, x0:e.clientX, y0:e.clientY, live:false, ghost:null, box:null,
+            holdOk: e.pointerType !== "touch"};
+    if(!drag.holdOk){ var d0 = drag; d0.timer = setTimeout(function(){ if(drag === d0) d0.holdOk = true; }, 340); }
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+  });
+  function ok(targetId, sourceId){
+    if(!targetId || targetId === sourceId) return false;
+    var t = person(targetId);
+    if(!t || t.locked) return false;
+    return !reportsUnder(targetId, sourceId);
+  }
+  function move(e){
+    if(!drag) return;
+    if(!drag.live){
+      if(Math.abs(e.clientX-drag.x0) < 6 && Math.abs(e.clientY-drag.y0) < 6) return;
+      if(!drag.holdOk){ up(); return; }
+      drag.live = true;
+      var r = drag.node.getBoundingClientRect();
+      var g = drag.node.cloneNode(true);
+      g.classList.add("ghost-node");
+      g.style.cssText += ";position:fixed;z-index:900;pointer-events:none;width:" + r.width + "px;" +
+        "left:" + r.left + "px;top:" + r.top + "px;box-shadow:var(--shadow-lift);transform:rotate(-1.5deg);opacity:.97";
+      document.body.appendChild(g);
+      drag.ghost = g;
+      drag.offX = drag.x0 - r.left; drag.offY = drag.y0 - r.top;
+      drag.node.classList.add("lifting");
+      document.body.style.userSelect = "none";
+    }
+    e.preventDefault();
+    drag.ghost.style.left = (e.clientX - drag.offX) + "px";
+    drag.ghost.style.top  = (e.clientY - drag.offY) + "px";
+    var under = document.elementFromPoint(e.clientX, e.clientY);
+    var node = under && under.closest ? under.closest(".onode[data-onode]") : null;
+    var id = node && node.getAttribute("data-onode");
+    var target = ok(id, drag.id) ? node : null;
+    if(target !== drag.box){
+      if(drag.box) drag.box.classList.remove("landing");
+      if(target) target.classList.add("landing");
+      drag.box = target;
+    }
+    var wrap = document.querySelector(".orgwrap");
+    if(wrap){
+      var wr = wrap.getBoundingClientRect();
+      if(e.clientX > wr.right - 70) wrap.scrollLeft += 16;
+      else if(e.clientX < wr.left + 70) wrap.scrollLeft -= 16;
+    }
+  }
+  function up(){
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", up);
+    document.removeEventListener("pointercancel", up);
+    if(!drag) return;
+    clearTimeout(drag.timer);
+    var d = drag; drag = null;
+    document.body.style.userSelect = "";
+    if(!d.live) return;
+    if(d.ghost) d.ghost.remove();
+    d.node.classList.remove("lifting");
+    if(d.box) d.box.classList.remove("landing");
+    if(!d.box) return;
+    var moved = person(d.id), boss = person(d.box.getAttribute("data-onode"));
+    if(!moved || !boss || moved.reportsTo === boss.id) return;
+    snapshot("changing who " + bigName(moved) + " reports to");
+    moved.reportsTo = boss.id;
+    save(); renderOrg(); renderRoster();
+    toast(bigName(moved) + " now reports to " + bigName(boss));
+  }
+})();
+
+/* pan the chart by dragging the space around it */
+(function(){
+  var pan = null;
+  document.addEventListener("pointerdown", function(e){
+    var wrap = e.target.closest && e.target.closest(".orgwrap");
+    if(!wrap) return;
+    if(e.target.closest(".onode, button, a, input, select, textarea, [contenteditable='true']")) return;
+    if(wrap.scrollWidth <= wrap.clientWidth) return;
+    pan = {wrap:wrap, x0:e.clientX, left:wrap.scrollLeft};
+    wrap.classList.add("panning");
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", end);
+    document.addEventListener("pointercancel", end);
+  });
+  function move(e){ if(pan){ e.preventDefault(); pan.wrap.scrollLeft = pan.left - (e.clientX - pan.x0); } }
+  function end(){
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", end);
+    document.removeEventListener("pointercancel", end);
+    if(pan) pan.wrap.classList.remove("panning");
+    pan = null;
   }
 })();
 
@@ -1150,6 +1284,12 @@ document.addEventListener("input", function(e){
   if(el.hasAttribute("data-copy")){ S.copy[el.getAttribute("data-copy")] = v; }
   else if(el.hasAttribute("data-duty")){ a = two(el.getAttribute("data-duty")); o = person(a[0]); if(o) o.duties[Number(a[1])] = v; }
   else if(el.hasAttribute("data-pnote")){ o = person(el.getAttribute("data-pnote")); if(o) o.note = v; }
+  else if(el.hasAttribute("data-pname")){ o = person(el.getAttribute("data-pname")); if(o) o.name = v; }
+  else if(el.hasAttribute("data-prole")){ o = person(el.getAttribute("data-prole")); if(o) o.role = v; }
+  else if(el.hasAttribute("data-ptag")){  o = person(el.getAttribute("data-ptag"));  if(o) o.tag  = v; }
+  else if(el.hasAttribute("data-cname")){ o = client(el.getAttribute("data-cname")); if(o) o.name = v; }
+  else if(el.hasAttribute("data-csub")){  o = client(el.getAttribute("data-csub"));  if(o) o.sub  = v; }
+  else if(el.hasAttribute("data-wtitle")){ o = work(el.getAttribute("data-wtitle")); if(o) o.title = v; }
   else if(el.hasAttribute("data-cnote")){ o = client(el.getAttribute("data-cnote")); if(o) o.note = v; }
   else if(el.hasAttribute("data-fit")){ a = two(el.getAttribute("data-fit")); S.fit[a[0]][Number(a[1])] = v; }
   else if(el.hasAttribute("data-inbox")){ o = findBy(S.inbox, el.getAttribute("data-inbox")); if(o) o.text = v; }
@@ -1177,7 +1317,10 @@ function setView(v){
   S.ui.view = v; save();
   $$(".tab").forEach(function(t){ t.setAttribute("aria-selected", String(t.getAttribute("data-view") === v)); });
   $$(".view").forEach(function(s){ s.classList.toggle("on", s.id === "view-" + v); });
-  if(v === "org") requestAnimationFrame(layoutBars);
+  if(v === "roster")   renderRoster();
+  if(v === "accounts") renderAccounts();
+  if(v === "plan")     renderPlan();
+  if(v === "org"){ renderOrg(); requestAnimationFrame(layoutBars); }
   window.scrollTo({top:0, behavior:"instant"});
 }
 $$(".tab").forEach(function(t){ t.addEventListener("click", function(){ setView(t.getAttribute("data-view")); }); });
