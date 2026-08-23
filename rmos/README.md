@@ -8,14 +8,23 @@ without passing the person whose job it is to check it.
 No dependencies, no build step, no account to sign up for. Node 18 or newer and
 one JSON file.
 
+**On a Mac, double-click `RM-OS.command`.** It sets itself up on first run, builds
+the board, and opens the dashboard. Nothing else to install.
+
+The same thing by hand, from a terminal:
+
 ```bash
 cd rmos
-node cli/rmos.js init      # write the starting state
-node cli/rmos.js week      # build this week from the standing commitments
-node cli/rmos.js pulse     # the founder view
-node cli/rmos.js serve     # the dashboard on http://localhost:3940
-npm test                   # 25 tests over the rules that matter
+node cli/rmos.js init            # write the starting state
+node cli/rmos.js week --weeks 2  # build this week and the next
+node cli/rmos.js pulse           # the founder view
+node cli/rmos.js serve           # the dashboard on http://localhost:3940
+npm test                         # 26 tests over the rules that matter
 ```
+
+Generating a week never dates work into the past — install on a Thursday and you
+get the rest of that week, not a board that is already late. `--backfill`
+reconstructs a past week deliberately.
 
 ## What problem this solves
 
@@ -87,6 +96,7 @@ rmos pulse                      # what needs you, in order
 rmos brief olivia               # one person's day
 rmos board --owner viktor       # the live board, filtered
 rmos alerts --severity high     # what is actually on fire
+rmos week --weeks 2             # build a fortnight ahead
 rmos move <job> gate --as senior
 rmos post <job> --as olivia     # marks it published and logs the delivery
 ```
@@ -110,6 +120,7 @@ anything else that accepts a webhook. See `docs/AUTOMATION.md`.
 ## Layout
 
 ```
+RM-OS.command   double-click launcher for macOS
 server/         db, seed, and the HTTP API
   domain/       pipeline, scheduler, capacity, alerts, brief
 public/         the dashboard — vanilla, theme-aware, no framework
