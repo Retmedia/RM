@@ -37,11 +37,21 @@ function generateWeek(state, day, opts = {}) {
   const week = isoWeek(start);
   const created = [];
   const skipped = [];
+  const now = today();
+
+  /*
+   * Days already gone are not generated. Installing on a Thursday would otherwise
+   * open a brand-new board carrying a week of work that was "late" before the
+   * system existed, which teaches everybody to ignore the late count on day one.
+   * Pass backfill to reconstruct a past week deliberately.
+   */
+  const inScope = opts.backfill ? days : days.filter((d) => d >= now);
+  const notGenerated = days.length - inScope.length;
 
   for (const wl of state.workLines) {
     if (wl.active === false) continue;
     if (wl.route === 'standing') continue;
-    for (const d of days) {
+    for (const d of inScope) {
       const units = unitsFor(wl, d);
       for (let i = 0; i < units; i += 1) {
         const id = stableId('j', wl.id, d, String(i));
@@ -62,7 +72,7 @@ function generateWeek(state, day, opts = {}) {
     total: state.jobs.filter((j) => j.dueOn >= start && j.dueOn <= days[6]).length,
   };
 
-  return { week, weekStart: start, created, skipped, ...(opts.quiet ? {} : {}) };
+  return { week, weekStart: start, created, skipped, daysSkipped: notGenerated };
 }
 
 /* Everything due in the week containing `day`. */

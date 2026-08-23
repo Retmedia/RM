@@ -88,6 +88,19 @@ test('regenerating picks up a new work line without touching existing jobs', () 
   assert.equal(db.job(s, target.id).state, 'editing', 'work already in flight is left alone');
 });
 
+test('a week already partly gone is not dated into the past', () => {
+  const s = db.reset();
+  /* weekStart of today, so most of the week is behind us whenever this runs mid-week */
+  const r = scheduler.generateWeek(s, util.today());
+  const now = util.today();
+  assert.ok(s.jobs.every((j) => j.dueOn >= now), 'nothing is born late');
+  if (r.daysSkipped) assert.ok(r.daysSkipped > 0);
+
+  const back = db.reset();
+  scheduler.generateWeek(back, util.today(), { backfill: true });
+  assert.ok(back.jobs.length >= s.jobs.length, 'backfill reconstructs the whole week when asked');
+});
+
 test('cadence produces the promised number of units', () => {
   const s = fresh();
   assert.equal(jobsOf(s, 'wl_mew_tt').length, 21, 'three a day, seven days');

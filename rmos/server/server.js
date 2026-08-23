@@ -124,9 +124,9 @@ on('GET', /^\/api\/standards\/([\w-]+)$/, (m, _q, _b, state) => {
 /* ---------- writes ---------- */
 
 on('POST', /^\/api\/week$/, (_m, _q, body, state) => {
-  const r = scheduler.generateWeek(state, body.on || util.today());
+  const r = scheduler.generateWeek(state, body.on || util.today(), { backfill: !!body.backfill });
   db.save(state);
-  return { week: r.week, weekStart: r.weekStart, created: r.created.length, skipped: r.skipped };
+  return { week: r.week, weekStart: r.weekStart, created: r.created.length, skipped: r.skipped, daysSkipped: r.daysSkipped };
 });
 
 on('POST', /^\/api\/jobs\/([\w-]+)\/move$/, (m, _q, body, state) => {

@@ -92,13 +92,23 @@ commands.brief = (state) => {
 };
 
 commands.week = (state) => {
-  const r = scheduler.generateWeek(state, when());
-  db.save(state);
-  console.log(`${r.week} (from ${r.weekStart}) — ${green(`${r.created.length} new`)} deliverable${r.created.length === 1 ? '' : 's'} scheduled.`);
-  if (r.skipped.length) {
-    console.log(yellow(`${r.skipped.length} skipped:`));
-    for (const s of r.skipped) console.log(`  · ${s.workLineId} ${s.dueOn}: ${s.reason}`);
+  const weeks = Math.max(1, Number(flags.weeks) || 1);
+  let last = null;
+  for (let i = 0; i < weeks; i += 1) {
+    const on = util.addDays(util.weekStart(when()), i * 7);
+    const r = scheduler.generateWeek(state, on, { backfill: !!flags.backfill });
+    last = r;
+    console.log(`${r.week} (from ${r.weekStart}) — ${green(`${r.created.length} new`)} deliverable${r.created.length === 1 ? '' : 's'} scheduled.`);
+    if (r.daysSkipped) {
+      console.log(dim(`  ${r.daysSkipped} day${r.daysSkipped === 1 ? '' : 's'} of that week already gone, so nothing was dated into the past. Use --backfill to reconstruct them.`));
+    }
+    if (r.skipped.length) {
+      console.log(yellow(`  ${r.skipped.length} could not be scheduled:`));
+      for (const s of r.skipped) console.log(`    · ${s.workLineId} ${s.dueOn}: ${s.reason}`);
+    }
   }
+  db.save(state);
+  const r = last;
   const cap = capacity.forWeek(state, r.weekStart);
   const over = cap.seats.filter((x) => x.utilization > 100);
   if (over.length) {
@@ -387,7 +397,7 @@ ${bold('Every day')}
   rmos alerts --severity high    what is actually on fire
 
 ${bold('Running the week')}
-  rmos week [--for DATE]         turn the standing commitments into dated work
+  rmos week [--for DATE] [--weeks N]  turn the standing commitments into dated work
   rmos capacity                  does the week fit in the seats we have
   rmos relief <seat>             what to move when it does not
 
