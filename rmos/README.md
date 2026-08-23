@@ -11,6 +11,17 @@ one JSON file.
 **On a Mac, double-click `RM-OS.command`.** It sets itself up on first run, builds
 the board, and opens the dashboard. Nothing else to install.
 
+If macOS says *"RM-OS.command Not Opened — Apple could not verify…"*, click
+**Done** (never *Move to Trash*). That is quarantine, applied to everything that
+arrives inside a downloaded zip, and it is not a judgement about this file. Clear
+it once:
+
+```bash
+xattr -cr .        # from the folder this README is in
+```
+
+Cloning with git instead of downloading a zip avoids it entirely.
+
 The same thing by hand, from a terminal:
 
 ```bash
