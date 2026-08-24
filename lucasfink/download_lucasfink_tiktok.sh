@@ -13,7 +13,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # SET THIS to the "Lucas Fink" folder inside RM Drive.
 # ---------------------------------------------------------------------------
-DEST="${DEST:-$HOME/Library/CloudStorage/GoogleDrive-info@retmediaagency.com/My Drive/RM/Lucas Fink}"
+DEST="${DEST:-/Volumes/RM/Lucas Fink}"
 
 # Profile enumeration by handle (@lucasfinkrj) FAILS. The channel-ID form works.
 CHANNEL="tiktokuser:MS4wLjABAAAApBOPJCvWGgP2UMYgszzlkklApxB_hSGhpPO5fISqc0ICaxbkDZCLRm5aFsVCCuzA"
@@ -22,6 +22,13 @@ VENV="$HOME/.tiktok-dl-venv"
 YTDLP="$VENV/bin/yt-dlp"
 
 log() { printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
+
+# The RM drive has to actually be plugged in.
+VOLUME="$(printf '%s' "$DEST" | awk -F/ '/^\/Volumes\//{print "/Volumes/" $3}')"
+if [ -n "$VOLUME" ] && [ ! -d "$VOLUME" ]; then
+  echo "ERROR: $VOLUME is not mounted. Plug the RM drive in and run this again." >&2
+  exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # 1. Self-install / upgrade yt-dlp
@@ -39,13 +46,42 @@ log "yt-dlp $("$YTDLP" --version)"
 # ---------------------------------------------------------------------------
 # 2. Prepare destination
 # ---------------------------------------------------------------------------
-mkdir -p "$DEST"
+mkdir -p "$DEST" 2>/dev/null || true
+if [ ! -d "$DEST" ]; then
+  echo "ERROR: could not create $DEST" >&2
+  exit 1
+fi
 if [ ! -w "$DEST" ]; then
-  echo "ERROR: destination not writable: $DEST" >&2
+  echo "ERROR: destination is not writable: $DEST" >&2
+  echo "       If the drive is NTFS, macOS mounts it read-only. Reformat it exFAT or use another disk." >&2
   exit 1
 fi
 log "Destination: $DEST"
-log "Free space: $(df -h "$DEST" | awk 'NR==2 {print $4}') (need ~23GB)"
+
+# Free space. 1993 videos come to roughly 23GB.
+AVAIL_GB="$(df -g "$DEST" | awk 'NR==2 {print $4}')"
+log "Free space: ${AVAIL_GB}GB (need ~23GB)"
+if [ -n "$AVAIL_GB" ] && [ "$AVAIL_GB" -lt 25 ]; then
+  echo "ERROR: only ${AVAIL_GB}GB free. Free up space before starting - a disk that fills" >&2
+  echo "       up halfway leaves you with truncated video files." >&2
+  exit 1
+fi
+
+# Filesystem. exFAT/FAT/NTFS reject ? " : * < > | which TikTok captions are full of,
+# so filenames get sanitized on those volumes. APFS/HFS+ take them as-is.
+FSTYPE="$(mount | sed -n 's/^.* on \(.*\) (\([a-z0-9]*\).*/\1|\2/p' \
+  | awk -F'|' -v d="$DEST/" 'index(d, $1"/")==1 || $1=="/" { if (length($1) >= length(best)) { best=$1; fs=$2 } } END { print fs }')"
+FS_ARGS=()
+case "$FSTYPE" in
+  apfs|hfs|"")
+    [ -n "$FSTYPE" ] && log "Filesystem: $FSTYPE (captions preserved in filenames)"
+    ;;
+  *)
+    log "Filesystem: $FSTYPE - using --windows-filenames so illegal characters are replaced"
+    log "            (filenames only; Facebook captions come from the CSV and are untouched)"
+    FS_ARGS+=(--windows-filenames)
+    ;;
+esac
 
 ARCHIVE="$DEST/_archive.txt"
 INDEX="$DEST/_index.tsv"
@@ -82,6 +118,7 @@ set +e
   --min-sleep-interval 1 \
   --max-sleep-interval 3 \
   --newline \
+  "${FS_ARGS[@]+"${FS_ARGS[@]}"}" \
   "$CHANNEL" 2> >(tee -a "$ERRORS" >&2)
 RC=$?
 set -e

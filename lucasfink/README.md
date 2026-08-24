@@ -4,7 +4,7 @@ Download every video @lucasfinkrj has posted to TikTok (1993 of them, ~23GB, no
 watermark), then republish the whole catalog to his Facebook Page as Reels —
 25 per day, oldest first, TikTok caption as the description, unattended for 80 days.
 
-Runs on Garrett's Mac. Costs nothing: yt-dlp is open source, the Graph API has no
+Runs on Garrett's Mac, with the videos on the RM external drive. Costs nothing: yt-dlp is open source, the Graph API has no
 usage charges, launchd ships with macOS, Drive storage already exists.
 
 ## Files
@@ -24,23 +24,31 @@ The installer copies the middle two into `~` for you. You never move files by ha
 
 ### 1. Download
 
-First check Google Drive for Desktop → Preferences: the RM Drive folder must be
-**Mirror**, not Stream. On Stream the uploader has to re-fetch every video from
-Google before posting it, every day for 80 days.
-
-Open `download_lucasfink_tiktok.sh` and set `DEST=` (line 16) to the Lucas Fink
-folder inside RM Drive. Then:
+Plug in the RM drive and confirm the name macOS gives it:
 
 ```bash
-./download_lucasfink_tiktok.sh
+ls /Volumes
 ```
+
+The script defaults to `/Volumes/RM/Lucas Fink`. If the drive mounts under a
+different name, pass the path instead of editing the file:
+
+```bash
+DEST="/Volumes/WHATEVER/Lucas Fink" ./download_lucasfink_tiktok.sh
+```
+
+Before it downloads anything it checks the drive is mounted, that there is 25GB
+free, and what filesystem it is. On exFAT, FAT or NTFS it adds
+`--windows-filenames`, because those filesystems reject `? " : * < > |` and TikTok
+captions are full of them. That only affects filenames — Facebook captions come
+from the CSV and are never touched.
 
 3–5 hours. It self-installs yt-dlp into `~/.tiktok-dl-venv`, resumes if
 interrupted (re-running costs nothing), and skips anything already on disk.
 
-When yt-dlp finishes, Drive still has to push ~23GB up to Google. That is a
-separate wait bounded by your upload speed. The folder is not "done" the moment
-the script exits.
+Keep the drive plugged in from here on. The daily job reads the videos off it, so
+an unmounted drive means a skipped day — the log says so in plain english when it
+happens, and running the job again catches that day up.
 
 ### 2. Get the Meta token
 
@@ -64,7 +72,7 @@ The publisher checks token health on every run and shouts in the log from 14 day
 ### 3. Install the daily job
 
 ```bash
-./install_fb_daily.sh "/path/to/RM Drive/Lucas Fink"
+./install_fb_daily.sh "/Volumes/RM/Lucas Fink"
 ```
 
 It validates the folder, patches `VIDEO_DIR`, installs the files, does a dry run,
@@ -117,6 +125,7 @@ Bookkeeping lives in the video folder, not in `~`:
 | A video file is missing | Logged, skipped, the day still posts its full 25. |
 | One video fails 3 times | Set aside so it cannot block the other 1992. |
 | Mac dies mid-post | State is appended after each post, so nothing double-posts. |
+| RM drive unplugged at 9:15 | Says which drive is missing and skips the day. Run it again to catch up. |
 | Two runs overlap | The second one exits without posting. |
 | Queue runs out | Says so and tells you to remove the launchd job. |
 

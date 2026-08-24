@@ -436,6 +436,11 @@ def main():
             "Edit the VIDEO_DIR line near the top of this file, or pass --video-dir.")
     video_dir = Path(video_dir_s).expanduser()
     if not video_dir.is_dir():
+        parts = video_dir.parts
+        if len(parts) > 2 and parts[1] == "Volumes" and not Path("/Volumes", parts[2]).is_dir():
+            raise SystemExit(
+                f"ERROR: the {parts[2]} drive is not mounted, so today's batch was skipped.\n"
+                f"Plug it in, then run this again to catch up:  {sys.argv[0]}")
         raise SystemExit(f"ERROR: video folder does not exist: {video_dir}")
 
     log_path = Path(os.environ.get("FB_LOG_FILE", LOG_FILE)).expanduser()
