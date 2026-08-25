@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>RET Studio</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <nav class="rail">
+      <div class="brand"><span class="dot"></span> RET Studio</div>
+      <button class="nav-item" data-view="today">Today <span class="count" id="count-today"></span></button>
+      <button class="nav-item" data-view="planner">Planner <span class="count" id="count-week"></span></button>
+      <button class="nav-item" data-view="compose">Compose</button>
+      <button class="nav-item" data-view="creators">Creators <span class="count" id="count-creators"></span></button>
+      <button class="nav-item" data-view="connect">Accounts <span class="count" id="count-accounts"></span></button>
+      <div class="rail-foot" id="mode-note"></div>
+    </nav>
+    <main class="main" id="view"></main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
