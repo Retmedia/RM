@@ -52,6 +52,28 @@ the real blockers on a go-live date — the code is ready before the approvals a
   screen. The real ceiling is quota, not posts: 10,000 units/day and 1,600 per
   upload, so about six uploads a day until you request an increase.
 
+## The three things Buffer does not do
+
+**A posting rhythm per creator, and bulk drops that fill it.** Each creator carries
+their own slots — "Mon and Thu, 9am and 5pm". Hand the bulk composer sixty clips and
+they become sixty posts landing in the next sixty open slots, in order, each fanned
+to every account that creator posts to. Re-running a drop fills the gaps rather than
+doubling up, because slots already spoken for are skipped.
+
+**Client approval before anything publishes.** Turn it on per creator and every post
+gets a review link: one page, no login, showing the media, the caption, where it is
+going and when. The client approves or asks for changes. Nothing unapproved publishes
+from any path — not the scheduler, not the Publish button. Asking for changes pulls
+the post back to draft; approving puts it back in the queue. Re-opening review after
+an edit mints a new link and kills the old one, so a client can never wave through
+content they did not see.
+
+**Performance pulled back per creator.** Each adapter knows how to read its own
+numbers — Instagram insights, Facebook page insights, TikTok video query, YouTube
+statistics. They are cached on the post and refreshed slowly, because a post's
+numbers matter over days. In dry run the Performance screen says it has nothing
+rather than showing invented figures.
+
 ## Layout
 
 ```
@@ -59,14 +81,19 @@ server/
   server.js       HTTP API
   store.js        creators, accounts, posts, media — JSON on disk, atomic writes
   connect.js      OAuth handshake; one login can return several accounts
+  cadence.js      posting slots, and the maths that fills them
   publisher.js    fans one post out to its targets, with per-target retry
   scheduler.js    30-second tick, picks up anything due
+  insights.js     pulls each platform's numbers back and rolls them up
   platforms/      one adapter per platform, same shape for each
-public/           the UI — no build step, no framework
+public/
+  index.html      the internal app — no build step, no framework
+  review.html     the one page clients see, standalone
 ```
 
-Every adapter exports `meta`, `authUrl`, `exchangeCode`, `discover`, `validate` and
-`publish`, so the publisher and the UI never branch on platform. Adding LinkedIn or
+Every adapter exports `meta`, `authUrl`, `exchangeCode`, `discover`, `validate`,
+`publish` and `fetchMetrics`, so the publisher, the scheduler and the UI never branch
+on platform. Adding LinkedIn or
 Threads means writing one file in `platforms/` and nothing else.
 
 ### A few decisions worth knowing
@@ -83,6 +110,6 @@ Threads means writing one file in `platforms/` and nothing else.
 
 ## Not built yet
 
-Analytics pull-back, approval flows for client sign-off, Instagram Stories, TikTok
-photo posts, LinkedIn/Threads/X, and drag-to-reschedule in the planner. The adapter
-shape is where all of those land.
+Instagram Stories, TikTok photo posts, LinkedIn/Threads/X, drag-to-reschedule in the
+planner, per-creator caption templates, and follower-count tracking over time. The
+adapter shape is where the new networks land.
