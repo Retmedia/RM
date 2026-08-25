@@ -195,4 +195,23 @@ function localPath(item) {
   return path.join(root, 'media', item.storedName);
 }
 
-module.exports = { meta, authUrl, exchangeCode, refresh, discover, validate, publish };
+// videos.list costs 1 quota unit against the same daily budget uploads spend,
+// so refreshing metrics is cheap next to publishing.
+async function fetchMetrics({ tokens, remoteId }) {
+  if (DRY_RUN) return null;
+  const r = await api(`${API}/videos?part=statistics&id=${remoteId}`, {
+    headers: { Authorization: `Bearer ${tokens.accessToken}` },
+  });
+  const stats = r.items?.[0]?.statistics;
+  if (!stats) return null;
+  const num = (v) => (v === undefined ? null : Number(v));
+  return {
+    views: num(stats.viewCount),
+    likes: num(stats.likeCount),
+    comments: num(stats.commentCount),
+    shares: null,
+    saves: null,
+  };
+}
+
+module.exports = { meta, authUrl, exchangeCode, refresh, discover, validate, publish, fetchMetrics };

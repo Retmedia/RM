@@ -18,7 +18,8 @@ const meta = {
     'Until the app passes TikTok audit, everything it posts is forced to SELF_ONLY (private). Audit is what unlocks public posting.',
     'Your domain must be verified with TikTok before media can be pulled by URL.',
   ],
-  scopes: ['user.info.basic', 'video.publish', 'video.upload'],
+  scopes: ['user.info.basic', 'video.publish', 'video.upload', 'video.list'],
+  metricsScopes: ['video.list'],
   limits: {
     captionChars: 2200,
     postsPer24h: 6,
@@ -211,4 +212,30 @@ function localPath(item) {
   return path.join(root, 'media', item.storedName);
 }
 
-module.exports = { meta, authUrl, exchangeCode, refresh, discover, validate, publish };
+// Needs video.list, which is a separate scope from publishing — an account
+// connected before this was added reports nothing until it reconnects.
+async function fetchMetrics({ tokens, remoteId }) {
+  if (DRY_RUN) return null;
+  const r = await api(
+    `${API}/video/query/?fields=id,like_count,comment_count,share_count,view_count`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${tokens.accessToken}`,
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: JSON.stringify({ filters: { video_ids: [remoteId] } }),
+    },
+  );
+  const video = r.data?.videos?.[0];
+  if (!video) return null;
+  return {
+    views: video.view_count ?? null,
+    likes: video.like_count ?? null,
+    comments: video.comment_count ?? null,
+    shares: video.share_count ?? null,
+    saves: null,
+  };
+}
+
+module.exports = { meta, authUrl, exchangeCode, refresh, discover, validate, publish, fetchMetrics };

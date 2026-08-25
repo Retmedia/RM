@@ -16,7 +16,8 @@ const meta = {
     'You need a publishing role (Admin, Editor or the Content task) on each Page.',
     'The Meta app needs Advanced Access for pages_manage_posts.',
   ],
-  scopes: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'business_management'],
+  scopes: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'read_insights', 'business_management'],
+  metricsScopes: ['read_insights'],
   limits: {
     captionChars: 63206,
     postsPer24h: 50,
@@ -179,4 +180,21 @@ function localPath(item) {
   return path.join(root, 'media', item.storedName);
 }
 
-module.exports = { meta, authUrl, exchangeCode, discover, validate, publish };
+async function fetchMetrics({ tokens, remoteId }) {
+  if (DRY_RUN) return null;
+  const metrics = 'post_impressions,post_video_views,post_reactions_by_type_total';
+  const r = await api(`${GRAPH}/${remoteId}/insights?metric=${metrics}&access_token=${tokens.accessToken}`);
+  const byName = Object.fromEntries((r.data || []).map((m) => [m.name, m.values?.[0]?.value ?? 0]));
+  const reactions = byName.post_reactions_by_type_total;
+  return {
+    views: byName.post_video_views ?? byName.post_impressions ?? null,
+    likes: reactions && typeof reactions === 'object'
+      ? Object.values(reactions).reduce((a, b) => a + b, 0)
+      : reactions ?? null,
+    comments: null,
+    shares: null,
+    saves: null,
+  };
+}
+
+module.exports = { meta, authUrl, exchangeCode, discover, validate, publish, fetchMetrics };

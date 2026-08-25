@@ -12,6 +12,8 @@ const state = {
   weekStart: startOfWeek(new Date()),
   filterCreator: null,
   draft: null,
+  bulk: null,
+  composeMode: 'single',
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -102,6 +104,7 @@ function render() {
     planner: renderPlanner,
     compose: renderCompose,
     creators: renderCreators,
+    insights: renderInsights,
     connect: renderConnect,
   }[state.view] || renderToday)();
 }
@@ -117,6 +120,8 @@ function renderToday() {
   const sends = todays.reduce((n, p) => n + p.targets.length, 0);
   const failing = state.posts.filter((p) => p.status === 'failed' || p.status === 'partial');
   const stale = state.accounts.filter((a) => a.status === 'needs_reauth');
+  const waiting = state.posts.filter((p) => p.approval?.required && p.approval.status === 'pending');
+  const changes = state.posts.filter((p) => p.approval?.status === 'changes_requested');
 
   view.innerHTML = `
     <div class="eyebrow">${now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</div>
@@ -130,6 +135,17 @@ function renderToday() {
         <div><b>${stale.length} account${stale.length > 1 ? 's need' : ' needs'} reconnecting</b>
         <div class="meta" style="color:var(--muted);font-size:13px">${stale.map((a) => esc(a.displayName)).join(', ')}</div></div>
         <button class="btn ghost small" data-go="connect">Fix</button>
+      </div></div>` : ''}
+
+    ${changes.length ? `<div class="card" style="border-color:var(--warn);margin-bottom:18px">
+      <b style="color:var(--warn)">${changes.length} post${changes.length > 1 ? 's' : ''} came back with changes</b>
+      <ul class="tight">${changes.slice(0, 5).map((p) => `<li>${esc(creatorById(p.creatorId)?.name || '')} — ${esc(p.approval.note || 'no note left')}</li>`).join('')}</ul>
+    </div>` : ''}
+
+    ${waiting.length ? `<div class="card" style="margin-bottom:18px">
+      <div class="row between">
+        <div><b>${waiting.length} post${waiting.length > 1 ? 's' : ''} waiting on client approval</b>
+        <div style="color:var(--muted);font-size:13px">They stay in the queue but will not publish until approved.</div></div>
       </div></div>` : ''}
 
     ${failing.length ? `<div class="card" style="border-color:var(--danger);margin-bottom:18px">
@@ -270,6 +286,24 @@ function plannerChip(post) {
 /* -- compose -- */
 
 function renderCompose() {
+  if (state.composeMode === 'bulk') return renderBulk();
+  return renderSingle();
+}
+
+function composeTabs() {
+  return `<div class="row" style="gap:8px;margin-bottom:24px">
+    <button class="pill${state.composeMode === 'single' ? ' on' : ''}" data-mode="single">One post</button>
+    <button class="pill${state.composeMode === 'bulk' ? ' on' : ''}" data-mode="bulk">Bulk drop</button>
+  </div>`;
+}
+
+function bindComposeTabs() {
+  view.querySelectorAll('[data-mode]').forEach((el) => {
+    el.onclick = () => { state.composeMode = el.dataset.mode; render(); };
+  });
+}
+
+function renderSingle() {
   const draft = state.draft || {};
   const creatorId = draft.creatorId || state.creators[0]?.id || '';
   const creator = creatorById(creatorId);
@@ -279,6 +313,7 @@ function renderCompose() {
   view.innerHTML = `
     <h1>Compose</h1>
     <p class="sub">One caption, every account that creator posts to.</p>
+    ${composeTabs()}
 
     ${state.creators.length ? '' : '<div class="card"><div class="empty">Add a creator first.</div></div>'}
 
@@ -331,6 +366,7 @@ function renderCompose() {
       </div>
     </div>` : ''}`;
 
+  bindComposeTabs();
   if (!state.creators.length) return;
 
   const selectedTargets = new Set(
@@ -478,6 +514,140 @@ function localValue(d) {
 
 /* -- creators -- */
 
+/* -- bulk drop -- */
+
+function renderBulk() {
+  const draft = state.bulk || {};
+  const creatorId = draft.creatorId || state.creators[0]?.id || '';
+  const creator = creatorById(creatorId);
+  const accounts = creator ? state.accounts.filter((a) => a.creatorId === creator.id && a.status === 'connected') : [];
+  const picked = draft.mediaIds || [];
+
+  view.innerHTML = `
+    <h1>Compose</h1>
+    <p class="sub">Drop a month of clips in one go. They land in this creator's open slots, in order.</p>
+    ${composeTabs()}
+
+    ${state.creators.length ? `
+    <div class="grid two" style="align-items:start">
+      <div class="card">
+        <label class="field"><span>Creator</span>
+          <select id="b-creator">${state.creators.map((c) => `<option value="${c.id}" ${c.id === creatorId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+        </label>
+
+        <div class="eyebrow">Posting rhythm</div>
+        <div class="row between" style="margin-bottom:18px">
+          <span style="font-size:14px" id="b-rhythm">…</span>
+          <button class="btn quiet small" data-go="creators">Change</button>
+        </div>
+
+        <div class="eyebrow">Every post goes to</div>
+        <div class="row wrap" style="margin-bottom:20px">
+          ${accounts.length ? accounts.map((a) => `<span class="pill static">
+            <span class="dot" style="background:${platformMeta(a.platform).color}"></span>${esc(a.displayName)}</span>`).join('')
+            : '<div class="note warn">No connected accounts for this creator.</div>'}
+        </div>
+
+        <label class="field"><span>Add the clips — order is the order they post in</span>
+          <input type="file" id="b-file" accept="video/mp4,video/quicktime,image/jpeg,image/png,image/webp" multiple />
+        </label>
+
+        <div id="b-progress" style="font-size:13px;color:var(--muted)"></div>
+
+        <div class="row" style="margin-top:18px">
+          <button class="btn" id="b-schedule" ${picked.length && accounts.length ? '' : 'disabled'}>
+            Schedule ${picked.length || ''} post${picked.length === 1 ? '' : 's'}
+          </button>
+          <button class="btn quiet" id="b-clear" ${picked.length ? '' : 'disabled'}>Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">Where they land</div>
+        <div id="b-plan">
+          ${picked.length ? '<div class="empty" style="padding:20px 0">Working out the slots…</div>'
+            : '<div class="empty" style="padding:30px 0">Add clips to see the schedule.</div>'}
+        </div>
+      </div>
+    </div>` : '<div class="card"><div class="empty">Add a creator first.</div></div>'}`;
+
+  bindComposeTabs();
+  view.querySelectorAll('[data-go]').forEach((el) => { el.onclick = () => go(el.dataset.go); });
+  if (!state.creators.length) return;
+
+  loadRhythm(creatorId, picked.length);
+
+  $('#b-creator').onchange = (e) => {
+    state.bulk = { creatorId: e.target.value, mediaIds: [] };
+    render();
+  };
+
+  $('#b-clear').onclick = () => { state.bulk = { creatorId }; render(); };
+
+  $('#b-file').onchange = async (e) => {
+    const files = [...e.target.files];
+    const ids = [];
+    const progress = $('#b-progress');
+    for (let i = 0; i < files.length; i += 1) {
+      progress.textContent = `Uploading ${i + 1} of ${files.length} — ${files[i].name}`;
+      try {
+        const saved = await api('/api/media', {
+          method: 'POST',
+          raw: true,
+          headers: { 'Content-Type': files[i].type, 'x-filename': files[i].name },
+          body: files[i],
+        });
+        ids.push(saved.id);
+      } catch (err) {
+        progress.textContent = '';
+        toast(`${files[i].name}: ${err.message}`, true);
+      }
+    }
+    state.bulk = { creatorId: $('#b-creator').value, mediaIds: [...picked, ...ids] };
+    await refresh();
+    render();
+  };
+
+  $('#b-schedule').onclick = async () => {
+    try {
+      const result = await api('/api/posts/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ creatorId: $('#b-creator').value, mediaIds: picked }),
+      });
+      state.bulk = null;
+      state.composeMode = 'single';
+      await refresh();
+      toast(`Scheduled ${result.created} posts.`);
+      go('planner');
+    } catch (err) { toast(err.message, true); }
+  };
+}
+
+// The plan preview comes from the server so it uses the same slot maths the
+// bulk endpoint will use — no chance of the preview disagreeing with reality.
+async function loadRhythm(creatorId, count) {
+  try {
+    const { rhythm, slots } = await api(`/api/creators/${creatorId}/slots/preview?count=${Math.max(count, 5)}`);
+    const rhythmEl = $('#b-rhythm');
+    if (rhythmEl) rhythmEl.textContent = rhythm;
+    const plan = $('#b-plan');
+    if (!plan || !count) return;
+    const media = state.media.filter((m) => (state.bulk?.mediaIds || []).includes(m.id));
+    plan.innerHTML = slots.slice(0, count).map((iso, i) => `<div class="list-row" style="padding:10px 4px">
+      <span style="color:var(--faint);font-size:12px;width:22px;font-variant-numeric:tabular-nums">${i + 1}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(media[i]?.filename || 'clip')}</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums">
+        ${new Date(iso).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}<br>${timeOf(iso)}
+      </div>
+    </div>`).join('');
+  } catch (err) {
+    const plan = $('#b-plan');
+    if (plan) plan.innerHTML = `<div class="note warn">${esc(err.message)}</div>`;
+  }
+}
+
 function renderCreators() {
   view.innerHTML = `
     <div class="row between">
@@ -491,7 +661,14 @@ function renderCreators() {
             <div><div style="font-weight:650;font-size:16px">${esc(c.name)}</div>
             <div style="color:var(--muted);font-size:13px">${c.handle ? '@' + esc(c.handle) : 'no handle set'}</div></div>
           </div>
-          <button class="btn quiet small" data-remove="${c.id}">Remove</button>
+          <div class="row" style="gap:2px">
+            <button class="btn quiet small" data-edit="${c.id}">Edit</button>
+            <button class="btn quiet small" data-remove="${c.id}">Remove</button>
+          </div>
+        </div>
+        <div class="row wrap" style="gap:8px;margin-top:14px">
+          <span class="tag">${esc(describeSlots(c.slots))}</span>
+          ${c.requiresApproval ? '<span class="tag" style="color:var(--warn);border-color:var(--warn)">Client approves</span>' : ''}
         </div>
         <div style="margin-top:16px">
           ${c.accounts.length ? c.accounts.map((a) => `<div class="row" style="padding:7px 0;font-size:13px">
@@ -522,6 +699,10 @@ function renderCreators() {
     };
   });
 
+  view.querySelectorAll('[data-edit]').forEach((el) => {
+    el.onclick = () => openCreatorSettings(creatorById(el.dataset.edit));
+  });
+
   view.querySelectorAll('[data-remove]').forEach((el) => {
     el.onclick = async () => {
       const creator = creatorById(el.dataset.remove);
@@ -529,6 +710,82 @@ function renderCreators() {
       await api(`/api/creators/${el.dataset.remove}`, { method: 'DELETE' });
       await refresh();
       render();
+    };
+  });
+}
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function describeSlots(slots) {
+  if (!slots?.length) return 'No rhythm set';
+  const days = [...new Set(slots.map((s) => s.day))].sort().map((d) => DAY_NAMES[d]);
+  return `${slots.length}/week · ${days.join(' ')}`;
+}
+
+function openCreatorSettings(creator) {
+  if (!creator) return;
+  let slots = (creator.slots || []).map((s) => ({ ...s }));
+
+  const drawSlots = (root) => {
+    const list = $('#cs-slots', root);
+    list.innerHTML = slots.length
+      ? slots.map((s, i) => `<div class="row" style="padding:7px 0;border-bottom:1px solid var(--line-soft)">
+          <span style="width:52px;font-size:13px;font-weight:600">${DAY_NAMES[s.day]}</span>
+          <span style="font-variant-numeric:tabular-nums;font-size:14px">${s.time}</span>
+          <span class="spacer"></span>
+          <button class="btn quiet small" data-drop="${i}">Remove</button>
+        </div>`).join('')
+      : '<div style="color:var(--faint);font-size:13px;padding:8px 0">No slots — bulk drops need at least one.</div>';
+    list.querySelectorAll('[data-drop]').forEach((el) => {
+      el.onclick = () => { slots.splice(Number(el.dataset.drop), 1); drawSlots(root); };
+    });
+    $('#cs-summary', root).textContent = describeSlots(slots);
+  };
+
+  modal(`
+    <h2>${esc(creator.name)}</h2>
+    <p class="sub" style="margin-bottom:22px">The rhythm a bulk drop fills, and whether this client signs off before anything publishes.</p>
+
+    <div class="eyebrow">Posting rhythm — <span id="cs-summary"></span></div>
+    <div id="cs-slots" style="margin-bottom:14px"></div>
+
+    <div class="row" style="gap:8px;margin-bottom:24px">
+      <select id="cs-day" style="width:120px">
+        ${DAY_NAMES.map((d, i) => `<option value="${i}">${d}</option>`).join('')}
+      </select>
+      <input type="text" id="cs-time" placeholder="09:00" style="width:110px" />
+      <button class="btn ghost small" id="cs-add">Add slot</button>
+    </div>
+
+    <label class="row" style="gap:10px;margin-bottom:26px;cursor:pointer">
+      <input type="checkbox" id="cs-approval" ${creator.requiresApproval ? 'checked' : ''} style="width:auto" />
+      <span style="font-size:14px">Send every post to this client for approval before it publishes</span>
+    </label>
+
+    <button class="btn" id="cs-save">Save</button>`, (root) => {
+    drawSlots(root);
+
+    $('#cs-add', root).onclick = () => {
+      const time = $('#cs-time', root).value.trim();
+      if (!/^\d{1,2}:\d{2}$/.test(time)) return toast('Time looks like 09:00 or 17:30.', true);
+      const [h, m] = time.split(':');
+      const padded = `${String(Number(h)).padStart(2, '0')}:${m}`;
+      if (Number(h) > 23 || Number(m) > 59) return toast('That is not a real time.', true);
+      slots.push({ day: Number($('#cs-day', root).value), time: padded });
+      slots.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
+      $('#cs-time', root).value = '';
+      drawSlots(root);
+    };
+
+    $('#cs-save', root).onclick = async () => {
+      await api(`/api/creators/${creator.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ slots, requiresApproval: $('#cs-approval', root).checked }),
+      });
+      closeModal();
+      await refresh();
+      render();
+      toast('Saved.');
     };
   });
 }
@@ -664,6 +921,8 @@ async function openPost(id) {
 
     <div class="card" style="background:var(--surface-2);white-space:pre-wrap;margin-bottom:18px">${esc(post.caption) || '<span style="color:var(--faint)">No caption</span>'}</div>
 
+    ${approvalPanel(post)}
+
     <div class="eyebrow">Destinations</div>
     ${post.targets.map((t) => {
       const account = accountById(t.accountId);
@@ -678,13 +937,26 @@ async function openPost(id) {
       </div>`;
     }).join('')}
 
-    <div class="row" style="margin-top:22px">
+    <div class="row wrap" style="margin-top:22px;gap:8px">
       <button class="btn small" id="p-publish">${post.status === 'published' ? 'Publish again' : 'Publish now'}</button>
+      <button class="btn ghost small" id="p-review">${post.approval?.required ? 'New review link' : 'Send for approval'}</button>
       <button class="btn ghost small" id="p-close">Close</button>
       <span class="spacer"></span>
       <button class="btn danger small" id="p-delete">Delete</button>
     </div>`, (root) => {
     $('#p-close', root).onclick = closeModal;
+    $('#p-review', root).onclick = async () => {
+      const { link } = await api(`/api/posts/${post.id}/review`, {
+        method: 'POST',
+        body: JSON.stringify({ required: true }),
+      });
+      await refresh();
+      closeModal();
+      render();
+      showReviewLink(link);
+    };
+    const copy = $('#p-copy', root);
+    if (copy) copy.onclick = () => copyText(copy.dataset.link);
     $('#p-publish', root).onclick = async () => {
       try {
         await api(`/api/posts/${post.id}/publish`, { method: 'POST', body: JSON.stringify({ force: true }) });
@@ -702,6 +974,126 @@ async function openPost(id) {
       render();
     };
   });
+}
+
+function approvalPanel(post) {
+  const a = post.approval;
+  if (!a?.required) return '';
+  const link = `${location.origin}/review/${a.token}`;
+  const label = {
+    pending: 'Waiting on the client',
+    approved: 'Approved by the client',
+    changes_requested: 'Client asked for changes',
+  }[a.status] || a.status;
+  const color = a.status === 'approved' ? 'var(--accent)' : a.status === 'changes_requested' ? 'var(--danger)' : 'var(--warn)';
+  return `<div class="card" style="background:var(--surface-2);margin-bottom:18px">
+    <div class="row between">
+      <b style="color:${color}">${label}</b>
+      ${a.reviewedAt ? `<span style="font-size:12px;color:var(--faint)">${new Date(a.reviewedAt).toLocaleString()}</span>` : ''}
+    </div>
+    ${a.note ? `<div style="margin-top:8px;color:var(--muted);font-size:14px">"${esc(a.note)}"</div>` : ''}
+    ${a.status === 'pending' ? `<div class="row" style="margin-top:12px;gap:8px">
+      <code style="flex:1;min-width:0;font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(link)}</code>
+      <button class="btn ghost small" id="p-copy" data-link="${esc(link)}">Copy link</button>
+    </div>` : ''}
+  </div>`;
+}
+
+function copyText(text) {
+  navigator.clipboard?.writeText(text)
+    .then(() => toast('Link copied.'))
+    .catch(() => toast(text, false));
+}
+
+function showReviewLink(link) {
+  if (!link) return;
+  modal(`
+    <h2>Send this to the client</h2>
+    <p class="sub">It opens one post, needs no login, and stops working the moment you re-open review after an edit.</p>
+    <div class="card" style="background:var(--surface-2);word-break:break-all;font-size:13px">${esc(link)}</div>
+    <div class="row" style="margin-top:18px;gap:8px">
+      <button class="btn" id="rl-copy">Copy link</button>
+      <button class="btn ghost" id="rl-close">Done</button>
+    </div>`, (root) => {
+    $('#rl-copy', root).onclick = () => copyText(link);
+    $('#rl-close', root).onclick = closeModal;
+  });
+}
+
+/* -- performance -- */
+
+async function renderInsights() {
+  view.innerHTML = '<h1>Performance</h1><p class="sub">Loading…</p>';
+  let data;
+  try {
+    data = await api('/api/insights');
+  } catch (err) {
+    view.innerHTML = `<h1>Performance</h1><div class="note warn">${esc(err.message)}</div>`;
+    return;
+  }
+
+  const n = (v) => (v || 0).toLocaleString();
+  const totals = data.creators.reduce((acc, r) => {
+    acc.posts += r.posts; acc.views += r.views; acc.likes += r.likes;
+    acc.comments += r.comments; acc.shares += r.shares;
+    return acc;
+  }, { posts: 0, views: 0, likes: 0, comments: 0, shares: 0 });
+
+  view.innerHTML = `
+    <div class="row between">
+      <div><h1>Performance</h1><p class="sub" style="margin:0">Pulled from each platform, per creator.</p></div>
+      <button class="btn ghost small" id="i-refresh">Refresh</button>
+    </div>
+
+    ${!data.hasData ? `<div class="card" style="margin-top:26px">
+      <div class="eyebrow">Nothing to report yet</div>
+      <p style="margin:0;color:var(--muted);line-height:1.6">
+        Numbers appear once posts have actually published to a connected account. In dry run
+        nothing reaches a platform, so there is nothing to read back — this stays empty on
+        purpose rather than showing made-up figures.
+      </p>
+    </div>` : `
+      <div class="hero-number" style="margin-top:22px">${n(totals.views)}</div>
+      <p class="hero-note">views across <b>${totals.posts}</b> published posts</p>
+
+      <h2>By creator</h2>
+      <div class="card" style="margin-bottom:30px">
+        ${data.creators.filter((r) => r.posts).map((r) => `<div class="list-row">
+          ${avatar(r.creator)}
+          <div style="flex:1"><div class="title">${esc(r.creator.name)}</div>
+          <div class="meta">${r.posts} post${r.posts === 1 ? '' : 's'}${r.withData < r.posts ? ` · ${r.posts - r.withData} without numbers yet` : ''}</div></div>
+          <div style="text-align:right;font-variant-numeric:tabular-nums">
+            <div style="font-weight:650">${n(r.views)}</div>
+            <div class="meta">${n(r.likes)} likes</div>
+          </div>
+        </div>`).join('') || '<div class="empty">No published posts yet.</div>'}
+      </div>
+
+      <h2>Top posts</h2>
+      <div class="card">
+        ${data.top.map((t) => {
+          const account = accountById(t.accountId);
+          return `<div class="list-row">
+            <span class="dot" style="width:8px;height:8px;border-radius:50%;background:${platformMeta(account?.platform).color}"></span>
+            <div style="flex:1;min-width:0">
+              <div class="title" style="font-size:14px">${esc(t.caption || 'Untitled')}</div>
+              <div class="meta">${esc(creatorById(t.creatorId)?.name || '')} · ${esc(account?.displayName || '')}</div>
+            </div>
+            <div style="text-align:right;font-variant-numeric:tabular-nums">
+              <div style="font-weight:650">${n(t.views)}</div>
+              <div class="meta">${n(t.likes)} likes</div>
+            </div>
+          </div>`;
+        }).join('') || '<div class="empty">No numbers yet.</div>'}
+      </div>`}`;
+
+  $('#i-refresh').onclick = async () => {
+    try {
+      const { refreshed } = await api('/api/insights/refresh', { method: 'POST' });
+      toast(refreshed ? `Refreshed ${refreshed} posts.` : 'No published posts to refresh.');
+      render();
+    } catch (err) { toast(err.message, true); }
+  };
 }
 
 /* ------------------------------------------------------------------ modal */

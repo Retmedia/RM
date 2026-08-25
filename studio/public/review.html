@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Review your post</title>
+  <style>
+    :root {
+      --ground: #f4f6f7;
+      --card: #ffffff;
+      --ink: #14181c;
+      --ink-2: #5b646d;
+      --ink-3: #8b949c;
+      --rule: #e0e5e9;
+      --accent: #10714c;
+      --accent-soft: #e6f2ec;
+      --amber: #8a5a12;
+      --amber-soft: #fbf1de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ground: #0f1215; --card: #171b1f; --ink: #e9edf0; --ink-2: #a3acb4;
+        --ink-3: #78828a; --rule: #262c32; --accent: #4fbd8d; --accent-soft: #163026; --amber: #d9a441; --amber-soft: #2e2717;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--ground); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 620px; margin: 0 auto; padding: 44px 20px 80px; }
+    .eyebrow {
+      font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+      font-weight: 700; color: var(--ink-3); margin-bottom: 10px;
+    }
+    h1 { font-size: 27px; letter-spacing: -.02em; margin: 0 0 6px; text-wrap: balance; }
+    .sub { color: var(--ink-2); margin: 0 0 30px; }
+    .card {
+      background: var(--card); border: 1px solid var(--rule);
+      border-radius: 14px; padding: 22px; margin-bottom: 16px;
+    }
+    .media { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 18px; }
+    .media img, .media video { width: 100%; border-radius: 10px; display: block; background: var(--ground); }
+    .caption { white-space: pre-wrap; line-height: 1.6; }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); margin-bottom: 9px; }
+    .dest {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 14px;
+      border: 1px solid var(--rule); border-radius: 999px; padding: 5px 12px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .when { font-size: 15px; color: var(--ink-2); }
+    button {
+      font: inherit; font-weight: 650; border-radius: 999px; padding: 13px 24px;
+      cursor: pointer; border: 1px solid transparent; transition: filter .12s;
+    }
+    button:hover { filter: brightness(1.06); }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .approve { background: var(--accent); color: #fff; }
+    .changes { background: transparent; color: var(--ink); border-color: var(--rule); }
+    textarea {
+      font: inherit; width: 100%; min-height: 110px; padding: 12px;
+      border: 1px solid var(--rule); border-radius: 10px; resize: vertical;
+      background: var(--card); color: var(--ink); margin: 14px 0;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    .banner { border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; }
+    .banner.ok { background: var(--accent-soft); color: var(--accent); }
+    .banner.wait { background: var(--amber-soft); color: var(--amber); }
+    .banner b { display: block; font-size: 17px; margin-bottom: 3px; }
+    .hidden { display: none; }
+    footer { text-align: center; color: var(--ink-3); font-size: 13px; margin-top: 32px; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="root">Loading…</div>
+
+  <script>
+    const COLORS = { instagram: '#c2255c', tiktok: '#0b7f80', facebook: '#1b5fc4', youtube: '#c31f2b' };
+    const token = location.pathname.split('/').pop();
+    const root = document.getElementById('root');
+
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    async function load() {
+      const res = await fetch(`/api/review/${token}`);
+      const data = await res.json();
+      if (!res.ok) {
+        root.innerHTML = `<h1>Link expired</h1><p class="sub">${esc(data.error)} Ask us for a fresh one.</p>`;
+        return;
+      }
+      draw(data);
+    }
+
+    function draw(post) {
+      const decided = post.approval.status !== 'pending';
+      root.innerHTML = `
+        <div class="eyebrow">${esc(post.creator?.name || 'Your account')} · for your approval</div>
+        <h1>One post to look over</h1>
+        <p class="sub">Approve it and we'll publish at the time below. Ask for changes and nothing goes out.</p>
+
+        <div id="banner"></div>
+
+        <div class="card">
+          ${post.media.length ? `<div class="media">${post.media.map((m) => m.kind === 'video'
+            ? `<video src="${esc(m.url)}" controls playsinline></video>`
+            : `<img src="${esc(m.url)}" alt="Post image">`).join('')}</div>` : ''}
+          <div class="caption">${esc(post.caption) || '<span style="color:var(--ink-3)">No caption</span>'}</div>
+        </div>
+
+        <div class="card">
+          <div class="label">Going to</div>
+          <div class="row" style="margin-bottom:18px">
+            ${post.destinations.map((d) => `<span class="dest">
+              <span class="dot" style="background:${COLORS[d.platform] || '#888'}"></span>${esc(d.name)}</span>`).join('')}
+          </div>
+          <div class="label">Scheduled for</div>
+          <div class="when">${post.scheduledAt
+            ? new Date(post.scheduledAt).toLocaleString([], { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+            : 'Not scheduled yet'}</div>
+        </div>
+
+        <div id="actions" class="${decided ? 'hidden' : ''}">
+          <div class="row" style="gap:12px;margin-top:22px">
+            <button class="approve" id="approve">Approve &amp; schedule</button>
+            <button class="changes" id="ask">Ask for changes</button>
+          </div>
+          <div id="note-box" class="hidden">
+            <textarea id="note" placeholder="What should we change?"></textarea>
+            <button class="approve" id="send">Send to the team</button>
+          </div>
+        </div>
+
+        <footer>Sent by RET Media</footer>`;
+
+      paintBanner(post.approval);
+      if (decided) return;
+
+      document.getElementById('approve').onclick = () => decide('approved');
+      document.getElementById('ask').onclick = () => {
+        document.getElementById('note-box').classList.remove('hidden');
+        document.getElementById('note').focus();
+      };
+      document.getElementById('send').onclick = () =>
+        decide('changes_requested', document.getElementById('note').value);
+    }
+
+    function paintBanner(approval) {
+      const banner = document.getElementById('banner');
+      if (!banner) return;
+      if (approval.status === 'approved') {
+        banner.innerHTML = `<div class="banner ok"><b>Approved</b>We'll publish it at the scheduled time.</div>`;
+      } else if (approval.status === 'changes_requested') {
+        banner.innerHTML = `<div class="banner wait"><b>Changes requested</b>${
+          esc(approval.note || 'The team is on it.')}</div>`;
+      } else {
+        banner.innerHTML = '';
+      }
+    }
+
+    async function decide(decision, note) {
+      const res = await fetch(`/api/review/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, note }),
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.error);
+      document.getElementById('actions').classList.add('hidden');
+      paintBanner({ status: data.status, note });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    load();
+  </script>
+</body>
+</html>

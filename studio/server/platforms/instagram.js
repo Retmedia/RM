@@ -21,6 +21,7 @@ const meta = {
     'instagram_content_publish',
     'pages_show_list',
     'pages_read_engagement',
+    'instagram_manage_insights',
     'business_management',
   ],
   limits: {
@@ -30,6 +31,7 @@ const meta = {
     videoSeconds: 900,
     formats: ['image', 'video', 'carousel'],
   },
+  metricsScopes: ['instagram_manage_insights'],
   notes: [
     'Feed posts, Reels and carousels are the well-trodden paths. Confirm Stories support against the current Content Publishing docs before promising it to a client.',
     'Media is pulled by Meta from a public URL — the file has to be reachable from the internet at publish time.',
@@ -181,4 +183,20 @@ async function waitForContainer(creationId, token, timeoutMs = 5 * 60 * 1000) {
   throw new PlatformError('Instagram did not finish processing the media in time.', { retryable: true });
 }
 
-module.exports = { meta, authUrl, exchangeCode, discover, validate, publish };
+// Reels report plays/reach; feed posts report impressions. Ask for the union
+// and keep whatever comes back rather than branching on media type.
+async function fetchMetrics({ tokens, remoteId }) {
+  if (DRY_RUN) return null;
+  const metrics = 'reach,likes,comments,saved,shares,views';
+  const r = await api(`${GRAPH}/${remoteId}/insights?metric=${metrics}&access_token=${tokens.accessToken}`);
+  const byName = Object.fromEntries((r.data || []).map((m) => [m.name, m.values?.[0]?.value ?? 0]));
+  return {
+    views: byName.views ?? byName.reach ?? null,
+    likes: byName.likes ?? null,
+    comments: byName.comments ?? null,
+    shares: byName.shares ?? null,
+    saves: byName.saved ?? null,
+  };
+}
+
+module.exports = { meta, authUrl, exchangeCode, discover, validate, publish, fetchMetrics };

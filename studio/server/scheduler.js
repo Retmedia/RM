@@ -1,5 +1,5 @@
 const store = require('./store');
-const { publishPost } = require('./publisher');
+const { publishPost, approvalBlock } = require('./publisher');
 
 const TICK_MS = Number(process.env.STUDIO_TICK_MS) || 30_000;
 
@@ -20,6 +20,9 @@ async function tick() {
     const posts = await store.listPosts();
     const due = posts.filter((p) => {
       if (!p.scheduledAt || p.scheduledAt > now) return false;
+      // Leave unapproved posts sitting in the queue rather than burning a
+      // publish attempt on them every tick.
+      if (approvalBlock(p)) return false;
       if (p.status === 'scheduled') return true;
       // Pick a post back up once its backoff window has passed.
       if (p.status === 'publishing' || p.status === 'partial') {

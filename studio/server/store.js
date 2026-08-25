@@ -1,6 +1,8 @@
 const path = require('node:path');
 const fs = require('node:fs/promises');
+const crypto = require('node:crypto');
 const { newId, writeJSONAtomic, readJSONIfExists, encryptSecret, decryptSecret } = require('./utils');
+const { DEFAULT_SLOTS, normalizeSlots } = require('./cadence');
 
 const DATA_ROOT = process.env.STUDIO_DATA
   ? path.resolve(process.env.STUDIO_DATA)
@@ -41,7 +43,7 @@ async function listCreators() {
   }));
 }
 
-async function createCreator({ name, handle, color, notes }) {
+async function createCreator({ name, handle, color, notes, slots, requiresApproval }) {
   const d = await load();
   const creator = {
     id: newId('cre'),
@@ -49,6 +51,8 @@ async function createCreator({ name, handle, color, notes }) {
     handle: (handle || '').replace(/^@/, '').trim(),
     color: color || pickColor(d.creators.length),
     notes: notes || '',
+    slots: normalizeSlots(slots).length ? normalizeSlots(slots) : structuredClone(DEFAULT_SLOTS),
+    requiresApproval: !!requiresApproval,
     createdAt: new Date().toISOString(),
   };
   d.creators.push(creator);
@@ -63,6 +67,8 @@ async function updateCreator(id, patch) {
   for (const field of ['name', 'handle', 'color', 'notes']) {
     if (patch[field] !== undefined) creator[field] = patch[field];
   }
+  if (patch.slots !== undefined) creator.slots = normalizeSlots(patch.slots);
+  if (patch.requiresApproval !== undefined) creator.requiresApproval = !!patch.requiresApproval;
   await persist();
   return creator;
 }
@@ -216,8 +222,10 @@ async function getPost(id) {
   return d.posts.find((p) => p.id === id) || null;
 }
 
-async function createPost({ creatorId, caption, mediaIds, scheduledAt, status, targets }) {
+async function createPost({ creatorId, caption, mediaIds, scheduledAt, status, targets, requiresApproval }) {
   const d = await load();
+  const creator = d.creators.find((c) => c.id === creatorId);
+  const needsApproval = requiresApproval !== undefined ? !!requiresApproval : !!creator?.requiresApproval;
   const post = {
     id: newId('post'),
     creatorId,
@@ -237,6 +245,16 @@ async function createPost({ creatorId, caption, mediaIds, scheduledAt, status, t
       error: null,
       publishedAt: null,
     })),
+    approval: {
+      required: needsApproval,
+      status: needsApproval ? 'pending' : 'not_required',
+      // The review link is the token; it is the only thing a client needs and
+      // it grants nothing except this one post.
+      token: needsApproval ? crypto.randomBytes(16).toString('hex') : null,
+      note: null,
+      reviewedAt: null,
+      reviewedBy: null,
+    },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -278,6 +296,49 @@ async function updatePost(id, patch) {
 }
 
 async function savePost(post) {
+  post.updatedAt = new Date().toISOString();
+  await persist();
+  return post;
+}
+
+// A client's review link resolves to exactly one post and carries no session.
+async function getPostByToken(token) {
+  if (!token) return null;
+  const d = await load();
+  return d.posts.find((p) => p.approval?.token === token) || null;
+}
+
+async function recordReview(postId, { decision, note, reviewedBy }) {
+  const d = await load();
+  const post = d.posts.find((p) => p.id === postId);
+  if (!post || !post.approval?.required) return null;
+  if (!['approved', 'changes_requested'].includes(decision)) return null;
+  post.approval.status = decision;
+  post.approval.note = note || null;
+  post.approval.reviewedAt = new Date().toISOString();
+  post.approval.reviewedBy = reviewedBy || null;
+  // Changes requested pulls the post out of the queue; approving puts it back.
+  if (decision === 'changes_requested' && post.status === 'scheduled') post.status = 'draft';
+  if (decision === 'approved' && post.status === 'draft' && post.scheduledAt) post.status = 'scheduled';
+  post.updatedAt = new Date().toISOString();
+  await persist();
+  return post;
+}
+
+// Re-opening review after an edit: a new token so an old link cannot re-approve
+// content the client never saw.
+async function resetApproval(postId, required) {
+  const d = await load();
+  const post = d.posts.find((p) => p.id === postId);
+  if (!post) return null;
+  post.approval = {
+    required: !!required,
+    status: required ? 'pending' : 'not_required',
+    token: required ? crypto.randomBytes(16).toString('hex') : null,
+    note: null,
+    reviewedAt: null,
+    reviewedBy: null,
+  };
   post.updatedAt = new Date().toISOString();
   await persist();
   return post;
@@ -343,6 +404,9 @@ module.exports = {
   updatePost,
   savePost,
   deletePost,
+  getPostByToken,
+  recordReview,
+  resetApproval,
   addMedia,
   listMedia,
   getMediaByIds,

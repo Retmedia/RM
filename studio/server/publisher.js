@@ -38,11 +38,28 @@ async function validatePost(post) {
   return problems;
 }
 
+// A post a client has not signed off on never goes out, whichever path asks —
+// the scheduler, the Publish button, or a bulk run.
+function approvalBlock(post) {
+  if (!post.approval?.required) return null;
+  if (post.approval.status === 'approved') return null;
+  return post.approval.status === 'changes_requested'
+    ? 'The client asked for changes on this post.'
+    : 'Waiting on client approval.';
+}
+
 // Publish every target that is still pending. One failing platform never stops
 // the others — a TikTok rejection should not hold back the Instagram post.
 async function publishPost(postId) {
   const post = await store.getPost(postId);
   if (!post) return null;
+
+  const blocked = approvalBlock(post);
+  if (blocked) {
+    post.status = 'awaiting_approval';
+    await store.savePost(post);
+    return post;
+  }
 
   const media = await store.getMediaByIds(post.mediaIds);
   post.status = 'publishing';
@@ -105,4 +122,4 @@ function rollupStatus(targets) {
   return 'failed';
 }
 
-module.exports = { publishPost, validatePost, rollupStatus };
+module.exports = { publishPost, validatePost, rollupStatus, approvalBlock };
