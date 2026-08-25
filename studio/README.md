@@ -83,6 +83,6 @@ Threads means writing one file in `platforms/` and nothing else.
 
 ## Not built yet
 
-Analytics pull-back, approval flows for client sign-off, Instagram Stories (no API
-allows it), TikTok photo posts, LinkedIn/Threads/X, and drag-to-reschedule in the
-planner. The adapter shape is where all of those land.
+Analytics pull-back, approval flows for client sign-off, Instagram Stories, TikTok
+photo posts, LinkedIn/Threads/X, and drag-to-reschedule in the planner. The adapter
+shape is where all of those land.

@@ -31,7 +31,7 @@ const meta = {
     formats: ['image', 'video', 'carousel'],
   },
   notes: [
-    'Stories cannot be published through the API. Feed posts, Reels and carousels can.',
+    'Feed posts, Reels and carousels are the well-trodden paths. Confirm Stories support against the current Content Publishing docs before promising it to a client.',
     'Media is pulled by Meta from a public URL — the file has to be reachable from the internet at publish time.',
   ],
 };
