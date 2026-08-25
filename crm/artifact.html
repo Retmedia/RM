@@ -118,6 +118,12 @@
   .whale .nm{color:var(--gold)}
   .lane.won .deal{background:#124038;border-color:#1f6656}
   .stag{font-size:9.5px;padding:1px 7px;border-radius:5px;border:1px solid var(--line2);color:var(--aqua2)}
+  @keyframes wonGlow{0%,100%{box-shadow:0 0 0 1px rgba(95,221,157,.55),0 0 12px rgba(95,221,157,.3)}
+    50%{box-shadow:0 0 0 1px rgba(102,235,222,.95),0 0 28px rgba(102,235,222,.75)}}
+  .deal.fresh{animation:wonGlow 1.8s ease-in-out infinite;border-color:var(--green)}
+  .client.freshc{animation:wonGlow 1.8s ease-in-out infinite}
+  .fresh-note{font-size:9.5px;color:var(--green);font-weight:800;margin-top:5px;letter-spacing:.2px}
+  @media(prefers-reduced-motion:reduce){.deal.fresh,.client.freshc{animation:none;box-shadow:0 0 0 1px var(--green),0 0 14px rgba(95,221,157,.4)}}
   .fu{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:6px;border:1px solid var(--line2);color:var(--dim)}
   .fu.due{background:#3a2f16;color:var(--sand);border-color:#5e4c22}
   .fu.over{background:#3a1a18;color:var(--coral);border-color:#5e2a26}
@@ -233,6 +239,8 @@
   #wave .banner{position:absolute;left:50%;top:22%;transform:translateX(-50%);text-align:center;animation:drop .5s cubic-bezier(.2,1.4,.3,1);pointer-events:none;width:90%}
   #wave .banner .big{font-size:clamp(28px,6vw,58px);font-weight:900;letter-spacing:1px;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.5),0 0 40px rgba(55,214,200,.6)}
   #wave .banner .sm{font-size:clamp(14px,2.4vw,20px);color:var(--gold);font-weight:800;margin-top:6px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+  #wave .banner .hint2{margin-top:18px;font-size:13px;color:rgba(255,255,255,.8);font-weight:600;letter-spacing:.3px;animation:hintPulse 1.6s ease-in-out infinite}
+  @keyframes hintPulse{0%,100%{opacity:.55}50%{opacity:1}}
   @keyframes drop{from{transform:translateX(-50%) translateY(-40px) scale(.7);opacity:0}to{transform:translateX(-50%) translateY(0) scale(1);opacity:1}}
 
   .foot{color:var(--faint);font-size:11px;text-align:center;margin-top:34px;line-height:1.7}
@@ -360,7 +368,8 @@
 <div id="toasts"></div>
 <div id="modal"><div class="m" id="modalBody"></div></div>
 <div id="wave"><canvas id="wc"></canvas>
-  <div class="banner"><div class="big" id="wbig">BARRELED! 🤙</div><div class="sm" id="wsm"></div></div></div>
+  <div class="banner"><div class="big" id="wbig">BARRELED! 🤙</div><div class="sm" id="wsm"></div>
+  <div class="hint2">Tap anywhere to continue</div></div></div>
 
 <script>
 /* ============================================================
@@ -552,7 +561,7 @@ function toast(msg){const t=document.createElement("div");t.className="toast";t.
 function openModal(h){document.getElementById("modalBody").innerHTML=h;document.getElementById("modal").style.display="grid";}
 function closeModal(){document.getElementById("modal").style.display="none";}
 document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();if(window.__waveClose)window.__waveClose();}});
 
 /* ---------- mini calendar (used by task + deal date pickers) ---------- */
 function openCal(iso){const b=iso?new Date(iso+"T00:00:00"):new Date();CAL={y:b.getFullYear(),m:b.getMonth(),sel:iso||""};renderCal();}
@@ -590,19 +599,37 @@ function editDeal(id){
 }
 function saveDeal(id){const n=v("x_n");if(!n){toast("Name required");return;}
   const data={name:n,co:v("x_c"),value:+v("x_v")||0,stage:v("x_s"),note:v("x_no"),fu:v("x_date")};
-  if(id){const d=S.deals.find(x=>x.id===id);const wasWon=d.stage==="won";Object.assign(d,data);closeModal();save();render();
+  if(id){const d=S.deals.find(x=>x.id===id);const wasWon=d.stage==="won";Object.assign(d,data);
+    if(d.stage==="won"&&!wasWon)d.wonAt=Date.now();if(d.stage!=="won")delete d.wonAt;
+    closeModal();save();render();
     if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.stage==="lost"?n+" moved to Lost":"Saved");}
-  else{S.deals.unshift({id:"d"+Date.now(),whale:false,...data});closeModal();save();render();
+  else{const nd={id:"d"+Date.now(),whale:false,...data};if(nd.stage==="won")nd.wonAt=Date.now();
+    S.deals.unshift(nd);closeModal();save();render();
     if(data.stage==="won")rideTheWave(n);else toast("Added "+n);}}
 function delDeal(id){S.deals=S.deals.filter(x=>x.id!==id);closeModal();save();render();toast("Deleted");}
 function reviveDeal(id){const d=S.deals.find(x=>x.id===id);if(!d)return;d.stage="lineup";save();render();toast(d.name+" back in the lineup");}
 function moveDeal(id,dir){const d=S.deals.find(x=>x.id===id);if(!d)return;
   const i=STAGES.findIndex(s=>s.id===d.stage)+dir;if(i<0||i>=STAGES.length)return;
-  const wasWon=d.stage==="won";d.stage=STAGES[i].id;save();render();
+  const wasWon=d.stage==="won";d.stage=STAGES[i].id;
+  if(d.stage==="won"&&!wasWon)d.wonAt=Date.now();if(d.stage!=="won")delete d.wonAt;
+  save();render();
   if(d.stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES[i].label);}
 function dropDeal(id,stage){const d=S.deals.find(x=>x.id===id);if(!d||d.stage===stage)return;
-  const wasWon=d.stage==="won";d.stage=stage;save();render();
+  const wasWon=d.stage==="won";d.stage=stage;
+  if(stage==="won"&&!wasWon)d.wonAt=Date.now();if(stage!=="won")delete d.wonAt;
+  save();render();
   if(stage==="won"&&!wasWon)rideTheWave(d.name);else toast(d.name+" → "+STAGES.find(s=>s.id===stage).label);}
+function sweepWon(){
+  const now=Date.now(),DAY=864e5;let changed=false;const moved=[];
+  S.deals.forEach(d=>{if(d.stage==="won"&&!d.wonAt){d.wonAt=now;changed=true;}});
+  const ready=S.deals.filter(d=>d.stage==="won"&&d.wonAt&&(now-d.wonAt>=DAY));
+  if(ready.length){
+    ready.forEach((d,k)=>{S.clients.push({id:"c"+now+"_"+k,name:d.name,em:"🤝",tier:"growth",
+      svc:d.co||d.note||"New client",deal:d.value?("~"+fmt(d.value)+"/mo (est)"):"New win",
+      mrr:+d.value||0,variable:true,newAt:now});moved.push(d.name);});
+    const ids=new Set(ready.map(d=>d.id));S.deals=S.deals.filter(d=>!ids.has(d.id));changed=true;}
+  if(changed){save();render();moved.forEach(nm=>toast("🎉 "+nm+" is now a client"));}
+}
 
 /* ---------- SETS (tasks): edit, reorder ---------- */
 function toggleSet(id){const s=S.sets.find(x=>x.id===id);if(!s)return;s.done=!s.done;save();render();}
@@ -717,12 +744,15 @@ function render(){
         ondragover="event.preventDefault();this.classList.add('drop')" ondragleave="this.classList.remove('drop')"
         ondrop="this.classList.remove('drop');dropDeal(event.dataTransfer.getData('id'),'${st.id}')">
       <div class="lh"><div><b>${st.label}</b> <span class="surf">· ${st.surf}</span></div><span class="cnt">${items.length}</span></div>
-      ${items.map(d=>{const f=fuMeta(d.fu);return `
-        <div class="deal ${d.whale?"whale":""}" draggable="true" ondragstart="event.dataTransfer.setData('id','${d.id}');this.classList.add('dragging')" ondragend="this.classList.remove('dragging')">
+      ${items.map(d=>{const f=fuMeta(d.fu);
+        const fresh=d.stage==="won"&&d.wonAt&&(Date.now()-d.wonAt<864e5);
+        const hrs=fresh?Math.max(1,Math.ceil((864e5-(Date.now()-d.wonAt))/36e5)):0;return `
+        <div class="deal ${d.whale?"whale":""} ${fresh?"fresh":""}" draggable="true" ondragstart="event.dataTransfer.setData('id','${d.id}');this.classList.add('dragging')" ondragend="this.classList.remove('dragging')">
           <div class="nm">${d.whale?"🐋 ":""}${esc(d.name)}</div>
           ${d.co?`<div class="co">${esc(d.co)}</div>`:""}
           ${d.value?`<div class="mt"><span class="val">${fmt(d.value)}</span>${st.id==="won"?" · signed":" est."}</div>`:""}
           ${f&&st.id!=="won"?`<div class="fu ${f.cls}">⏰ ${f.cls==="over"?"Overdue · "+f.lab:f.cls==="due"?"Follow up today":"Follow up "+f.lab}</div>`:""}
+          ${fresh?`<div class="fresh-note">🎉 Signed! Moves to Clients in ${hrs}h</div>`:""}
           ${d.note?`<div class="mt">${esc(d.note)}</div>`:""}
           <div class="ctl">
             <button class="ic" title="Back a stage" ${idx===0?"disabled":""} onclick="moveDeal('${d.id}',-1)">◀</button>
@@ -757,15 +787,17 @@ function render(){
 
   // roster
   document.getElementById("rosterSub").textContent=fmt(mrr())+"/mo estimated · "+S.clients.length+" clients";
-  document.getElementById("roster").innerHTML=S.clients.map(c=>`
-    <div class="client">
+  document.getElementById("roster").innerHTML=S.clients.map(c=>{
+    const isNew=c.newAt&&(Date.now()-c.newAt<864e5);return `
+    <div class="client ${isNew?"freshc":""}">
       <div class="rib ${c.tier}">${esc(c.tier)}</div>
       <div class="cn"><span style="margin-right:5px">${esc(c.em)}</span>${esc(c.name)}</div>
       <div class="cs">${esc(c.svc)}</div>
       <div class="cd">${esc(c.deal)}</div>
       <div class="cm">${c.mrr?fmt(c.mrr)+"/mo"+(c.variable?"*":""):"trial / rev-share"}</div>
+      ${isNew?`<div class="fresh-note">🎉 Just landed</div>`:""}
       <div class="cx"><button class="ic" title="Edit" onclick="editClient('${c.id}')">✎</button></div>
-    </div>`).join("")||emptyState("No clients yet.");
+    </div>`;}).join("")||emptyState("No clients yet.");
 
   // milestones
   document.getElementById("miles").innerHTML=MILES.map(m=>{const on=m.on();
@@ -929,34 +961,71 @@ function playStoke(){try{
   const ng=ac.createGain();ng.gain.setValueAtTime(.0001,now);ng.gain.linearRampToValueAtTime(.5,now+.15);ng.gain.exponentialRampToValueAtTime(.001,now+dur);
   src.connect(bp).connect(ng).connect(ac.destination);src.start(now);src.stop(now+dur);setTimeout(()=>ac.close(),2000);
 }catch(e){}}
+let waveRAF=null;
 function rideTheWave(name){
   const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.getElementById("wbig").textContent="BARRELED! 🤙";
-  document.getElementById("wsm").textContent=name==="the stoke"?"drop in.":name+" is signed. Go get the next one.";
+  document.getElementById("wsm").textContent=name==="the stoke"?"Drop in.":name+" is signed. Go get the next one.";
   const ov=document.getElementById("wave");ov.style.display="block";playStoke();
   const cv=document.getElementById("wc"),ctx=cv.getContext("2d");
-  const W=cv.width=innerWidth,H=cv.height=innerHeight;let t=0;const dur=reduce?40:150;const spray=[];
-  function frame(){
-    t++;ctx.clearRect(0,0,W,H);const prog=t/dur;
-    const grd=ctx.createLinearGradient(0,H*0.45,0,H);grd.addColorStop(0,"#1fb6c9");grd.addColorStop(.5,"#128aa8");grd.addColorStop(1,"#0a4f6e");
-    const baseY=H*0.62,amp=H*0.16,phase=prog*Math.PI;
+  let W=cv.width=innerWidth,H=cv.height=innerHeight;
+  let t=reduce?130:0,running=true,burst=false;
+  const trail=[],spray=[],sparks=[],conf=[],RIDE=130;
+  function close(){running=false;if(waveRAF)cancelAnimationFrame(waveRAF);waveRAF=null;ov.style.display="none";ov.onclick=null;window.__waveClose=null;}
+  ov.onclick=close;window.__waveClose=close;
+  function wave(baseY,amp,speed,c0,c1){
     ctx.beginPath();ctx.moveTo(0,H);
-    for(let x=0;x<=W;x+=8){const k=x/W;const crest=Math.sin(k*Math.PI*1.3-phase*1.2)*amp*(0.6+0.8*k);const lift=Math.sin(prog*Math.PI)*amp*0.5;
-      ctx.lineTo(x,baseY-crest-lift+Math.sin((x*0.02)+(t*0.15))*4);}
-    ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
-    ctx.lineWidth=4;ctx.strokeStyle="rgba(255,255,255,.85)";ctx.beginPath();
-    for(let x=0;x<=W;x+=8){const k=x/W;const crest=Math.sin(k*Math.PI*1.3-phase*1.2)*amp*(0.6+0.8*k);const lift=Math.sin(prog*Math.PI)*amp*0.5;
-      const y=baseY-crest-lift+Math.sin((x*0.02)+(t*0.15))*4;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
-    ctx.stroke();
-    const sx=W*(0.08+0.84*prog),k=sx/W;const crest=Math.sin(k*Math.PI*1.3-phase*1.2)*amp*(0.6+0.8*k);const lift=Math.sin(prog*Math.PI)*amp*0.5;const sy=baseY-crest-lift-6;
-    ctx.save();ctx.translate(sx,sy);ctx.rotate(-0.12);ctx.font="46px serif";ctx.textAlign="center";ctx.fillText("🏄",0,0);ctx.restore();
-    if(t%2===0)for(let i=0;i<3;i++)spray.push({x:sx-14,y:sy-6,vx:-(1+Math.random()*2.5),vy:-(1+Math.random()*3),life:1});
-    spray.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.02;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(p.x,p.y,2.4,0,7);ctx.fill();});
-    ctx.globalAlpha=1;
-    if(t<dur)requestAnimationFrame(frame);else setTimeout(()=>{ov.style.display="none";},650);
+    for(let x=0;x<=W;x+=10)ctx.lineTo(x,baseY+Math.sin(x*0.012+t*speed)*amp+Math.sin(x*0.03-t*speed*1.7)*amp*0.35);
+    ctx.lineTo(W,H);ctx.closePath();
+    const g=ctx.createLinearGradient(0,baseY-amp,0,H);g.addColorStop(0,c0);g.addColorStop(1,c1);ctx.fillStyle=g;ctx.fill();
   }
-  requestAnimationFrame(frame);
-  ov.onclick=()=>{ov.style.display="none";};
+  function scene(){
+    if(!running)return;
+    if(cv.width!==innerWidth)W=cv.width=innerWidth;if(cv.height!==innerHeight)H=cv.height=innerHeight;
+    t++;const prog=Math.min(1,t/RIDE);
+    // sunset sky
+    const sky=ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,"#241a4d");sky.addColorStop(.45,"#4b2a6b");sky.addColorStop(.7,"#c85a5a");sky.addColorStop(.86,"#f2a24d");sky.addColorStop(1,"#ffcf7a");
+    ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    // sun + glow
+    const sunX=W*0.5,sunY=H*0.6,sunR=Math.min(W,H)*0.11;
+    const sg=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,sunR*3.2);
+    sg.addColorStop(0,"rgba(255,240,200,.95)");sg.addColorStop(.4,"rgba(255,200,120,.5)");sg.addColorStop(1,"rgba(255,180,90,0)");
+    ctx.fillStyle=sg;ctx.beginPath();ctx.arc(sunX,sunY,sunR*3.2,0,7);ctx.fill();
+    ctx.fillStyle="rgba(255,238,190,.95)";ctx.beginPath();ctx.arc(sunX,sunY,sunR,0,7);ctx.fill();
+    // ambient sparkles on water
+    if(t%5===0)sparks.push({x:Math.random()*W,y:H*0.55+Math.random()*H*0.25,life:1});
+    sparks.forEach(s=>{s.life-=0.02;ctx.globalAlpha=Math.max(0,s.life);ctx.fillStyle="#ffe6a3";ctx.fillRect(s.x,s.y,2,2);});
+    ctx.globalAlpha=1;for(let i=sparks.length-1;i>=0;i--)if(sparks[i].life<=0)sparks.splice(i,1);
+    // layered waves
+    wave(H*0.72,14*(H/700+.6),0.05,"#1a6f86","#0a3550");
+    wave(H*0.8,20*(H/700+.6),0.08,"#2fb6c9","#0c5a72");
+    // foam crest on front wave
+    ctx.lineWidth=Math.max(3,H*0.006);ctx.strokeStyle="rgba(255,255,255,.9)";ctx.beginPath();
+    const amp=20*(H/700+.6);
+    for(let x=0;x<=W;x+=10){const y=H*0.8+Math.sin(x*0.012+t*0.08)*amp+Math.sin(x*0.03-t*0.136)*amp*0.35;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+    // surfer on the crest
+    const sx=W*(0.1+0.8*prog);
+    const sy=H*0.8+Math.sin(sx*0.012+t*0.08)*amp - H*0.02 + (prog>=1?Math.sin(t*0.12)*4:0);
+    trail.push({x:sx,y:sy});if(trail.length>18)trail.shift();
+    trail.forEach((p,i)=>{ctx.globalAlpha=(i/trail.length)*0.4;ctx.fillStyle="#bff6ff";ctx.beginPath();ctx.arc(p.x-8,p.y+7,5*(i/trail.length),0,7);ctx.fill();});
+    ctx.globalAlpha=1;
+    const size=Math.max(42,H*0.075);
+    ctx.save();ctx.translate(sx,sy);ctx.rotate(-0.14);ctx.font=size+"px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🏄",0,0);ctx.restore();
+    // spray behind surfer
+    if(t%2===0)for(let i=0;i<4;i++)spray.push({x:sx-size*0.3,y:sy+4,vx:-(1+Math.random()*3),vy:-(1+Math.random()*4.5),life:1});
+    spray.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life-=0.02;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill();});
+    ctx.globalAlpha=1;for(let i=spray.length-1;i>=0;i--)if(spray[i].life<=0)spray.splice(i,1);
+    // confetti burst on landing
+    if(prog>=1&&!burst){burst=true;const cols=["#37d6c8","#f2c078","#ff7a6b","#5fdd9d","#66ebde"];
+      for(let i=0;i<90;i++)conf.push({x:W/2,y:H*0.28,vx:(Math.random()-.5)*11,vy:-(Math.random()*10+3),c:cols[i%5],life:1,rot:Math.random()*6});}
+    conf.forEach(c=>{c.x+=c.vx;c.y+=c.vy;c.vy+=0.22;c.life-=0.007;c.rot+=0.2;ctx.globalAlpha=Math.max(0,c.life);
+      ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);ctx.fillStyle=c.c;ctx.fillRect(-4,-3,8,6);ctx.restore();});
+    ctx.globalAlpha=1;for(let i=conf.length-1;i>=0;i--)if(conf[i].life<=0)conf.splice(i,1);
+    if(!reduce&&running)waveRAF=requestAnimationFrame(scene);
+  }
+  waveRAF=requestAnimationFrame(scene);
 }
 
 /* ---------- boot ---------- */
@@ -964,7 +1033,9 @@ renderTabs();
 setTab(S.tab||"overview");
 render();save();
 startLiveSync();
+sweepWon();
 setInterval(tickClock,60000);
+setInterval(sweepWon,60000);
 </script>
 
 
