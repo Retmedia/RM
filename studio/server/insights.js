@@ -15,10 +15,10 @@ async function refreshPost(post, { force = false } = {}) {
 
     const account = await store.getAccount(target.accountId);
     if (!account) continue;
-    const adapter = platforms.get(account.platform);
-    if (!adapter.fetchMetrics) continue;
 
     try {
+      const adapter = platforms.get(account.platform);
+      if (!adapter.fetchMetrics) continue;
       const tokens = await store.accountTokens(account.id);
       const metrics = await adapter.fetchMetrics({ account, tokens, remoteId: target.remoteId });
       if (metrics) {

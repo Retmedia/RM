@@ -30,6 +30,12 @@ app.get('/api/health', (_req, res) => {
 
 app.get('/api/platforms', (_req, res) => res.json(platforms.listMeta()));
 
+// Accounts can outlive a platform being switched off, so the UI needs to know
+// which ones it can still act on.
+app.get('/api/platforms/all', (_req, res) => {
+  res.json(Object.keys(platforms.platforms).map((id) => platforms.describe(id)));
+});
+
 /* ---------------------------------------------------------------- creators */
 
 app.get('/api/creators', wrap(async (_req, res) => res.json(await store.listCreators())));

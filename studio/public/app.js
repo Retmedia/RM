@@ -8,6 +8,7 @@ const state = {
   posts: [],
   media: [],
   platforms: [],
+  allPlatforms: [],
   health: {},
   weekStart: startOfWeek(new Date()),
   filterCreator: null,
@@ -64,7 +65,9 @@ const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).m
 
 const creatorById = (id) => state.creators.find((c) => c.id === id);
 const accountById = (id) => state.accounts.find((a) => a.id === id);
-const platformMeta = (id) => state.platforms.find((p) => p.id === id) || { name: id, color: '#888' };
+const platformMeta = (id) => state.allPlatforms.find((p) => p.id === id)
+  || state.platforms.find((p) => p.id === id)
+  || { name: id, color: '#6b7280', enabled: false };
 
 function avatar(creator, big) {
   const color = creator?.color || '#3a3f45';
@@ -74,11 +77,11 @@ function avatar(creator, big) {
 /* ------------------------------------------------------------------- load */
 
 async function refresh() {
-  const [creators, accounts, posts, media, platforms, health] = await Promise.all([
+  const [creators, accounts, posts, media, platforms, allPlatforms, health] = await Promise.all([
     api('/api/creators'), api('/api/accounts'), api('/api/posts'),
-    api('/api/media'), api('/api/platforms'), api('/api/health'),
+    api('/api/media'), api('/api/platforms'), api('/api/platforms/all'), api('/api/health'),
   ]);
-  Object.assign(state, { creators, accounts, posts, media, platforms, health });
+  Object.assign(state, { creators, accounts, posts, media, platforms, allPlatforms, health });
 
   const today = new Date();
   const todayCount = posts.filter((p) => p.scheduledAt && sameDay(new Date(p.scheduledAt), today)).length;
@@ -834,11 +837,14 @@ function renderConnect() {
 
     <div class="card" style="margin-top:20px">
       <div class="eyebrow">One thing worth knowing</div>
+      <p style="margin:0 0 12px;color:var(--muted);line-height:1.6">
+        No API can read the accounts you have switched between inside the TikTok or X app on your phone —
+        that list never leaves the device. What replaces it: each creator taps Connect once, on their own phone,
+        and it holds until revoked. Instagram is the exception — one Meta login pulls in every Instagram
+        account attached to a Page you manage, all at once.
+      </p>
       <p style="margin:0;color:var(--muted);line-height:1.6">
-        No API can read the accounts you have switched between inside the TikTok or Instagram app on your phone —
-        that account list never leaves the device. What replaces it: each creator taps Connect once, on their own phone,
-        and the connection then holds until it is revoked. Meta and YouTube are the exception —
-        one agency login pulls in every Page, Instagram account and managed channel at once.
+        X is also the only one of the three with a paid API tier. Price that in before you quote a client.
       </p>
     </div>`;
 

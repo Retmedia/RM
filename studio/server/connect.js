@@ -7,12 +7,22 @@ const platforms = require('./platforms');
 const pending = new Map();
 const STATE_TTL_MS = 10 * 60 * 1000;
 
+// PKCE, for the platforms that require it (X). The verifier stays here on the
+// server and is handed back at the token call; only its hash ever reaches the
+// browser or the platform.
+function makePkce() {
+  const verifier = crypto.randomBytes(32).toString('base64url');
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+  return { verifier, challenge };
+}
+
 function beginConnect({ platform, creatorId }) {
   const adapter = platforms.get(platform);
   const state = crypto.randomBytes(16).toString('hex');
-  pending.set(state, { platform, creatorId, createdAt: Date.now() });
+  const pkce = adapter.meta.usesPkce ? makePkce() : null;
+  pending.set(state, { platform, creatorId, createdAt: Date.now(), codeVerifier: pkce?.verifier });
   sweep();
-  return { state, url: adapter.authUrl(state) };
+  return { state, url: adapter.authUrl(state, { codeChallenge: pkce?.challenge }) };
 }
 
 function sweep() {
@@ -31,7 +41,7 @@ async function completeConnect({ platform, code, state }) {
   pending.delete(state);
 
   const adapter = platforms.get(platform);
-  const tokens = await adapter.exchangeCode(code);
+  const tokens = await adapter.exchangeCode(code, { codeVerifier: entry.codeVerifier });
   const found = await adapter.discover(tokens);
   if (!found.length) {
     throw new Error(
