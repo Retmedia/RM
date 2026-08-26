@@ -32,7 +32,7 @@ half that isn't is worth knowing before any of this gets built on.
 |---|---|---|
 | **Facebook** | Every Page you have a publishing role on | Works exactly as expected. One agency login, all Pages. |
 | **Instagram** | Every IG Professional account attached to those Pages | Same login as Facebook. Accounts must be Business/Creator and Page-linked. |
-| **YouTube** | The channel you pick at sign-in | Google's picker lists every channel you own **or were granted Manager access to**, Brand Accounts included. Run the connect once per channel, pick a different one each time. No extra passwords. |
+| **YouTube** | The channel you pick at sign-in | Only channels this login reaches **through the API** appear. Manager/Editor granted in Studio -> Settings -> Permissions have no API access at all — **Owner** is the minimum. Legacy Brand Account managers are the one exception, and it disappears the moment that channel migrates. |
 | **TikTok** | Exactly one account | No API can read the account list inside the phone app — it never leaves the device. Each creator taps Connect once on their own phone, and it holds until revoked. |
 
 So the phone-login shortcut works for Meta and YouTube, and for TikTok it becomes a

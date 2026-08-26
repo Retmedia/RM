@@ -13,11 +13,12 @@ const meta = {
   // This is the one where the "channels I was given access to" intuition holds.
   multiAccount: 'picker',
   multiAccountNote:
-    'Google shows a channel picker during sign-in listing every channel you own or have been granted Manager access to, including Brand Accounts. Run the connect flow once per channel and pick a different one each time — no separate password is ever needed.',
+    'Google shows a channel picker at sign-in, but it only lists channels this login can reach through the API. That is a narrower set than the channels you can manage in Studio — see the requirements below, because this is the sharpest edge of any platform here.',
   requirements: [
     'A Google Cloud project with the YouTube Data API v3 enabled.',
     'OAuth consent screen verified, because youtube.upload is a sensitive scope.',
-    'Manager (not just Communications Manager) permission on any channel you did not create.',
+    'Owner or Primary owner on any channel you did not create. Manager and Editor granted through YouTube Studio -> Settings -> Permissions can do everything inside Studio and nothing at all through the API, so those channels never appear in the picker.',
+    'The one exception: a channel still on legacy Brand Account access, where a Brand Account manager does get API access. Once that channel migrates to Studio channel permissions the exception is gone and it cannot be undone.',
   ],
   scopes: [
     'https://www.googleapis.com/auth/youtube.upload',
@@ -31,6 +32,7 @@ const meta = {
     formats: ['video'],
   },
   notes: [
+    'Ask a client to check Studio -> Settings -> Permissions before promising a connection date. If it lists people with roles, the channel has already migrated and Owner is the only role that works.',
     'The real daily ceiling is quota, not post count: a new project gets 10,000 units a day and each upload costs 1,600, so about six uploads until you request an increase.',
     'A brand-new API project uploads as private until the project passes its own verification — the video is there, it just is not public yet.',
   ],
