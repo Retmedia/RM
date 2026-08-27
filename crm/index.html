@@ -67,6 +67,11 @@
   .kpi.money .k::before{background:var(--sand)} .kpi.win .k::before{background:var(--green)}
   .kpi.warn .k::before{background:var(--coral)} .kpi.pipe .k::before{background:var(--aqua)} .kpi.clients .k::before{background:var(--sky)}
   .kpi .edge{display:none}
+  .kpi.clk{cursor:pointer}
+  .kpi .kgo{position:absolute;top:14px;right:15px;color:var(--faint);font-size:18px;font-weight:700;opacity:0;transition:opacity .15s,transform .15s;line-height:1}
+  .kpi.clk:hover .kgo{opacity:1;transform:translateX(3px);color:var(--ink)}
+  @keyframes flashRing{0%{box-shadow:0 0 0 0 rgba(245,197,131,0)}30%{box-shadow:0 0 0 3px rgba(245,197,131,.55)}100%{box-shadow:0 0 0 0 rgba(245,197,131,0)}}
+  .flash{animation:flashRing 1.3s ease}
 
   .head{display:flex;align-items:baseline;gap:12px;margin:34px 4px 14px;flex-wrap:wrap}
   .head h2{font-size:13px;letter-spacing:.6px;text-transform:uppercase;margin:0;font-weight:750;color:var(--ink)}
@@ -210,11 +215,15 @@
   .delta.up{color:var(--green)} .delta.down{color:var(--coral)}
   .growthhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px}
   .gtoggles{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;flex:none}
-  .chartwrap{position:relative;max-width:560px}
-  .gtip{position:absolute;top:-6px;transform:translateX(-50%);background:#0b2030;border:1px solid var(--line2);border-radius:8px;
-    padding:4px 9px;font-size:11px;white-space:nowrap;opacity:0;transition:opacity .12s;pointer-events:none;z-index:3;color:var(--ink);box-shadow:var(--shadow)}
+  .chartwrap{position:relative;width:100%;margin-top:4px;cursor:crosshair}
+  .gchart{width:100%;height:210px;display:block}
+  .gyl{position:absolute;left:0;font-size:9px;color:var(--faint);transform:translateY(-50%);pointer-events:none;background:linear-gradient(90deg,var(--deck) 60%,transparent);padding-right:5px;z-index:2}
+  .gxl{position:absolute;bottom:0;font-size:9.5px;color:var(--faint);transform:translateX(-50%);pointer-events:none}
+  .gvline{position:absolute;top:6%;bottom:18%;width:1px;background:linear-gradient(rgba(122,240,227,.7),rgba(122,240,227,.15));opacity:0;transition:opacity .1s;pointer-events:none;z-index:2}
+  .gdot2{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--aqua2);border:2.5px solid var(--deck);transform:translate(-50%,-50%);opacity:0;transition:opacity .1s;pointer-events:none;z-index:3;box-shadow:0 0 14px rgba(122,240,227,.9)}
+  .gtip{position:absolute;top:-4px;transform:translateX(-50%);background:var(--deck2);border:1px solid var(--line2);border-radius:10px;
+    padding:5px 11px;font-size:11.5px;white-space:nowrap;opacity:0;transition:opacity .12s;pointer-events:none;z-index:4;color:var(--ink);box-shadow:var(--shadow);font-weight:700}
   .gtip b{color:var(--aqua2)}
-  #gsvg_over,#gsvg_money{cursor:crosshair}
 
   /* layout polish */
   .client,.mile,.goal{transition:transform .18s ease,border-color .18s,box-shadow .18s}
@@ -265,6 +274,7 @@
     .sets,.goals{grid-template-columns:1fr}
     .twocol{grid-template-columns:1fr}
     .clock{display:none}
+    .gchart{height:170px}
   }
 </style>
 </head>
@@ -287,11 +297,11 @@
   <section class="view on" id="v-overview">
     <div id="fuAlert"></div>
     <div class="kpis">
-      <div class="kpi money"><div class="edge"></div><div class="k">Monthly Rev (est)</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
-      <div class="kpi win"><div class="edge"></div><div class="k">Invoiced 2026</div><div class="v num" id="ytd">$0</div><div class="s" id="ytdSub"></div></div>
-      <div class="kpi warn"><div class="edge"></div><div class="k">Outstanding</div><div class="v num" id="ar">$0</div><div class="s" id="arSub"></div></div>
-      <div class="kpi pipe"><div class="edge"></div><div class="k">Open Pipeline</div><div class="v num" id="pipe">$0</div><div class="s" id="pipeSub"></div></div>
-      <div class="kpi clients"><div class="edge"></div><div class="k">Active Clients</div><div class="v num" id="cli">0</div><div class="s">on the roster</div></div>
+      <div class="kpi money clk" onclick="setTab('money')"><span class="kgo">›</span><div class="k">Monthly Rev (est)</div><div class="v num" id="mrr">$0</div><div class="s" id="mrrSub"></div></div>
+      <div class="kpi win clk" onclick="setTab('money')"><span class="kgo">›</span><div class="k">Invoiced 2026</div><div class="v num" id="ytd">$0</div><div class="s" id="ytdSub"></div></div>
+      <div class="kpi warn clk" onclick="goOutstanding()"><span class="kgo">›</span><div class="k">Outstanding</div><div class="v num" id="ar">$0</div><div class="s" id="arSub"></div></div>
+      <div class="kpi pipe clk" onclick="setTab('pipeline')"><span class="kgo">›</span><div class="k">Open Pipeline</div><div class="v num" id="pipe">$0</div><div class="s" id="pipeSub"></div></div>
+      <div class="kpi clients clk" onclick="setTab('clients')"><span class="kgo">›</span><div class="k">Active Clients</div><div class="v num" id="cli">0</div><div class="s">on the roster</div></div>
     </div>
 
     <div class="head"><h2>Income &amp; Growth</h2><span class="tag">how the money is moving</span></div>
@@ -366,7 +376,7 @@
           <div class="head" style="margin:0 0 8px"><h2>Recurring</h2></div>
           <div id="recur"></div>
         </div>
-        <div class="panel" style="margin-top:14px">
+        <div class="panel" id="outstandingPanel" style="margin-top:14px">
           <div class="head" style="margin:0 0 8px"><h2>Chase These</h2></div>
           <div id="outstanding"></div>
         </div>
@@ -374,10 +384,7 @@
     </div>
   </section>
 
-  <div class="foot">
-    RET MEDIA LLC · seeded from Notion CRM, QuickBooks, Calendar and Gmail on 2026-08-13.<br>
-    Every move saves in this browser. Say "refresh my CRM data" to Claude to re-pull live numbers.
-  </div>
+  <div style="height:24px"></div>
 </div>
 
 <div id="toasts"></div>
@@ -559,6 +566,8 @@ function setTab(t){S.tab=t;save();
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.v===t));
   document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+t));
   window.scrollTo({top:0,behavior:"smooth"});}
+function goOutstanding(){setTab("money");setTimeout(()=>{const el=document.getElementById("outstandingPanel");
+  if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash");}},280);}
 
 /* ---------- clock ---------- */
 function tickClock(){
@@ -797,7 +806,7 @@ function render(){
   // pipeline snapshot
   document.getElementById("pipeSnap").innerHTML=STAGES.map(st=>{
     const items=S.deals.filter(d=>d.stage===st.id);const val=items.reduce((a,d)=>a+(+d.value||0),0);
-    return `<div class="kpi"><div class="k">${st.label}</div><div class="v num" style="font-size:20px">${items.length}</div><div class="s">${val?fmt(val):"$0"}</div></div>`;
+    return `<div class="kpi clk" onclick="setTab('pipeline')"><span class="kgo">›</span><div class="k">${st.label}</div><div class="v num" style="font-size:20px">${items.length}</div><div class="s">${val?fmt(val):"$0"}</div></div>`;
   }).join("");
 
   // roster
@@ -841,63 +850,70 @@ function growthSeries(){
   return {period,months,total,delta,deltaLab,headLab};
 }
 function buildGrowthGeom(){
-  const s=growthSeries(),W=320,H=94,padL=36,padT=8,padR=8,padB=16,iw=W-padL-padR,ih=H-padT-padB;
+  const s=growthSeries();
   const vals=s.months.map(m=>m[1]),labs=s.months.map(m=>m[0]),n=vals.length,max=Math.max(1,...vals);
-  const X=i=>n<=1?padL+iw/2:padL+iw*i/(n-1),Y=v=>padT+ih*(1-v/max);
-  const pts=vals.map((v,i)=>({x:X(i),y:Y(v),val:v,label:labs[i]}));
-  return {s,W,H,padL,padT,padR,ih,n,max,pts};
+  const padL=6,padR=3,padT=12,padB=15,iw=100-padL-padR,ih=100-padT-padB;
+  const xp=i=>n<=1?padL+iw/2:padL+iw*(i/(n-1)),yp=v=>padT+ih*(1-v/max);
+  const pts=vals.map((v,i)=>({xp:xp(i),yp:yp(v),val:v,label:labs[i]}));
+  return {s,pts,n,max,padL,padR,padT,padB,ih,defNum:fmt(s.total),headLab:s.headLab};
 }
 function growthChartSVG(loc){
-  const g=window.GCHART;if(!g)return"";
-  const {W,H,padL,padT,padR,ih,pts,max}=g;
+  const g=window.GCHART;if(!g)return"";const {pts,max,padL,padR,padT,padB,ih}=g;
   if(!pts.length)return `<div class="faint" style="font-size:12px;padding:8px 0">No income in this period.</div>`;
-  const line=pts.map((p,i)=>(i?"L":"M")+p.x.toFixed(1)+" "+p.y.toFixed(1)).join(" ");
-  const area=line+" L "+pts[pts.length-1].x.toFixed(1)+" "+(padT+ih)+" L "+pts[0].x.toFixed(1)+" "+(padT+ih)+" Z";
-  const grid=[0,max/2,max].map(v=>{const yy=padT+ih*(1-v/max);
-    return `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--line)" stroke-width="0.8"/>`+
-      `<text x="${padL-4}" y="${(yy+3).toFixed(1)}" text-anchor="end" font-size="8" fill="var(--faint)">$${v>=1000?(v/1000).toFixed(0)+"k":Math.round(v)}</text>`;}).join("");
-  const markers=pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.3" fill="var(--aqua)"/>`).join("");
-  const xl=pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="8" fill="var(--faint)">${esc(p.label)}</text>`).join("");
-  return `<div class="chartwrap" id="gwrap_${loc}">
-    <div class="gtip" id="gtip_${loc}"></div>
-    <svg id="gsvg_${loc}" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block"
+  const line=pts.map((p,i)=>(i?"L":"M")+p.xp.toFixed(2)+" "+p.yp.toFixed(2)).join(" ");
+  const baseY=(padT+ih).toFixed(2);
+  const area=line+" L "+pts[pts.length-1].xp.toFixed(2)+" "+baseY+" L "+pts[0].xp.toFixed(2)+" "+baseY+" Z";
+  const gv=[0,max/2,max];
+  const grid=gv.map(v=>{const y=(padT+ih*(1-v/max)).toFixed(2);
+    return `<line x1="${padL}" y1="${y}" x2="${100-padR}" y2="${y}" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke" opacity=".55"/>`;}).join("");
+  const yl=gv.map(v=>`<div class="gyl" style="top:${(padT+ih*(1-v/max)).toFixed(2)}%">$${v>=1000?(v/1000).toFixed(0)+"k":Math.round(v)}</div>`).join("");
+  const xl=pts.map(p=>`<div class="gxl" style="left:${p.xp.toFixed(2)}%">${esc(p.label)}</div>`).join("");
+  return `<div class="chartwrap" id="gwrap_${loc}"
       onmousemove="gMove(event,'${loc}')" onmouseleave="gLeave('${loc}')" ontouchstart="gMove(event,'${loc}')" ontouchmove="gMove(event,'${loc}')">
+    <svg class="gchart" viewBox="0 0 100 100" preserveAspectRatio="none">
       <defs><linearGradient id="garea" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="var(--aqua)" stop-opacity="0.3"/><stop offset="1" stop-color="var(--aqua)" stop-opacity="0"/></linearGradient></defs>
+        <stop offset="0" stop-color="var(--aqua)" stop-opacity="0.26"/><stop offset="1" stop-color="var(--aqua)" stop-opacity="0"/></linearGradient></defs>
       ${grid}<path d="${area}" fill="url(#garea)"/>
-      <path d="${line}" fill="none" stroke="var(--aqua)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-      ${markers}
-      <line id="gguide_${loc}" y1="${padT}" y2="${padT+ih}" stroke="var(--aqua2)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/>
-      <circle id="gdot_${loc}" r="3.6" fill="var(--aqua2)" stroke="#04231f" stroke-width="1.5" style="opacity:0"/>
-      ${xl}</svg></div>`;
+      <path d="${line}" fill="none" stroke="var(--aqua)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    </svg>
+    ${yl}${xl}
+    <div class="gvline" id="gguide_${loc}"></div>
+    <div class="gdot2" id="gdot_${loc}"></div>
+    <div class="gtip" id="gtip_${loc}"></div>
+  </div>`;
 }
 function growthHTML(loc){
   const g=window.GCHART;if(!g)return"";const s=g.s,up=(s.delta==null)||s.delta>=0;
-  const deltaHTML=s.delta==null?`<div class="faint" style="font-size:11px;margin-top:2px">${esc(s.deltaLab||"")}</div>`
-    :`<div class="delta ${up?"up":"down"}">${up?"▲":"▼"} ${Math.abs(s.delta).toFixed(1)}% <span class="faint" style="font-weight:600">${esc(s.deltaLab)}</span></div>`;
+  const deltaHTML=s.delta==null?`<div class="faint" id="gdelta_${loc}" style="font-size:11px;margin-top:2px">${esc(s.deltaLab||"")}</div>`
+    :`<div class="delta ${up?"up":"down"}" id="gdelta_${loc}">${up?"▲":"▼"} ${Math.abs(s.delta).toFixed(1)}% <span class="faint" style="font-weight:600">${esc(s.deltaLab)}</span></div>`;
   const per=S.growthPeriod||"ytd",btn=(p,l)=>`<button class="gtoggle ${per===p?"on":""}" onclick="setGrowthPeriod('${p}')">${l}</button>`;
   return `<div class="growthhead">
-      <div><div class="faint" style="font-size:10px;text-transform:uppercase;letter-spacing:1px">${esc(s.headLab)}</div>
-        <div class="num" style="font-size:22px;font-weight:800;color:var(--sand)">${fmt(s.total)}</div>${deltaHTML}</div>
+      <div><div class="faint" id="gcap_${loc}" style="font-size:10px;text-transform:uppercase;letter-spacing:1px">${esc(s.headLab)}</div>
+        <div class="num" id="gnum_${loc}" style="font-size:26px;font-weight:800;color:var(--sand)">${fmt(s.total)}</div>${deltaHTML}</div>
       <div class="gtoggles">${btn("3m","3M")}${btn("6m","6M")}${btn("ytd","YTD")}</div>
     </div>${growthChartSVG(loc)}`;
 }
 function gMove(e,loc){
   const g=window.GCHART;if(!g||!g.pts.length)return;
-  const svg=document.getElementById("gsvg_"+loc);if(!svg)return;
-  const r=svg.getBoundingClientRect();
+  const wrap=document.getElementById("gwrap_"+loc);if(!wrap)return;
+  const r=wrap.getBoundingClientRect();
   const cx=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
-  const vbX=(cx-r.left)/r.width*g.W;
-  let bi=0,bd=Infinity;for(let i=0;i<g.pts.length;i++){const d=Math.abs(g.pts[i].x-vbX);if(d<bd){bd=d;bi=i;}}
+  const pctX=(cx-r.left)/r.width*100;
+  let bi=0,bd=Infinity;for(let i=0;i<g.pts.length;i++){const d=Math.abs(g.pts[i].xp-pctX);if(d<bd){bd=d;bi=i;}}
   const p=g.pts[bi];
-  const guide=document.getElementById("gguide_"+loc),dot=document.getElementById("gdot_"+loc),tip=document.getElementById("gtip_"+loc),wrap=document.getElementById("gwrap_"+loc);
-  if(guide){guide.setAttribute("x1",p.x);guide.setAttribute("x2",p.x);guide.style.opacity=1;}
-  if(dot){dot.setAttribute("cx",p.x);dot.setAttribute("cy",p.y);dot.style.opacity=1;}
-  if(tip&&wrap){const wr=wrap.getBoundingClientRect();
-    tip.innerHTML=`<b>${esc(p.label)}</b> · ${fmt(p.val)}`;tip.style.opacity=1;
-    let px=(p.x/g.W)*r.width+(r.left-wr.left);px=Math.max(32,Math.min(wr.width-32,px));tip.style.left=px+"px";}
+  const dot=document.getElementById("gdot_"+loc),guide=document.getElementById("gguide_"+loc),tip=document.getElementById("gtip_"+loc);
+  if(dot){dot.style.left=p.xp+"%";dot.style.top=p.yp+"%";dot.style.opacity=1;}
+  if(guide){guide.style.left=p.xp+"%";guide.style.opacity=1;}
+  if(tip){tip.innerHTML=`<b>${esc(p.label)}</b> · ${fmt(p.val)}`;tip.style.opacity=1;
+    let px=Math.max(36,Math.min(r.width-36,p.xp/100*r.width));tip.style.left=px+"px";}
+  const num=document.getElementById("gnum_"+loc),cap=document.getElementById("gcap_"+loc);
+  if(num)num.textContent=fmt(p.val);if(cap)cap.textContent=esc(p.label)+" income";
 }
-function gLeave(loc){["gguide_","gdot_","gtip_"].forEach(pre=>{const el=document.getElementById(pre+loc);if(el)el.style.opacity=0;});}
+function gLeave(loc){
+  ["gdot_","gguide_","gtip_"].forEach(pre=>{const el=document.getElementById(pre+loc);if(el)el.style.opacity=0;});
+  const g=window.GCHART;const num=document.getElementById("gnum_"+loc),cap=document.getElementById("gcap_"+loc);
+  if(g&&num)num.textContent=g.defNum;if(g&&cap)cap.textContent=g.headLab;
+}
 
 function renderMoney(){
   const inv=invoicesData(), months=monthlyData();
