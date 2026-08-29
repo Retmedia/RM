@@ -24,6 +24,11 @@ const meta = {
     'instagram_manage_insights',
     'business_management',
   ],
+  emptyResultHelp:
+    'That Meta login has no Instagram Professional account behind a Page it manages. '
+    + 'Either the account is still a personal one, or it is not linked to a Page yet. '
+    + 'Both are changed by the creator in the Instagram app in about two minutes.',
+  creatorCanSelfConnect: true,
   limits: {
     captionChars: 2200,
     hashtags: 30,

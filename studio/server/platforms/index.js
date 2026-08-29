@@ -9,7 +9,10 @@ const youtube = require('./youtube');
 // just not part of the current product.
 const all = { instagram, tiktok, x, facebook, youtube };
 
-const DEFAULT_ENABLED = ['tiktok', 'instagram', 'x'];
+// YouTube is back on because invites solve the reason it was painful: the
+// creator authorises as the Owner they already are, so nobody's role changes.
+// Facebook stays off until it is asked for.
+const DEFAULT_ENABLED = ['tiktok', 'instagram', 'x', 'youtube'];
 
 const enabled = (process.env.STUDIO_PLATFORMS || DEFAULT_ENABLED.join(','))
   .split(',')

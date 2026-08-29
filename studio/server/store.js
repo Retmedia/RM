@@ -11,7 +11,7 @@ const DATA_ROOT = process.env.STUDIO_DATA
 const DB_FILE = path.join(DATA_ROOT, 'studio.json');
 const MEDIA_DIR = path.join(DATA_ROOT, 'media');
 
-const EMPTY = { creators: [], accounts: [], posts: [], media: [], version: 1 };
+const EMPTY = { creators: [], accounts: [], posts: [], media: [], invites: [], version: 1 };
 
 let db = null;
 let writeChain = Promise.resolve();
@@ -133,6 +133,7 @@ async function upsertAccount({
   refreshToken,
   expiresAt,
   meta,
+  connectedVia,
 }) {
   const d = await load();
   let account = d.accounts.find(
@@ -151,6 +152,10 @@ async function upsertAccount({
     meta: meta || {},
     status: 'connected',
     lastError: null,
+    // Whether the agency connected this or the creator did it themselves from
+    // an invite. The second kind is the one that survives a client who will not
+    // hand over an ownership role.
+    connectedVia: connectedVia || 'agency',
     connectedAt: new Date().toISOString(),
     tokens: {
       access: encryptSecret(accessToken),
@@ -352,6 +357,69 @@ async function deletePost(id) {
   return d.posts.length < before;
 }
 
+/* ----------------------------------------------------------------- invites */
+
+// An invite is a link the creator opens themselves. They authorise with their
+// own login, which is the whole point: for YouTube the API only accepts a token
+// held by an Owner, and the creator already is one. Nobody's role has to change
+// and no password is ever shared.
+async function createInvite({ creatorId, platforms: wanted, note, expiresInDays }) {
+  const d = await load();
+  const invite = {
+    id: newId('inv'),
+    creatorId,
+    token: crypto.randomBytes(24).toString('base64url'),
+    platforms: wanted,
+    note: note || '',
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + (expiresInDays || 14) * 86400000).toISOString(),
+    connected: [],
+    revokedAt: null,
+  };
+  d.invites.push(invite);
+  await persist();
+  return invite;
+}
+
+async function getInviteByToken(token) {
+  if (!token) return null;
+  const d = await load();
+  return d.invites.find((i) => i.token === token) || null;
+}
+
+function inviteProblem(invite) {
+  if (!invite) return 'This link is not valid any more.';
+  if (invite.revokedAt) return 'This link has been turned off. Ask for a new one.';
+  if (invite.expiresAt && invite.expiresAt < new Date().toISOString()) {
+    return 'This link has expired. Ask for a new one.';
+  }
+  return null;
+}
+
+async function listInvites() {
+  const d = await load();
+  return d.invites.filter((i) => !i.revokedAt);
+}
+
+async function recordInviteConnection(inviteId, { platform, accountId, displayName }) {
+  const d = await load();
+  const invite = d.invites.find((i) => i.id === inviteId);
+  if (!invite) return null;
+  invite.connected = invite.connected.filter((c) => c.platform !== platform);
+  invite.connected.push({ platform, accountId, displayName, at: new Date().toISOString() });
+  await persist();
+  return invite;
+}
+
+async function revokeInvite(id) {
+  const d = await load();
+  const invite = d.invites.find((i) => i.id === id);
+  if (!invite) return false;
+  invite.revokedAt = new Date().toISOString();
+  await persist();
+  return true;
+}
+
 /* ------------------------------------------------------------------- media */
 
 async function addMedia({ filename, storedName, mimeType, size, kind }) {
@@ -407,6 +475,12 @@ module.exports = {
   getPostByToken,
   recordReview,
   resetApproval,
+  createInvite,
+  getInviteByToken,
+  inviteProblem,
+  listInvites,
+  recordInviteConnection,
+  revokeInvite,
   addMedia,
   listMedia,
   getMediaByIds,

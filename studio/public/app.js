@@ -801,8 +801,23 @@ function renderConnect() {
   if (params.get('connected')) toast(`Connected ${params.get('connected')} account(s).`);
 
   view.innerHTML = `
-    <h1>Accounts</h1>
-    <p class="sub">How many accounts one login brings in differs per platform. That difference is the whole reason this exists.</p>
+    <div class="row between">
+      <div>
+        <h1>Accounts</h1>
+        <p class="sub" style="margin:0">Send the creator a link and they connect themselves. Nobody's role has to change.</p>
+      </div>
+      <button class="btn" id="new-invite">Send an invite</button>
+    </div>
+
+    <div class="card" style="margin:26px 0 20px;border-color:var(--accent)">
+      <div class="eyebrow">The short version</div>
+      <p style="margin:0;color:var(--muted);line-height:1.6">
+        YouTube only accepts a token held by a channel <b style="color:var(--text)">Owner</b> — being a Manager
+        gets you nothing through the API. That does not mean a client has to promote you.
+        They already are the owner. Send them an invite, they tap Allow with their own login,
+        and this can post. Their role never changes and they can revoke it themselves.
+      </p>
+    </div>
 
     <div class="grid two">
       ${state.platforms.map((p) => {
@@ -816,13 +831,14 @@ function renderConnect() {
           </div>
           <p class="note">${esc(p.multiAccountNote)}</p>
           <ul class="tight">${p.requirements.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
-          <div class="row" style="margin-top:16px">
-            <button class="btn small" data-connect="${p.id}">Connect ${esc(p.name)}</button>
-            <button class="btn ghost small" data-demo="${p.id}">Add test account</button>
+          <div class="row wrap" style="margin-top:16px;gap:8px">
+            <button class="btn ghost small" data-connect="${p.id}">Connect with my login</button>
+            <button class="btn quiet small" data-demo="${p.id}">Add test account</button>
           </div>
           ${mine.length ? `<div style="margin-top:16px;border-top:1px solid var(--line-soft);padding-top:12px">
             ${mine.map((a) => `<div class="row" style="padding:6px 0;font-size:13px">
               <span>${esc(a.displayName)}</span>
+              ${a.connectedVia === 'invite' ? '<span class="tag" style="color:var(--accent);border-color:var(--accent)">creator</span>' : ''}
               <span class="spacer"></span>
               <select data-assign="${a.id}" style="width:150px;padding:5px 8px;font-size:12px">
                 <option value="">Unassigned</option>
@@ -839,14 +855,15 @@ function renderConnect() {
       <div class="eyebrow">One thing worth knowing</div>
       <p style="margin:0 0 12px;color:var(--muted);line-height:1.6">
         No API can read the accounts you have switched between inside the TikTok or X app on your phone —
-        that list never leaves the device. What replaces it: each creator taps Connect once, on their own phone,
-        and it holds until revoked. Instagram is the exception — one Meta login pulls in every Instagram
-        account attached to a Page you manage, all at once.
+        that list never leaves the device. Instagram is the one exception: a single Meta login pulls in every
+        Instagram account attached to a Page you manage.
       </p>
       <p style="margin:0;color:var(--muted);line-height:1.6">
-        X is also the only one of the three with a paid API tier. Price that in before you quote a client.
+        X is the only platform here with a paid API tier. Price that in before you quote a client.
       </p>
     </div>`;
+
+  $('#new-invite').onclick = () => openInviteBuilder();
 
   view.querySelectorAll('[data-connect]').forEach((el) => {
     el.onclick = async () => {
@@ -856,6 +873,8 @@ function renderConnect() {
       } catch (err) { toast(err.message, true); }
     };
   });
+
+  renderInviteList();
 
   view.querySelectorAll('[data-demo]').forEach((el) => {
     el.onclick = () => modal(`
@@ -979,6 +998,111 @@ async function openPost(id) {
       await refresh();
       render();
     };
+  });
+}
+
+async function renderInviteList() {
+  let invites = [];
+  try { invites = await api('/api/invites'); } catch { return; }
+  const host = document.createElement('div');
+  host.style.marginTop = '20px';
+  host.innerHTML = `
+    <h2>Open invites</h2>
+    <div class="card">
+      ${invites.length ? invites.map((i) => {
+        const creator = creatorById(i.creatorId);
+        const done = i.connected.length;
+        return `<div class="list-row">
+          ${avatar(creator)}
+          <div style="flex:1;min-width:0">
+            <div class="title">${esc(creator?.name || 'Unknown creator')}</div>
+            <div class="meta">${done ? `${done} of ${i.platforms.length} connected` : `waiting on ${i.platforms.length} account${i.platforms.length === 1 ? '' : 's'}`}
+              · expires ${new Date(i.expiresAt).toLocaleDateString()}</div>
+          </div>
+          <button class="btn ghost small" data-copy-invite="${esc(i.link)}">Copy link</button>
+          <button class="btn quiet small" data-kill-invite="${i.id}">Revoke</button>
+        </div>`;
+      }).join('') : '<div class="empty">No invites out right now.</div>'}
+    </div>`;
+  view.appendChild(host);
+
+  host.querySelectorAll('[data-copy-invite]').forEach((el) => {
+    el.onclick = () => copyText(el.dataset.copyInvite);
+  });
+  host.querySelectorAll('[data-kill-invite]').forEach((el) => {
+    el.onclick = async () => {
+      if (!confirm('Revoke this link? Anyone holding it can no longer connect.')) return;
+      await api(`/api/invites/${el.dataset.killInvite}`, { method: 'DELETE' });
+      render();
+    };
+  });
+}
+
+function openInviteBuilder() {
+  if (!state.creators.length) return toast('Add a creator first.', true);
+  const chosen = new Set(state.platforms.map((p) => p.id));
+
+  modal(`
+    <h2>Send an invite</h2>
+    <p class="sub" style="margin-bottom:20px">
+      The creator opens this and authorises with their own login. For YouTube that is what makes it
+      work at all — they are already the Owner, so nothing about their role has to change.
+    </p>
+
+    <label class="field"><span>Creator</span>
+      <select id="iv-creator">${state.creators.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
+    </label>
+
+    <div class="eyebrow">Ask them to connect</div>
+    <div class="row wrap" id="iv-platforms" style="margin-bottom:20px">
+      ${state.platforms.map((p) => `<button class="pill on" data-pick="${p.id}">
+        <span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}
+    </div>
+
+    <label class="field"><span>A line for them (optional)</span>
+      <input type="text" id="iv-note" placeholder="Quick one so we can start posting the clips" />
+    </label>
+
+    <button class="btn" id="iv-make">Create link</button>`, (root) => {
+    root.querySelectorAll('[data-pick]').forEach((el) => {
+      el.onclick = () => {
+        const id = el.dataset.pick;
+        chosen.has(id) ? chosen.delete(id) : chosen.add(id);
+        el.classList.toggle('on', chosen.has(id));
+      };
+    });
+
+    $('#iv-make', root).onclick = async () => {
+      if (!chosen.size) return toast('Pick at least one platform.', true);
+      try {
+        const { link } = await api('/api/invites', {
+          method: 'POST',
+          body: JSON.stringify({
+            creatorId: $('#iv-creator', root).value,
+            platforms: [...chosen],
+            note: $('#iv-note', root).value.trim(),
+          }),
+        });
+        closeModal();
+        await refresh();
+        render();
+        showInviteLink(link);
+      } catch (err) { toast(err.message, true); }
+    };
+  });
+}
+
+function showInviteLink(link) {
+  modal(`
+    <h2>Send them this</h2>
+    <p class="sub">One tap per account. They keep ownership of everything, and can revoke it themselves at any time.</p>
+    <div class="card" style="background:var(--surface-2);word-break:break-all;font-size:13px">${esc(link)}</div>
+    <div class="row" style="margin-top:18px;gap:8px">
+      <button class="btn" id="il-copy">Copy link</button>
+      <button class="btn ghost" id="il-close">Done</button>
+    </div>`, (root) => {
+    $('#il-copy', root).onclick = () => copyText(link);
+    $('#il-close', root).onclick = closeModal;
   });
 }
 

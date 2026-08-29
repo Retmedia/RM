@@ -22,6 +22,9 @@ const meta = {
   scopes: ['tweet.read', 'tweet.write', 'users.read', 'media.write', 'offline.access'],
   metricsScopes: ['tweet.read'],
   usesPkce: true,
+  emptyResultHelp:
+    'X authorised the login but returned no account. Check the app has read and write permissions, then open the invite link again.',
+  creatorCanSelfConnect: true,
   limits: {
     captionChars: 280,
     postsPer24h: 100,

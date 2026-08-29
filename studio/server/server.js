@@ -90,18 +90,101 @@ app.post('/api/connect/:platform', wrap(async (req, res) => {
   }
 }));
 
+// One callback serves both paths. Where the handshake started decides where the
+// browser lands: the agency's own screen, or the creator's invite page.
 app.get('/auth/:platform/callback', wrap(async (req, res) => {
   const { code, state, error, error_description: description } = req.query;
-  if (error) return res.redirect(`/#connect?error=${encodeURIComponent(description || error)}`);
+  const started = connect.peekState(String(state || ''));
+  const home = started?.inviteToken ? `/invite/${started.inviteToken}` : '/#connect';
+  const sep = home.includes('#') ? '?' : '#';
+
+  if (error) return res.redirect(`${home}${sep}error=${encodeURIComponent(description || error)}`);
   try {
     const accounts = await connect.completeConnect({
       platform: req.params.platform,
       code: String(code),
       state: String(state),
     });
-    res.redirect(`/#connect?connected=${accounts.length}`);
+    res.redirect(`${home}${sep}connected=${encodeURIComponent(accounts.map((a) => a.displayName).join(', '))}`);
   } catch (err) {
-    res.redirect(`/#connect?error=${encodeURIComponent(err.message)}`);
+    res.redirect(`${home}${sep}error=${encodeURIComponent(err.message)}`);
+  }
+}));
+
+/* ----------------------------------------------------------------- invites */
+
+// The answer to a client who will not make you an Owner: they never have to.
+// They open this link, authorise with the account that already owns the
+// channel, and the token that comes back can post. Their role never changes.
+app.post('/api/invites', wrap(async (req, res) => {
+  const { creatorId, platforms: wanted, note, expiresInDays } = req.body || {};
+  if (!creatorId) return res.status(400).json({ error: 'creatorId is required' });
+  const list = (Array.isArray(wanted) && wanted.length ? wanted : platforms.enabled)
+    .filter((id) => platforms.isEnabled(id));
+  if (!list.length) return res.status(400).json({ error: 'pick at least one platform' });
+
+  const invite = await store.createInvite({ creatorId, platforms: list, note, expiresInDays });
+  res.json({ invite, link: inviteLink(invite.token) });
+}));
+
+app.get('/api/invites', wrap(async (_req, res) => {
+  const invites = await store.listInvites();
+  res.json(invites.map((i) => ({ ...i, link: inviteLink(i.token) })));
+}));
+
+app.delete('/api/invites/:id', wrap(async (req, res) => {
+  res.json({ ok: await store.revokeInvite(req.params.id) });
+}));
+
+function inviteLink(token) {
+  return `${process.env.STUDIO_PUBLIC_URL || `http://localhost:${port}`}/invite/${token}`;
+}
+
+app.get('/invite/:token', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'invite.html'));
+});
+
+app.get('/api/invite/:token', wrap(async (req, res) => {
+  const invite = await store.getInviteByToken(req.params.token);
+  const problem = store.inviteProblem(invite);
+  if (problem) return res.status(404).json({ error: problem });
+
+  const creators = await store.listCreators();
+  const creator = creators.find((c) => c.id === invite.creatorId);
+  res.json({
+    creator: creator ? { name: creator.name } : null,
+    note: invite.note,
+    platforms: invite.platforms.map((id) => {
+      const meta = platforms.describe(id);
+      return {
+        id,
+        name: meta.name,
+        color: meta.color,
+        // What the creator is actually agreeing to, in their words not ours.
+        asks: meta.requirements,
+        connected: invite.connected.find((c) => c.platform === id) || null,
+      };
+    }),
+  });
+}));
+
+app.post('/api/invite/:token/connect/:platform', wrap(async (req, res) => {
+  const invite = await store.getInviteByToken(req.params.token);
+  const problem = store.inviteProblem(invite);
+  if (problem) return res.status(404).json({ error: problem });
+  if (!invite.platforms.includes(req.params.platform)) {
+    return res.status(400).json({ error: 'That platform is not part of this link.' });
+  }
+  try {
+    const { url } = connect.beginConnect({
+      platform: req.params.platform,
+      creatorId: invite.creatorId,
+      inviteId: invite.id,
+      inviteToken: invite.token,
+    });
+    res.json({ url });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 }));
 

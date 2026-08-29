@@ -5,7 +5,7 @@ const connect = require('../server/connect');
 
 const ROSTER = [
   { name: 'Blair Conklin', handle: 'blairconklin', platforms: ['tiktok', 'instagram'] },
-  { name: 'Xander Budnick', handle: 'xanderbudnick', platforms: ['tiktok', 'instagram', 'x'] },
+  { name: 'Xander Budnick', handle: 'xanderbudnick', platforms: ['tiktok', 'instagram', 'x', 'youtube'] },
 ];
 
 (async function seed() {

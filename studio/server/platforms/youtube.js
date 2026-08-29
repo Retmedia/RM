@@ -31,6 +31,15 @@ const meta = {
     videoSeconds: 43200,
     formats: ['video'],
   },
+  // The failure everyone hits: a Manager's token authorises fine and then lists
+  // no channels at all, with nothing anywhere saying why.
+  emptyResultHelp:
+    'That Google account signed in fine, but it is not an Owner of any channel — so YouTube returns nothing to the API. '
+    + 'Manager and Editor roles work inside Studio and are invisible here. '
+    + 'The fix is not to change anyone\'s role: send the creator their own invite link and let them authorise with the account that already owns the channel.',
+  // Whoever owns the channel can grant this in thirty seconds without giving
+  // up anything, which is the whole reason invites exist.
+  creatorCanSelfConnect: true,
   notes: [
     'Ask a client to check Studio -> Settings -> Permissions before promising a connection date. If it lists people with roles, the channel has already migrated and Owner is the only role that works.',
     'The real daily ceiling is quota, not post count: a new project gets 10,000 units a day and each upload costs 1,600, so about six uploads until you request an increase.',

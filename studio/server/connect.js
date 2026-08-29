@@ -16,11 +16,24 @@ function makePkce() {
   return { verifier, challenge };
 }
 
-function beginConnect({ platform, creatorId }) {
+// Lets the OAuth callback know where to send the browser back to before it
+// consumes the state.
+function peekState(state) {
+  return pending.get(state) || null;
+}
+
+function beginConnect({ platform, creatorId, inviteId, inviteToken }) {
   const adapter = platforms.get(platform);
   const state = crypto.randomBytes(16).toString('hex');
   const pkce = adapter.meta.usesPkce ? makePkce() : null;
-  pending.set(state, { platform, creatorId, createdAt: Date.now(), codeVerifier: pkce?.verifier });
+  pending.set(state, {
+    platform,
+    creatorId,
+    inviteId: inviteId || null,
+    inviteToken: inviteToken || null,
+    createdAt: Date.now(),
+    codeVerifier: pkce?.verifier,
+  });
   sweep();
   return { state, url: adapter.authUrl(state, { codeChallenge: pkce?.challenge }) };
 }
@@ -44,15 +57,16 @@ async function completeConnect({ platform, code, state }) {
   const tokens = await adapter.exchangeCode(code, { codeVerifier: entry.codeVerifier });
   const found = await adapter.discover(tokens);
   if (!found.length) {
-    throw new Error(
-      `That login has no postable ${adapter.meta.name} account. ${adapter.meta.requirements[0]}`,
-    );
+    // An empty result is the single most confusing failure on every platform,
+    // and it always means something specific. Say which.
+    throw new Error(adapter.meta.emptyResultHelp || `That login has no postable ${adapter.meta.name} account.`);
   }
 
   const saved = [];
   for (const acct of found) {
     saved.push(await store.upsertAccount({
       creatorId: entry.creatorId || null,
+      connectedVia: entry.inviteId ? 'invite' : 'agency',
       platform,
       platformAccountId: acct.platformAccountId,
       displayName: acct.displayName,
@@ -64,6 +78,16 @@ async function completeConnect({ platform, code, state }) {
       expiresAt: tokens.expiresAt || null,
       meta: acct.meta,
     }));
+  }
+
+  if (entry.inviteId) {
+    for (const account of saved) {
+      await store.recordInviteConnection(entry.inviteId, {
+        platform,
+        accountId: account.id,
+        displayName: account.displayName,
+      });
+    }
   }
   return saved;
 }
@@ -87,4 +111,4 @@ async function connectDemoAccount({ platform, creatorId, displayName, username }
   });
 }
 
-module.exports = { beginConnect, completeConnect, connectDemoAccount };
+module.exports = { beginConnect, peekState, completeConnect, connectDemoAccount };

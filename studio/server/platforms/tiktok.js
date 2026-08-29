@@ -20,6 +20,9 @@ const meta = {
   ],
   scopes: ['user.info.basic', 'video.publish', 'video.upload', 'video.list'],
   metricsScopes: ['video.list'],
+  emptyResultHelp:
+    'TikTok authorised the login but returned no account. This is nearly always a half-finished authorisation — open the invite link again and complete every screen.',
+  creatorCanSelfConnect: true,
   limits: {
     captionChars: 2200,
     postsPer24h: 6,

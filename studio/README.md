@@ -21,6 +21,25 @@ It starts in **dry run**: the whole flow — schedule, queue, publish, retry, st
 runs end to end without touching a real account. Set `STUDIO_DRY_RUN=0` once the
 developer apps below are approved.
 
+## The thing this solves that nothing else does
+
+Every scheduler asks *you* to connect *your* accounts. That breaks the moment a
+client won't raise your role — most sharply on YouTube, where the API only accepts
+a token held by an **Owner** and a Manager sees nothing at all.
+
+The API does not require *you* to be the Owner. It requires **the token holder** to
+be. The creator already is one.
+
+So Studio inverts the flow: you generate an **invite link**, the creator opens it and
+authorises with their own login, and the refresh token that comes back can publish
+indefinitely. Nobody is promoted. No password is shared. They revoke it themselves
+from their own account settings whenever they like. The same link handles TikTok and
+X — which need a per-account tap anyway — so one link finishes a whole creator.
+
+When a connection does come back empty, Studio says which specific thing is wrong
+rather than showing an empty list. The YouTube one names the actual cause: this login
+is not an Owner, and the fix is an invite rather than a role change.
+
 ## What connecting an account actually looks like
 
 The most common expectation is that the software can see the accounts already
@@ -32,7 +51,7 @@ half that isn't is worth knowing before any of this gets built on.
 |---|---|---|
 | **Facebook** | Every Page you have a publishing role on | Works exactly as expected. One agency login, all Pages. |
 | **Instagram** | Every IG Professional account attached to those Pages | Same login as Facebook. Accounts must be Business/Creator and Page-linked. |
-| **YouTube** | The channel you pick at sign-in | Only channels this login reaches **through the API** appear. Manager/Editor granted in Studio -> Settings -> Permissions have no API access at all — **Owner** is the minimum. Legacy Brand Account managers are the one exception, and it disappears the moment that channel migrates. |
+| **YouTube** | The channel you pick at sign-in | Only channels this login reaches **through the API** appear. Manager/Editor granted in Studio -> Settings -> Permissions have no API access at all — **Owner** is the minimum. Send the owner an invite instead of asking to be promoted. |
 | **TikTok** | Exactly one account | No API can read the account list inside the phone app — it never leaves the device. Each creator taps Connect once on their own phone, and it holds until revoked. |
 
 So the phone-login shortcut works for Meta and YouTube, and for TikTok it becomes a
@@ -80,7 +99,7 @@ rather than showing invented figures.
 server/
   server.js       HTTP API
   store.js        creators, accounts, posts, media — JSON on disk, atomic writes
-  connect.js      OAuth handshake; one login can return several accounts
+  connect.js      OAuth handshake, agency-side and creator-side, with PKCE
   cadence.js      posting slots, and the maths that fills them
   publisher.js    fans one post out to its targets, with per-target retry
   scheduler.js    30-second tick, picks up anything due
@@ -88,7 +107,8 @@ server/
   platforms/      one adapter per platform, same shape for each
 public/
   index.html      the internal app — no build step, no framework
-  review.html     the one page clients see, standalone
+  invite.html     the creator connects their own accounts here
+  review.html     the client approves a post here
 ```
 
 Every adapter exports `meta`, `authUrl`, `exchangeCode`, `discover`, `validate`,
@@ -107,6 +127,12 @@ Threads means writing one file in `platforms/` and nothing else.
   own rules — so a 130-character first line is flagged as a too-long YouTube title
   at compose time rather than at 6am when the post fires.
 - **Captions are written once, overridden per platform** where a platform needs it.
+
+## One more thing worth knowing
+
+Uploads go straight to the platform with a resumable transfer, so there is no
+file-size ceiling of Studio's own making — a long YouTube cut is not capped the way
+a hosted scheduler caps it. Whatever the platform itself accepts, this accepts.
 
 ## Not built yet
 

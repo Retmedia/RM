@@ -18,6 +18,9 @@ const meta = {
   ],
   scopes: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'read_insights', 'business_management'],
   metricsScopes: ['read_insights'],
+  emptyResultHelp:
+    'That Meta login has no Page with a publishing role on it. The creator needs to be Admin or Editor of a Page — a personal profile cannot be posted to.',
+  creatorCanSelfConnect: true,
   limits: {
     captionChars: 63206,
     postsPer24h: 50,
