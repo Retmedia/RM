@@ -2,7 +2,7 @@ const path = require('node:path');
 const fs = require('node:fs/promises');
 const crypto = require('node:crypto');
 const { newId, writeJSONAtomic, readJSONIfExists, encryptSecret, decryptSecret } = require('./utils');
-const { DEFAULT_SLOTS, normalizeSlots } = require('./cadence');
+const { DEFAULT_SLOTS, DEFAULT_TZ, normalizeSlots, isValidTimezone } = require('./cadence');
 
 const DATA_ROOT = process.env.STUDIO_DATA
   ? path.resolve(process.env.STUDIO_DATA)
@@ -153,7 +153,7 @@ async function listCreators() {
   }));
 }
 
-async function createCreator({ name, handle, color, notes, slots, requiresApproval }) {
+async function createCreator({ name, handle, color, notes, slots, timezone, requiresApproval }) {
   const d = await load();
   const creator = {
     id: newId('cre'),
@@ -162,6 +162,8 @@ async function createCreator({ name, handle, color, notes, slots, requiresApprov
     color: color || pickColor(d.creators.length),
     notes: notes || '',
     slots: normalizeSlots(slots).length ? normalizeSlots(slots) : structuredClone(DEFAULT_SLOTS),
+    // Slot times mean this creator's local clock, not the server's.
+    timezone: isValidTimezone(timezone) ? timezone : DEFAULT_TZ,
     requiresApproval: !!requiresApproval,
     createdAt: new Date().toISOString(),
   };
@@ -178,6 +180,7 @@ async function updateCreator(id, patch) {
     if (patch[field] !== undefined) creator[field] = patch[field];
   }
   if (patch.slots !== undefined) creator.slots = normalizeSlots(patch.slots);
+  if (patch.timezone !== undefined && isValidTimezone(patch.timezone)) creator.timezone = patch.timezone;
   if (patch.requiresApproval !== undefined) creator.requiresApproval = !!patch.requiresApproval;
   await persist();
   return creator;
@@ -433,8 +436,15 @@ async function recordReview(postId, { decision, note, reviewedBy }) {
   post.approval.reviewedAt = new Date().toISOString();
   post.approval.reviewedBy = reviewedBy || null;
   // Changes requested pulls the post out of the queue; approving puts it back.
-  if (decision === 'changes_requested' && post.status === 'scheduled') post.status = 'draft';
-  if (decision === 'approved' && post.status === 'draft' && post.scheduledAt) post.status = 'scheduled';
+  // 'awaiting_approval' is where a post lands if someone hit Publish before the
+  // client answered — it has to be rescued here too, or approving leaves it
+  // stranded in a state nothing picks up.
+  if (decision === 'changes_requested' && ['scheduled', 'awaiting_approval'].includes(post.status)) {
+    post.status = 'draft';
+  }
+  if (decision === 'approved' && ['draft', 'awaiting_approval'].includes(post.status) && post.scheduledAt) {
+    post.status = 'scheduled';
+  }
   post.updatedAt = new Date().toISOString();
   await persist();
   return post;

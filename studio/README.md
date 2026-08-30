@@ -20,7 +20,8 @@ The first visit asks you to create the owner account. That route closes for good
 once someone exists, so it cannot be used to mint a second admin later.
 
 ```bash
-npm test                      # 42 tests, no network, no fixtures to maintain
+npm test                      # 47 tests, no network, no fixtures to maintain
+npm run preflight             # says whether this can go live, and what is missing
 node scripts/seed.js          # optional: demo creators with test accounts
 ```
 
@@ -28,6 +29,15 @@ It starts in **dry run**: the whole flow — schedule, queue, publish, retry, ap
 status — runs end to end without touching a real account. Set `STUDIO_DRY_RUN=0` once
 the developer apps below are approved; it refuses to start in that mode without
 `STUDIO_SECRET`, because that is the key the stored refresh tokens are encrypted with.
+
+## Timezones
+
+A slot written as `09:00` means **the creator's** nine o'clock, not the server's.
+Each creator carries their own zone; new ones inherit `STUDIO_TIMEZONE`. This is not
+cosmetic — a box hosted in UTC would otherwise fire a Laguna Beach morning post at
+2am, and the drift reverses twice a year at the daylight-saving change. Slot times
+are computed by walking the local calendar, so `09:00` stays `09:00` through the
+transition and a Sunday slot never lands on a Saturday.
 
 ## Signing in
 
@@ -181,6 +191,26 @@ transfer — nothing is ever held in memory whole. So there is no file-size ceil
 Studio's own making: a long YouTube cut is not capped the way a hosted scheduler caps
 it. Whatever the platform itself accepts, this accepts, up to
 `STUDIO_MAX_UPLOAD_MB` (2GB by default).
+
+## Things that were wrong, and now are not
+
+Written down because each one is a trap worth knowing about if this is ever
+extended.
+
+- **A post could publish twice.** The scheduler tick and someone clicking Publish
+  could both pick up the same due post, both read a target as still pending, and
+  both send it — two live posts on the client's account, one recorded here. There is
+  now one publish run per post at a time, and a target is claimed before any awaiting
+  happens.
+- **An approved post could be stranded.** Hitting Publish before the client answered
+  moved the post to `awaiting_approval`, a state nothing then picked up — so
+  approving it did nothing and it never went out.
+- **Slot times used the server's clock.** See Timezones above.
+- **A send interrupted by a restart is genuinely ambiguous** — it may or may not have
+  reached the platform. Retrying risks a double post and dropping it loses the post,
+  so it is flagged as `needs_check` for a person rather than guessed at.
+- **Missing media failed misleadingly.** A post referencing a file that had gone was
+  reported as "needs at least one photo" rather than naming the real cause.
 
 ## Not built yet
 

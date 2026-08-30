@@ -484,6 +484,7 @@ app.post('/api/posts/bulk', wrap(async (req, res) => {
     count: mediaIds.length,
     taken: existing,
     from: startAt ? new Date(startAt) : new Date(),
+    timezone: creator.timezone,
   });
   if (when.length < mediaIds.length) {
     return res.status(400).json({ error: 'Not enough open slots in the next 18 months for that many posts.' });
@@ -514,7 +515,10 @@ app.get('/api/creators/:id/slots/preview', wrap(async (req, res) => {
     .map((p) => p.scheduledAt);
   res.json({
     rhythm: cadence.describe(creator.slots),
-    slots: cadence.nextOpenSlots({ slots: creator.slots, count, taken: existing }),
+    timezone: creator.timezone || cadence.DEFAULT_TZ,
+    slots: cadence.nextOpenSlots({
+      slots: creator.slots, count, taken: existing, timezone: creator.timezone,
+    }),
   });
 }));
 

@@ -23,7 +23,9 @@ async function tick() {
       // Leave unapproved posts sitting in the queue rather than burning a
       // publish attempt on them every tick.
       if (approvalBlock(p)) return false;
-      if (p.status === 'scheduled') return true;
+      // Both are "queued and now allowed": a plain scheduled post, and one that
+      // was held for approval and has since been approved.
+      if (p.status === 'scheduled' || p.status === 'awaiting_approval') return true;
       // Pick a post back up once its backoff window has passed.
       if (p.status === 'publishing' || p.status === 'partial') {
         return p.targets.some((t) => t.status === 'retrying' && (!t.nextAttemptAt || t.nextAttemptAt <= now));
@@ -45,8 +47,36 @@ async function tick() {
   }
 }
 
+// A target left mid-send by a crash is genuinely ambiguous: it may or may not
+// have reached the platform. Retrying could double-post and dropping it could
+// lose the post, so it is surfaced for a person to check rather than guessed at.
+async function recoverInterrupted() {
+  const posts = await store.listPosts();
+  let found = 0;
+  for (const post of posts) {
+    let touched = false;
+    for (const target of post.targets) {
+      if (target.status !== 'sending') continue;
+      target.status = 'unknown';
+      target.error = 'Interrupted mid-send by a restart. Check the account before retrying — it may already be live.';
+      touched = true;
+      found += 1;
+    }
+    if (touched) {
+      post.status = 'needs_check';
+      await store.savePost(post);
+    }
+  }
+  if (found) {
+    record({ recovered: found });
+    console.warn(`WARNING  ${found} post target(s) were interrupted mid-send and need checking.`);
+  }
+  return found;
+}
+
 function start() {
   if (timer) return;
+  recoverInterrupted().catch((err) => record({ error: err.message }));
   timer = setInterval(tick, TICK_MS);
   timer.unref?.();
   tick();
@@ -57,4 +87,4 @@ function stop() {
   timer = null;
 }
 
-module.exports = { start, stop, tick, log };
+module.exports = { start, stop, tick, log, recoverInterrupted };

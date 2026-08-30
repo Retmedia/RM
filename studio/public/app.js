@@ -641,9 +641,9 @@ function renderBulk() {
 // bulk endpoint will use — no chance of the preview disagreeing with reality.
 async function loadRhythm(creatorId, count) {
   try {
-    const { rhythm, slots } = await api(`/api/creators/${creatorId}/slots/preview?count=${Math.max(count, 5)}`);
+    const { rhythm, slots, timezone } = await api(`/api/creators/${creatorId}/slots/preview?count=${Math.max(count, 5)}`);
     const rhythmEl = $('#b-rhythm');
-    if (rhythmEl) rhythmEl.textContent = rhythm;
+    if (rhythmEl) rhythmEl.textContent = timezone ? `${rhythm} · ${timezone.split('/').pop().replace(/_/g, ' ')}` : rhythm;
     const plan = $('#b-plan');
     if (!plan || !count) return;
     const media = state.media.filter((m) => (state.bulk?.mediaIds || []).includes(m.id));
@@ -682,6 +682,7 @@ function renderCreators() {
         </div>
         <div class="row wrap" style="gap:8px;margin-top:14px">
           <span class="tag">${esc(describeSlots(c.slots))}</span>
+          <span class="tag">${esc((c.timezone || '').split('/').pop().replace(/_/g, ' ') || 'no timezone')}</span>
           ${c.requiresApproval ? '<span class="tag" style="color:var(--warn);border-color:var(--warn)">Client approves</span>' : ''}
         </div>
         <div style="margin-top:16px">
@@ -730,6 +731,14 @@ function renderCreators() {
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+// The zones an agency actually works across, with whatever this browser is in
+// first so the common case is one click.
+const TIMEZONES = [...new Set([
+  Intl.DateTimeFormat().resolvedOptions().timeZone,
+  'America/Los_Angeles', 'America/Denver', 'America/Chicago', 'America/New_York',
+  'Europe/London', 'Europe/Paris', 'Australia/Sydney', 'Asia/Tokyo', 'UTC',
+].filter(Boolean))];
+
 function describeSlots(slots) {
   if (!slots?.length) return 'No rhythm set';
   const days = [...new Set(slots.map((s) => s.day))].sort().map((d) => DAY_NAMES[d]);
@@ -759,6 +768,10 @@ function openCreatorSettings(creator) {
   modal(`
     <h2>${esc(creator.name)}</h2>
     <p class="sub" style="margin-bottom:22px">The rhythm a bulk drop fills, and whether this client signs off before anything publishes.</p>
+
+    <label class="field"><span>Timezone — slot times mean this clock</span>
+      <select id="cs-tz">${TIMEZONES.map((tz) => `<option value="${tz}" ${tz === creator.timezone ? 'selected' : ''}>${esc(tz.replace(/_/g, ' '))}</option>`).join('')}</select>
+    </label>
 
     <div class="eyebrow">Posting rhythm — <span id="cs-summary"></span></div>
     <div id="cs-slots" style="margin-bottom:14px"></div>
@@ -794,7 +807,11 @@ function openCreatorSettings(creator) {
     $('#cs-save', root).onclick = async () => {
       await api(`/api/creators/${creator.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ slots, requiresApproval: $('#cs-approval', root).checked }),
+        body: JSON.stringify({
+          slots,
+          timezone: $('#cs-tz', root).value,
+          requiresApproval: $('#cs-approval', root).checked,
+        }),
       });
       closeModal();
       await refresh();

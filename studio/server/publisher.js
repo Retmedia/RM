@@ -22,6 +22,18 @@ async function freshTokens(account) {
 async function validatePost(post) {
   const media = await store.getMediaByIds(post.mediaIds);
   const problems = [];
+
+  // getMediaByIds quietly drops ids it cannot find. Left unsaid, that turns
+  // into a post published with fewer files than intended, or none.
+  if (media.length !== (post.mediaIds || []).length) {
+    const missing = (post.mediaIds || []).length - media.length;
+    problems.push({
+      accountId: null,
+      accountName: 'This post',
+      platform: 'media',
+      messages: [`${missing} file${missing === 1 ? ' is' : 's are'} missing from the library — re-upload before this goes out.`],
+    });
+  }
   for (const target of post.targets) {
     const account = await store.getAccount(target.accountId);
     if (!account) {
@@ -48,9 +60,25 @@ function approvalBlock(post) {
     : 'Waiting on client approval.';
 }
 
+// Only one publish run per post, ever, at a time.
+//
+// Without this, the scheduler tick and someone clicking Publish can both pick
+// up the same due post, both read a target as pending, and both send it — two
+// live posts on the client's account and one recorded here. A second caller
+// joins the run already in flight rather than starting its own.
+const inFlight = new Map();
+
 // Publish every target that is still pending. One failing platform never stops
 // the others — a TikTok rejection should not hold back the Instagram post.
-async function publishPost(postId) {
+function publishPost(postId) {
+  const running = inFlight.get(postId);
+  if (running) return running;
+  const run = publishPostOnce(postId).finally(() => inFlight.delete(postId));
+  inFlight.set(postId, run);
+  return run;
+}
+
+async function publishPostOnce(postId) {
   const post = await store.getPost(postId);
   if (!post) return null;
 
@@ -68,6 +96,11 @@ async function publishPost(postId) {
   for (const target of post.targets) {
     if (target.status === 'published') continue;
     if (target.nextAttemptAt && target.nextAttemptAt > new Date().toISOString()) continue;
+
+    // Claim the target before any awaiting happens, so nothing else can read
+    // it as still pending while this send is in the air.
+    target.status = 'sending';
+    await store.savePost(post);
 
     const account = await store.getAccount(target.accountId);
     if (!account) {
@@ -117,7 +150,7 @@ async function publishPost(postId) {
 function rollupStatus(targets) {
   if (!targets.length) return 'draft';
   if (targets.every((t) => t.status === 'published')) return 'published';
-  if (targets.some((t) => t.status === 'retrying')) return 'publishing';
+  if (targets.some((t) => ['retrying', 'sending'].includes(t.status))) return 'publishing';
   if (targets.some((t) => t.status === 'published')) return 'partial';
   return 'failed';
 }
