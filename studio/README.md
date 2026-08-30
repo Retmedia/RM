@@ -20,8 +20,10 @@ The first visit asks you to create the owner account. That route closes for good
 once someone exists, so it cannot be used to mint a second admin later.
 
 ```bash
-npm test                      # 47 tests, no network, no fixtures to maintain
+npm test                      # 63 tests, no network, no fixtures to maintain
 npm run preflight             # says whether this can go live, and what is missing
+npm run backup                # snapshot now
+npm run tidy                  # clear media no post points at any more
 node scripts/seed.js          # optional: demo creators with test accounts
 ```
 
@@ -29,6 +31,29 @@ It starts in **dry run**: the whole flow — schedule, queue, publish, retry, ap
 status — runs end to end without touching a real account. Set `STUDIO_DRY_RUN=0` once
 the developer apps below are approved; it refuses to start in that mode without
 `STUDIO_SECRET`, because that is the key the stored refresh tokens are encrypted with.
+
+## Keeping it alive
+
+Three things break a scheduler months after it is set up, so all three are
+handled rather than left to be discovered.
+
+**Connections rot.** Meta's long-lived tokens last about sixty days and *cannot*
+renew themselves — someone has to sign in again. TikTok, X and YouTube carry refresh
+tokens and can be kept warm. A sweep every half hour renews what it can and flags
+what it cannot, a week before it dies, with the fix named. The renewal window is
+deliberately narrow: the publisher already refreshes on demand ten minutes before it
+uses a token, and TikTok rotates its refresh token on every use, so needless churn is
+a way to *lose* an account rather than protect one.
+
+**Data goes.** Every write is atomic, but atomic writes do nothing about a bad edit or
+a lying disk. Rotating snapshots are kept (20 by default, at most one per fifteen
+minutes). If the live file is ever unreadable the newest good snapshot is restored
+automatically and the damaged file kept for inspection — and if nothing can be
+restored, it refuses to start rather than presenting an empty studio as a working one.
+
+**Disks fill.** Sixty clips a month with nowhere to go will eventually stop the app
+for a reason nobody would guess. `npm run tidy` clears media that no post points at,
+taking a snapshot first, and never touches a file a post still expects.
 
 ## Timezones
 
@@ -192,6 +217,16 @@ Studio's own making: a long YouTube cut is not capped the way a hosted scheduler
 it. Whatever the platform itself accepts, this accepts, up to
 `STUDIO_MAX_UPLOAD_MB` (2GB by default).
 
+## Editing a post
+
+Caption, time and destinations can all be changed after the fact. An account that
+already published is locked, so an edit cannot re-send it.
+
+One rule worth knowing: **changing the caption or the media on an approved post
+withdraws the approval** and mints a new review link. The client said yes to what
+they were shown; changing the words after that means their yes no longer covers what
+would go out. Moving only the time leaves the approval standing.
+
 ## Things that were wrong, and now are not
 
 Written down because each one is a trap worth knowing about if this is ever
@@ -214,10 +249,19 @@ extended.
 
 ## Not built yet
 
-Instagram Stories, TikTok photo posts, LinkedIn and Threads, drag-to-reschedule in the
-planner, per-creator caption templates, and follower-count tracking over time. The
-adapter shape is where the new networks land.
+Instagram Stories, TikTok photo posts, LinkedIn and Threads, drag-to-drop in the
+planner, per-creator caption templates, follower-count tracking over time, and email
+alerts when something fails (failures surface on Today, but only if someone looks).
+The adapter shape is where the new networks land.
 
-Storage is a JSON file with serialized atomic writes, which is right for one process
-and an agency-sized roster. If this ever runs more than one process, that is the piece
-to move to Postgres first — everything else is already stateless.
+## On storage
+
+Storage is a JSON file with serialized atomic writes, snapshots and automatic
+recovery. That is the right answer for one process and an agency-sized roster, and
+deliberately not Postgres: a managed database is real ops burden for a solo operator,
+and it would not have prevented any bug found so far.
+
+The trigger to move is a second process — two of these writing one file will corrupt
+it, and no amount of care in this codebase prevents that. Everything else is already
+stateless, so the swap is contained to `store.js`. Until then, the honest risk is a
+single machine, which snapshots plus an off-box copy of `.studio-data/backups` covers.

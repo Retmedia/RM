@@ -424,6 +424,21 @@ app.post('/api/media', wrap(async (req, res) => {
 
 app.get('/api/media', wrap(async (_req, res) => res.json(await store.listMedia())));
 
+app.get('/api/media/unused', wrap(async (_req, res) => {
+  const unused = await store.unusedMedia();
+  res.json({
+    count: unused.length,
+    bytes: unused.reduce((n, m) => n + (m.size || 0), 0),
+    items: unused,
+  });
+}));
+
+app.post('/api/media/tidy', auth.requireOwner, wrap(async (_req, res) => {
+  const unused = await store.unusedMedia();
+  const removed = await store.deleteMedia(unused.map((m) => m.id));
+  res.json({ removed: removed.length });
+}));
+
 /* ------------------------------------------------------------------- posts */
 
 app.get('/api/posts', wrap(async (req, res) => {
@@ -445,8 +460,22 @@ app.post('/api/posts', wrap(async (req, res) => {
 }));
 
 app.patch('/api/posts/:id', wrap(async (req, res) => {
+  const before = await store.getPost(req.params.id);
+  if (!before) return res.status(404).json({ error: 'not found' });
+
+  const changedContent = ['caption', 'mediaIds'].some((field) => (
+    req.body?.[field] !== undefined
+    && JSON.stringify(req.body[field]) !== JSON.stringify(before[field])
+  ));
+
   const post = await store.updatePost(req.params.id, req.body || {});
-  if (!post) return res.status(404).json({ error: 'not found' });
+
+  // A client approved the version they were shown. Changing the words or the
+  // footage after that means their yes no longer applies to what would go out.
+  if (changedContent && before.approval?.required && before.approval.status === 'approved') {
+    const reset = await store.resetApproval(post.id, true);
+    return res.json({ ...reset, approvalReset: true });
+  }
   res.json(post);
 }));
 

@@ -134,6 +134,8 @@ function renderToday() {
   const sends = todays.reduce((n, p) => n + p.targets.length, 0);
   const failing = state.posts.filter((p) => p.status === 'failed' || p.status === 'partial');
   const stale = state.accounts.filter((a) => a.status === 'needs_reauth');
+  const expiring = state.accounts.filter((a) => a.status === 'expiring');
+  const unknown = state.posts.filter((p) => p.status === 'needs_check');
   const waiting = state.posts.filter((p) => p.approval?.required && p.approval.status === 'pending');
   const changes = state.posts.filter((p) => p.approval?.status === 'changes_requested');
 
@@ -150,6 +152,20 @@ function renderToday() {
         <div class="meta" style="color:var(--muted);font-size:13px">${stale.map((a) => esc(a.displayName)).join(', ')}</div></div>
         <button class="btn ghost small" data-go="connect">Fix</button>
       </div></div>` : ''}
+
+    ${unknown.length ? `<div class="card" style="border-color:var(--danger);margin-bottom:18px">
+      <b style="color:var(--danger)">${unknown.length} post${unknown.length > 1 ? 's' : ''} interrupted mid-send</b>
+      <div style="color:var(--muted);font-size:13px;margin-top:4px">
+        These may or may not have gone live. Check the account before retrying.</div>
+    </div>` : ''}
+
+    ${expiring.length ? `<div class="card" style="border-color:var(--warn);margin-bottom:18px">
+      <div class="row between">
+        <div><b style="color:var(--warn)">${expiring.length} connection${expiring.length > 1 ? 's' : ''} expiring</b>
+        <div style="color:var(--muted);font-size:13px">${expiring.map((a) => `${esc(a.displayName)} — ${esc(a.lastError || '')}`).join('<br>')}</div></div>
+        <button class="btn ghost small" data-go="connect">Send an invite</button>
+      </div>
+    </div>` : ''}
 
     ${changes.length ? `<div class="card" style="border-color:var(--warn);margin-bottom:18px">
       <b style="color:var(--warn)">${changes.length} post${changes.length > 1 ? 's' : ''} came back with changes</b>
@@ -991,6 +1007,7 @@ async function openPost(id) {
     }).join('')}
 
     <div class="row wrap" style="margin-top:22px;gap:8px">
+      <button class="btn ghost small" id="p-edit">Edit</button>
       <button class="btn small" id="p-publish">${post.status === 'published' ? 'Publish again' : 'Publish now'}</button>
       <button class="btn ghost small" id="p-review">${post.approval?.required ? 'New review link' : 'Send for approval'}</button>
       <button class="btn ghost small" id="p-close">Close</button>
@@ -998,6 +1015,7 @@ async function openPost(id) {
       <button class="btn danger small" id="p-delete">Delete</button>
     </div>`, (root) => {
     $('#p-close', root).onclick = closeModal;
+    $('#p-edit', root).onclick = () => openPostEditor(post);
     $('#p-review', root).onclick = async () => {
       const { link } = await api(`/api/posts/${post.id}/review`, {
         method: 'POST',
@@ -1261,6 +1279,77 @@ function approvalPanel(post) {
       <button class="btn ghost small" id="p-copy" data-link="${esc(link)}">Copy link</button>
     </div>` : ''}
   </div>`;
+}
+
+function openPostEditor(post) {
+  const creator = creatorById(post.creatorId);
+  const accounts = state.accounts.filter((a) => a.creatorId === post.creatorId);
+  const chosen = new Set(post.targets.map((t) => t.accountId));
+  const published = new Set(post.targets.filter((t) => t.status === 'published').map((t) => t.accountId));
+
+  modal(`
+    <h2>Edit post</h2>
+    <p class="sub" style="margin-bottom:20px">${esc(creator?.name || '')}</p>
+
+    <label class="field"><span>Caption</span>
+      <textarea id="e-caption">${esc(post.caption)}</textarea></label>
+
+    <label class="field"><span>When</span>
+      <input type="datetime-local" id="e-when" value="${post.scheduledAt ? localValue(new Date(post.scheduledAt)) : ''}" /></label>
+
+    <div class="eyebrow">Post to</div>
+    <div class="row wrap" style="margin-bottom:20px">
+      ${accounts.map((a) => `<button class="pill${chosen.has(a.id) ? ' on' : ''}" data-pick="${a.id}"
+        ${published.has(a.id) ? 'disabled title="Already published here"' : ''}>
+        <span class="dot" style="background:${platformMeta(a.platform).color}"></span>${esc(a.displayName)}
+        ${published.has(a.id) ? ' ✓' : ''}</button>`).join('')}
+    </div>
+
+    ${post.approval?.status === 'approved'
+      ? '<div class="note warn">This post is approved. Changing the caption or media withdraws that approval and mints a new review link — moving the time alone does not.</div>'
+      : ''}
+
+    <div class="row" style="margin-top:20px;gap:8px">
+      <button class="btn" id="e-save">Save</button>
+      <button class="btn ghost" id="e-cancel">Cancel</button>
+    </div>`, (root) => {
+    root.querySelectorAll('[data-pick]').forEach((el) => {
+      el.onclick = () => {
+        const id = el.dataset.pick;
+        chosen.has(id) ? chosen.delete(id) : chosen.add(id);
+        el.classList.toggle('on', chosen.has(id));
+      };
+    });
+
+    $('#e-cancel', root).onclick = closeModal;
+    $('#e-save', root).onclick = async () => {
+      if (!chosen.size) return toast('Pick at least one account.', true);
+      const when = $('#e-when', root).value;
+      try {
+        const saved = await api(`/api/posts/${post.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            caption: $('#e-caption', root).value,
+            scheduledAt: when ? new Date(when).toISOString() : null,
+            targets: [...chosen].map((id) => {
+              const existing = post.targets.find((t) => t.accountId === id);
+              return {
+                accountId: id,
+                captionOverride: existing?.captionOverride || null,
+                options: existing?.options || {},
+              };
+            }),
+          }),
+        });
+        closeModal();
+        await refresh();
+        render();
+        toast(saved.approvalReset
+          ? 'Saved. The approval was withdrawn — send the new review link.'
+          : 'Saved.');
+      } catch (err) { toast(err.message, true); }
+    };
+  });
 }
 
 function copyText(text) {

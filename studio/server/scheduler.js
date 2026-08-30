@@ -1,7 +1,12 @@
 const store = require('./store');
+const tokens = require('./tokens');
 const { publishPost, approvalBlock } = require('./publisher');
 
 const TICK_MS = Number(process.env.STUDIO_TICK_MS) || 30_000;
+// Connections change slowly; checking them every half hour is plenty and keeps
+// the publish loop free of network calls it does not need.
+const TOKEN_SWEEP_MS = Number(process.env.STUDIO_TOKEN_SWEEP_MS) || 30 * 60 * 1000;
+let lastSweep = 0;
 
 let timer = null;
 let running = false;
@@ -39,6 +44,12 @@ async function tick() {
         status: result.status,
         targets: result.targets.map((t) => ({ accountId: t.accountId, status: t.status, error: t.error })),
       });
+    }
+
+    if (Date.now() - lastSweep > TOKEN_SWEEP_MS) {
+      lastSweep = Date.now();
+      const health = await tokens.sweep();
+      if (health.renewed || health.expiring || health.failed) record({ connections: health });
     }
   } catch (err) {
     record({ error: err.message });

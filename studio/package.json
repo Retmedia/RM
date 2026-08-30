@@ -9,6 +9,8 @@
     "dev": "node --watch server/server.js",
     "seed": "node scripts/seed.js",
     "preflight": "node scripts/preflight.js",
+    "tidy": "node scripts/tidy.js",
+    "backup": "node -e \"require('./server/store').snapshot().then(f => console.log('Saved', f))\"",
     "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {

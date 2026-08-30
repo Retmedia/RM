@@ -10,6 +10,15 @@ const DATA_ROOT = process.env.STUDIO_DATA
 
 const DB_FILE = path.join(DATA_ROOT, 'studio.json');
 const MEDIA_DIR = path.join(DATA_ROOT, 'media');
+const BACKUP_DIR = path.join(DATA_ROOT, 'backups');
+
+// Rotating snapshots. Atomic writes stop a crash from leaving half a file, but
+// they do nothing about a bad write, a bad edit, or a disk that lies. Keeping
+// the last few good states is the difference between an inconvenience and the
+// end of the business.
+const KEEP_BACKUPS = Number(process.env.STUDIO_KEEP_BACKUPS || 20);
+const BACKUP_EVERY_MS = Number(process.env.STUDIO_BACKUP_EVERY_MS || 15 * 60 * 1000);
+let lastBackupAt = 0;
 
 const EMPTY = {
   users: [], sessions: [], creators: [], accounts: [],
@@ -22,18 +31,107 @@ let writeChain = Promise.resolve();
 async function load() {
   if (db) return db;
   await fs.mkdir(MEDIA_DIR, { recursive: true });
-  db = (await readJSONIfExists(DB_FILE)) || structuredClone(EMPTY);
+
+  let loaded = null;
+  try {
+    loaded = await readJSONIfExists(DB_FILE);
+    if (loaded && !looksLikeStudioData(loaded)) throw new Error('file is not studio data');
+  } catch (err) {
+    // The live file is unreadable. Rather than starting empty — which looks
+    // like a working app that has lost every client — fall back to the newest
+    // good snapshot and say so as loudly as a log can.
+    console.error(`ERROR  ${DB_FILE} could not be read (${err.message}). Trying backups.`);
+    loaded = await restoreFromNewestBackup();
+    if (!loaded) {
+      throw new Error(
+        `${DB_FILE} is unreadable and no usable backup was found in ${BACKUP_DIR}. `
+        + 'Refusing to start with an empty studio — restore a copy before continuing.',
+      );
+    }
+  }
+
+  db = loaded || structuredClone(EMPTY);
   for (const key of Object.keys(EMPTY)) {
     if (db[key] === undefined) db[key] = structuredClone(EMPTY[key]);
   }
   return db;
 }
 
+async function restoreFromNewestBackup() {
+  for (const backup of await listBackups()) {
+    try {
+      const candidate = JSON.parse(await fs.readFile(backup.path, 'utf8'));
+      if (!looksLikeStudioData(candidate)) continue;
+      // Keep the damaged file for inspection rather than overwriting evidence.
+      await fs.rename(DB_FILE, `${DB_FILE}.corrupt-${Date.now()}`).catch(() => {});
+      await writeJSONAtomic(DB_FILE, candidate);
+      console.error(`RECOVERED  restored from ${backup.name} (${backup.at}).`);
+      return candidate;
+    } catch { /* try the next one down */ }
+  }
+  return null;
+}
+
 // Writes are serialized so two concurrent requests cannot interleave a
 // read-modify-write and drop one of the changes.
 function persist() {
-  writeChain = writeChain.then(() => writeJSONAtomic(DB_FILE, db));
+  writeChain = writeChain
+    .then(() => writeJSONAtomic(DB_FILE, db))
+    .then(() => maybeBackup());
   return writeChain;
+}
+
+async function maybeBackup() {
+  if (Date.now() - lastBackupAt < BACKUP_EVERY_MS) return;
+  lastBackupAt = Date.now();
+  try {
+    await snapshot();
+  } catch (err) {
+    // A failed backup must never fail the write that triggered it.
+    console.warn(`WARNING  backup failed: ${err.message}`);
+  }
+}
+
+async function snapshot() {
+  await fs.mkdir(BACKUP_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const file = path.join(BACKUP_DIR, `studio-${stamp}.json`);
+  await writeJSONAtomic(file, db);
+  await pruneBackups();
+  return file;
+}
+
+async function pruneBackups() {
+  const entries = (await fs.readdir(BACKUP_DIR).catch(() => []))
+    .filter((f) => f.startsWith('studio-') && f.endsWith('.json'))
+    .sort();
+  for (const stale of entries.slice(0, Math.max(0, entries.length - KEEP_BACKUPS))) {
+    await fs.rm(path.join(BACKUP_DIR, stale), { force: true });
+  }
+  return entries.length;
+}
+
+async function listBackups() {
+  const entries = (await fs.readdir(BACKUP_DIR).catch(() => []))
+    .filter((f) => f.startsWith('studio-') && f.endsWith('.json'))
+    .sort()
+    .reverse();
+  const out = [];
+  for (const name of entries) {
+    const full = path.join(BACKUP_DIR, name);
+    const stat = await fs.stat(full);
+    out.push({ name, path: full, size: stat.size, at: stat.mtime.toISOString() });
+  }
+  return out;
+}
+
+// Shape check, not a schema: enough to tell a real studio file from a
+// truncated one or something that is not this app's data at all.
+function looksLikeStudioData(candidate) {
+  if (!candidate || typeof candidate !== 'object') return false;
+  return Object.keys(EMPTY)
+    .filter((k) => Array.isArray(EMPTY[k]))
+    .every((k) => candidate[k] === undefined || Array.isArray(candidate[k]));
 }
 
 /* ------------------------------------------------------------------- users */
@@ -559,6 +657,34 @@ async function addMedia({ filename, storedName, mimeType, size, kind }) {
   return item;
 }
 
+// Files nothing points at any more. Sixty clips a month with no way to clear
+// them out fills a disk and then stops the app for a reason nobody would guess.
+async function unusedMedia() {
+  const d = await load();
+  const referenced = new Set(d.posts.flatMap((p) => p.mediaIds || []));
+  return d.media.filter((m) => !referenced.has(m.id));
+}
+
+async function deleteMedia(ids) {
+  const d = await load();
+  const wanted = new Set(ids);
+  const referenced = new Set(d.posts.flatMap((p) => p.mediaIds || []));
+  const removed = [];
+  for (const item of d.media.filter((m) => wanted.has(m.id))) {
+    // Never delete a file a post still expects; that turns a tidy-up into a
+    // publish failure weeks later.
+    if (referenced.has(item.id)) continue;
+    await fs.rm(path.join(MEDIA_DIR, item.storedName), { force: true });
+    removed.push(item.id);
+  }
+  if (removed.length) {
+    const gone = new Set(removed);
+    d.media = d.media.filter((m) => !gone.has(m.id));
+    await persist();
+  }
+  return removed;
+}
+
 async function listMedia() {
   const d = await load();
   return [...d.media].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -572,7 +698,11 @@ async function getMediaByIds(ids) {
 module.exports = {
   DATA_ROOT,
   MEDIA_DIR,
+  BACKUP_DIR,
   load,
+  snapshot,
+  listBackups,
+  looksLikeStudioData,
   listUsers,
   countUsers,
   getUser,
@@ -614,5 +744,7 @@ module.exports = {
   revokeInvite,
   addMedia,
   listMedia,
+  unusedMedia,
+  deleteMedia,
   getMediaByIds,
 };

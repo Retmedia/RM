@@ -66,6 +66,20 @@ function check(condition, message, list) {
     warnings.push(`${needsCheck.length} post(s) were interrupted mid-send and need checking`);
   }
 
+  const expiring = (await store.listAccounts()).filter((a) => a.status === 'expiring');
+  if (expiring.length) {
+    warnings.push(`${expiring.length} connection(s) expiring soon — send those creators a fresh invite`);
+  }
+
+  const backups = await store.listBackups();
+  check(backups.length > 0, `${backups.length} backup snapshot(s) on disk`, warnings);
+
+  const unused = await store.unusedMedia();
+  if (unused.length) {
+    const mb = Math.round(unused.reduce((n, m) => n + (m.size || 0), 0) / 1048576);
+    warnings.push(`${unused.length} unused file(s) taking ${mb}MB — clear with npm run tidy`);
+  }
+
   const show = (label, items, mark) => {
     if (!items.length) return;
     console.log(`${label}`);
