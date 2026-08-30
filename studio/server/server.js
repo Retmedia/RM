@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const express = require('express');
 const store = require('./store');
+const auth = require('./auth');
 const platforms = require('./platforms');
 const connect = require('./connect');
 const scheduler = require('./scheduler');
@@ -13,9 +14,79 @@ const { publishPost, validatePost } = require('./publisher');
 const port = Number(process.env.PORT) || 4400;
 
 const app = express();
+
+// Behind a reverse proxy (which is how this gets a public HTTPS origin), trust
+// the forwarding headers so req.protocol and the client IP are the real ones.
+if (process.env.STUDIO_TRUST_PROXY !== '0') app.set('trust proxy', 1);
+
 app.use(express.json({ limit: '2mb' }));
+
+// Media has to stay reachable without a session: Meta fetches Instagram media
+// by URL, and clients open review links without an account. Stored names are
+// 64 bits of randomness, which is what keeps them private.
+app.use('/media', express.static(store.MEDIA_DIR, { maxAge: '1h' }));
+
+app.use(auth.attachUser());
+
+// Default-deny. Everything under /api needs a session unless it is on this
+// list, so a route added later is protected by omission rather than exposed
+// by it. The public ones are all either pre-auth or authorised by a token in
+// the URL that reaches exactly one record.
+const PUBLIC_API = [
+  { method: 'GET', pattern: /^\/api\/session$/ },
+  { method: 'POST', pattern: /^\/api\/session$/ },
+  { method: 'DELETE', pattern: /^\/api\/session$/ },
+  { method: 'POST', pattern: /^\/api\/setup$/ },
+  { method: 'GET', pattern: /^\/api\/health$/ },
+  { method: 'GET', pattern: /^\/api\/review\/[^/]+$/ },
+  { method: 'POST', pattern: /^\/api\/review\/[^/]+$/ },
+  { method: 'GET', pattern: /^\/api\/invite\/[^/]+$/ },
+  { method: 'POST', pattern: /^\/api\/invite\/[^/]+\/connect\/[^/]+$/ },
+];
+
+app.use('/api', (req, res, next) => {
+  const full = `/api${req.path === '/' ? '' : req.path}`;
+  const open = PUBLIC_API.some((r) => r.method === req.method && r.pattern.test(full));
+  if (open || req.user) return next();
+  res.status(401).json({ error: 'Sign in to continue.' });
+});
+
+// A crude but sufficient throttle on the endpoints a stranger can reach:
+// sign-in, and the token-bearing public pages. Counts per IP per window.
+const attempts = new Map();
+function throttle({ max, windowMs, keyBy }) {
+  return (req, res, next) => {
+    const now = Date.now();
+    const key = `${req.method}:${req.baseUrl}${req.path}:${req.ip}:${keyBy ? keyBy(req) : ''}`;
+    const hits = (attempts.get(key) || []).filter((t) => now - t < windowMs);
+    if (hits.length >= max) {
+      res.set('Retry-After', String(Math.ceil(windowMs / 1000)));
+      return res.status(429).json({ error: 'Too many attempts. Wait a minute and try again.' });
+    }
+    hits.push(now);
+    attempts.set(key, hits);
+    // Keep the map from growing without bound on a long-running process.
+    if (attempts.size > 5000) {
+      for (const [k, v] of attempts) if (!v.some((t) => now - t < windowMs)) attempts.delete(k);
+    }
+    next();
+  };
+}
+
+// Keyed on the email being tried, not just the IP: brute-forcing one account
+// is the actual threat, and an office where everyone shares an address should
+// not lock itself out because one person fumbled their password.
+const loginLimiter = throttle({
+  max: Number(process.env.STUDIO_LOGIN_ATTEMPTS || 20),
+  windowMs: 15 * 60 * 1000,
+  keyBy: (req) => String(req.body?.email || '').trim().toLowerCase(),
+});
+
+const tokenLimiter = throttle({ max: 120, windowMs: 15 * 60 * 1000 });
+
+// Pages are static; every one of them calls an API that enforces its own
+// access, so serving the HTML shell needs no guard.
 app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use('/media', express.static(store.MEDIA_DIR));
 
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -27,6 +98,100 @@ app.get('/api/health', (_req, res) => {
     data: store.DATA_ROOT,
   });
 });
+
+/* -------------------------------------------------------------------- auth */
+
+// Says whether anyone exists yet, so the login screen can offer to create the
+// first owner instead of asking for credentials that cannot exist.
+app.get('/api/session', wrap(async (req, res) => {
+  res.json({ user: req.user || null, needsSetup: (await store.countUsers()) === 0 });
+}));
+
+app.post('/api/session', loginLimiter, wrap(async (req, res) => {
+  const { email, password } = req.body || {};
+  const result = await auth.login({ email, password, userAgent: req.get('user-agent') });
+  if (!result) return res.status(401).json({ error: 'That email and password do not match.' });
+  auth.setSessionCookie(res, result.token, { secure: auth.isSecureRequest(req) });
+  res.json({ user: result.user });
+}));
+
+app.delete('/api/session', wrap(async (req, res) => {
+  await auth.logout(req.sessionToken);
+  auth.clearSessionCookie(res);
+  res.json({ ok: true });
+}));
+
+// First run only. Once an owner exists this closes permanently, so the setup
+// screen can never be used to mint a second admin.
+app.post('/api/setup', wrap(async (req, res) => {
+  if ((await store.countUsers()) > 0) {
+    return res.status(409).json({ error: 'This studio is already set up. Sign in instead.' });
+  }
+  const { email, name, password } = req.body || {};
+  if (!email || !String(email).includes('@')) return res.status(400).json({ error: 'Enter a real email address.' });
+  const weak = auth.passwordProblem(password);
+  if (weak) return res.status(400).json({ error: weak });
+
+  const user = await store.createUser({
+    email, name, role: 'owner', passwordHash: auth.hashPassword(password),
+  });
+  const result = await auth.login({ email, password, userAgent: req.get('user-agent') });
+  auth.setSessionCookie(res, result.token, { secure: auth.isSecureRequest(req) });
+  res.json({ user });
+}));
+
+/* ------------------------------------------------------------------- team */
+
+app.get('/api/users', wrap(async (_req, res) => res.json(await store.listUsers())));
+
+app.post('/api/users', auth.requireOwner, wrap(async (req, res) => {
+  const { email, name, role, password } = req.body || {};
+  if (!email || !String(email).includes('@')) return res.status(400).json({ error: 'Enter a real email address.' });
+  const weak = auth.passwordProblem(password);
+  if (weak) return res.status(400).json({ error: weak });
+  try {
+    res.json(await store.createUser({ email, name, role, passwordHash: auth.hashPassword(password) }));
+  } catch (err) {
+    res.status(409).json({ error: err.message });
+  }
+}));
+
+app.patch('/api/users/:id', wrap(async (req, res) => {
+  const { name, role, password, disabled } = req.body || {};
+  const self = req.user.id === req.params.id;
+  // Anyone can rename themselves or change their own password. Only an owner
+  // can change roles or switch someone off, and never their own — otherwise
+  // the last owner can lock the studio out of itself.
+  if ((role !== undefined || disabled !== undefined)) {
+    if (req.user.role !== 'owner') return res.status(403).json({ error: 'Only an owner can do that.' });
+    if (self) return res.status(400).json({ error: 'You cannot change your own role or access.' });
+  }
+  if (!self && name === undefined && role === undefined && disabled === undefined) {
+    return res.status(403).json({ error: 'You can only change your own details.' });
+  }
+  if (password !== undefined && !self) {
+    return res.status(403).json({ error: 'People set their own passwords.' });
+  }
+  const patch = { name, role, disabled };
+  if (password !== undefined) {
+    const weak = auth.passwordProblem(password);
+    if (weak) return res.status(400).json({ error: weak });
+    patch.passwordHash = auth.hashPassword(password);
+  }
+  const user = await store.updateUser(req.params.id, patch);
+  if (!user) return res.status(404).json({ error: 'not found' });
+  res.json(user);
+}));
+
+app.delete('/api/users/:id', auth.requireOwner, wrap(async (req, res) => {
+  if (req.user.id === req.params.id) return res.status(400).json({ error: 'You cannot remove yourself.' });
+  const owners = (await store.listUsers()).filter((u) => u.role === 'owner' && !u.disabledAt);
+  const target = await store.getUser(req.params.id);
+  if (target?.role === 'owner' && owners.length <= 1) {
+    return res.status(400).json({ error: 'That is the last owner — promote someone else first.' });
+  }
+  res.json({ ok: await store.deleteUser(req.params.id) });
+}));
 
 app.get('/api/platforms', (_req, res) => res.json(platforms.listMeta()));
 
@@ -52,7 +217,7 @@ app.patch('/api/creators/:id', wrap(async (req, res) => {
   res.json(creator);
 }));
 
-app.delete('/api/creators/:id', wrap(async (req, res) => {
+app.delete('/api/creators/:id', auth.requireOwner, wrap(async (req, res) => {
   res.json({ ok: await store.deleteCreator(req.params.id) });
 }));
 
@@ -144,7 +309,7 @@ app.get('/invite/:token', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'invite.html'));
 });
 
-app.get('/api/invite/:token', wrap(async (req, res) => {
+app.get('/api/invite/:token', tokenLimiter, wrap(async (req, res) => {
   const invite = await store.getInviteByToken(req.params.token);
   const problem = store.inviteProblem(invite);
   if (problem) return res.status(404).json({ error: problem });
@@ -168,7 +333,7 @@ app.get('/api/invite/:token', wrap(async (req, res) => {
   });
 }));
 
-app.post('/api/invite/:token/connect/:platform', wrap(async (req, res) => {
+app.post('/api/invite/:token/connect/:platform', tokenLimiter, wrap(async (req, res) => {
   const invite = await store.getInviteByToken(req.params.token);
   const problem = store.inviteProblem(invite);
   if (problem) return res.status(404).json({ error: problem });
@@ -194,20 +359,65 @@ const EXT = { 'video/mp4': '.mp4', 'video/quicktime': '.mov', 'image/jpeg': '.jp
 
 // Raw-body upload: the browser sends the File itself with the name in a header,
 // which avoids a multipart dependency for what is always a single file.
-app.post('/api/media', express.raw({ type: '*/*', limit: '600mb' }), wrap(async (req, res) => {
+//
+// Streamed to disk rather than buffered. A month of Blair's clips is sixty
+// files at 70-200MB each; holding any one of them in memory is how this falls
+// over on the machine it actually runs on.
+const MAX_UPLOAD_BYTES = Number(process.env.STUDIO_MAX_UPLOAD_MB || 2048) * 1024 * 1024;
+
+app.post('/api/media', wrap(async (req, res) => {
   const filename = req.get('x-filename');
-  const mimeType = req.get('content-type') || 'application/octet-stream';
+  const mimeType = (req.get('content-type') || '').split(';')[0].trim();
   if (!filename) return res.status(400).json({ error: 'x-filename header is required' });
-  if (!req.body || !req.body.length) return res.status(400).json({ error: 'empty upload' });
-  if (!EXT[mimeType]) return res.status(415).json({ error: `Unsupported media type: ${mimeType}` });
+  if (!EXT[mimeType]) return res.status(415).json({ error: `Unsupported media type: ${mimeType || 'unknown'}` });
+
+  const declared = Number(req.get('content-length') || 0);
+  if (declared && declared > MAX_UPLOAD_BYTES) {
+    return res.status(413).json({ error: `That file is larger than the ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)}MB limit.` });
+  }
 
   const storedName = `${crypto.randomBytes(8).toString('hex')}${EXT[mimeType]}`;
-  fs.writeFileSync(path.join(store.MEDIA_DIR, storedName), req.body);
+  const target = path.join(store.MEDIA_DIR, storedName);
+  const sink = fs.createWriteStream(target);
+  let written = 0;
+  let failed = null;
+
+  try {
+    await new Promise((resolve, reject) => {
+      req.on('data', (chunk) => {
+        written += chunk.length;
+        if (written > MAX_UPLOAD_BYTES) {
+          failed = `That file is larger than the ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)}MB limit.`;
+          req.destroy();
+        }
+      });
+      req.on('error', reject);
+      sink.on('error', reject);
+      sink.on('finish', resolve);
+      req.pipe(sink);
+    });
+  } catch (err) {
+    // A half-written file is worse than none — it would look like valid media
+    // and fail at publish time instead of here.
+    await fs.promises.rm(target, { force: true });
+    if (failed) return res.status(413).json({ error: failed });
+    throw err;
+  }
+
+  if (failed) {
+    await fs.promises.rm(target, { force: true });
+    return res.status(413).json({ error: failed });
+  }
+  if (!written) {
+    await fs.promises.rm(target, { force: true });
+    return res.status(400).json({ error: 'That upload was empty.' });
+  }
+
   res.json(await store.addMedia({
     filename,
     storedName,
     mimeType,
-    size: req.body.length,
+    size: written,
     kind: mimeType.startsWith('video/') ? 'video' : 'image',
   }));
 }));
@@ -344,7 +554,7 @@ app.get('/review/:token', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'review.html'));
 });
 
-app.get('/api/review/:token', wrap(async (req, res) => {
+app.get('/api/review/:token', tokenLimiter, wrap(async (req, res) => {
   const post = await store.getPostByToken(req.params.token);
   if (!post) return res.status(404).json({ error: 'This review link is no longer valid.' });
   const creators = await store.listCreators();
@@ -364,7 +574,7 @@ app.get('/api/review/:token', wrap(async (req, res) => {
   });
 }));
 
-app.post('/api/review/:token', wrap(async (req, res) => {
+app.post('/api/review/:token', tokenLimiter, wrap(async (req, res) => {
   const post = await store.getPostByToken(req.params.token);
   if (!post) return res.status(404).json({ error: 'This review link is no longer valid.' });
   const { decision, note, name } = req.body || {};
@@ -386,20 +596,96 @@ app.post('/api/insights/refresh', wrap(async (_req, res) => {
 
 app.get('/api/scheduler', (_req, res) => res.json({ log: scheduler.log }));
 
-app.use((err, _req, res, _next) => {
-  console.error(err);
-  res.status(500).json({ error: err.message });
-});
-
-store.load().then(() => {
-  scheduler.start();
-  app.listen(port, '127.0.0.1', () => {
-    console.log(`RET Studio on http://localhost:${port}`);
-    console.log(`Data: ${store.DATA_ROOT}`);
-    if (process.env.STUDIO_DRY_RUN !== '0') {
-      console.log('DRY RUN — posts are simulated, nothing is sent to any platform.');
-    }
+// An unexpected error is logged in full but never described to the caller:
+// messages here carry file paths, environment variable names and library
+// internals, none of which a browser needs and some of which help an attacker.
+app.use((err, req, res, _next) => {
+  const ref = crypto.randomBytes(4).toString('hex');
+  console.error(`[${ref}] ${req.method} ${req.originalUrl}`, err);
+  res.status(500).json({
+    error: 'Something went wrong on our side. Nothing was published.',
+    reference: ref,
   });
 });
 
-module.exports = app;
+// Localhost by default so a development run is not accidentally exposed.
+// A real deployment sets STUDIO_HOST=0.0.0.0 and puts HTTPS in front.
+const host = process.env.STUDIO_HOST || '127.0.0.1';
+
+// Anything that would be unsafe once real credentials are in play stops the
+// process rather than printing a line nobody reads.
+function refuseToStart() {
+  const live = process.env.STUDIO_DRY_RUN === '0';
+  if (live && !process.env.STUDIO_SECRET) {
+    return 'STUDIO_SECRET must be set before live publishing — without it, every platform '
+      + 'refresh token is written to disk in plain text. Generate one with: openssl rand -hex 32';
+  }
+  return null;
+}
+
+function startupWarnings() {
+  const warnings = [];
+  if (!process.env.STUDIO_SECRET) {
+    warnings.push('STUDIO_SECRET is not set — platform tokens are being stored unencrypted. Fine for a dry run, never for live.');
+  }
+  const url = process.env.STUDIO_PUBLIC_URL || '';
+  if (host !== '127.0.0.1' && !url.startsWith('https://')) {
+    warnings.push('Listening publicly without an https STUDIO_PUBLIC_URL — session cookies will not be marked Secure.');
+  }
+  if (process.env.STUDIO_DRY_RUN === '0' && !url) {
+    warnings.push('Live publishing is on but STUDIO_PUBLIC_URL is unset — OAuth callbacks and review links will not resolve.');
+  }
+  return warnings;
+}
+
+let server;
+
+async function start() {
+  const fatal = refuseToStart();
+  if (fatal) {
+    console.error(`Refusing to start: ${fatal}`);
+    process.exit(1);
+  }
+  await store.load();
+  await store.pruneSessions();
+  scheduler.start();
+
+  server = app.listen(port, host, () => {
+    console.log(`RET Studio on http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
+    console.log(`Data: ${store.DATA_ROOT}`);
+    console.log(`Platforms: ${platforms.enabled.join(', ')}`);
+    if (process.env.STUDIO_DRY_RUN !== '0') {
+      console.log('DRY RUN — posts are simulated, nothing is sent to any platform.');
+    }
+    for (const warning of startupWarnings()) console.warn(`WARNING  ${warning}`);
+  });
+
+  // Long uploads need a generous header/body window; the default 60s cuts a
+  // 200MB transfer off partway on a slow connection.
+  server.requestTimeout = 0;
+  server.headersTimeout = 5 * 60 * 1000;
+  return server;
+}
+
+// Finish in-flight requests before exiting, so a restart mid-publish does not
+// leave a post half-sent.
+function shutdown(signal) {
+  console.log(`\n${signal} — finishing in-flight requests…`);
+  scheduler.stop();
+  if (!server) process.exit(0);
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 15000).unref();
+}
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => shutdown(signal));
+}
+
+if (require.main === module) {
+  start().catch((err) => {
+    console.error('Failed to start:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, start, shutdown };

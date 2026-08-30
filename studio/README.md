@@ -13,13 +13,56 @@ and the planner shows one swimlane per creator so a week reads at a glance.
 cd studio
 npm install
 cp .env.example .env          # set STUDIO_SECRET at minimum
-node scripts/seed.js          # optional: two demo creators with test accounts
 npm start                     # http://localhost:4400
 ```
 
-It starts in **dry run**: the whole flow — schedule, queue, publish, retry, status —
-runs end to end without touching a real account. Set `STUDIO_DRY_RUN=0` once the
-developer apps below are approved.
+The first visit asks you to create the owner account. That route closes for good
+once someone exists, so it cannot be used to mint a second admin later.
+
+```bash
+npm test                      # 42 tests, no network, no fixtures to maintain
+node scripts/seed.js          # optional: demo creators with test accounts
+```
+
+It starts in **dry run**: the whole flow — schedule, queue, publish, retry, approve,
+status — runs end to end without touching a real account. Set `STUDIO_DRY_RUN=0` once
+the developer apps below are approved; it refuses to start in that mode without
+`STUDIO_SECRET`, because that is the key the stored refresh tokens are encrypted with.
+
+## Signing in
+
+Everyone gets their own account — nothing runs off a shared login, which is the
+point if anyone other than you is going to post.
+
+- **Owner** runs the agency: adds and removes people, deletes creators.
+- **Manager** does the daily work: plans, composes, publishes, sends invites. Cannot
+  change the team or promote themselves.
+
+Sessions are httpOnly `SameSite=Lax` cookies lasting 30 days. Switching someone off
+ends their live sessions immediately rather than waiting for a cookie to lapse.
+Sign-in throttling is keyed per account, not per IP, so one person fumbling their
+password never locks out an office sharing an address.
+
+## Deploying it
+
+It binds to `127.0.0.1` unless told otherwise, so a development run is never
+accidentally public. A real deployment needs three things:
+
+1. **A public HTTPS origin.** Every platform demands an HTTPS OAuth callback, Meta
+   fetches Instagram media by URL, and creators open invite links from their phones.
+   Put a reverse proxy or a tunnel in front — never expose the process directly.
+2. `STUDIO_HOST=0.0.0.0` and `STUDIO_PUBLIC_URL=https://your-domain`.
+3. Each platform's redirect URI registered as `https://your-domain/auth/<platform>/callback`.
+
+`STUDIO_TRUST_PROXY` is on by default so `req.protocol` and the client IP come from
+the forwarding headers; set it to `0` only if nothing sits in front. On SIGTERM the
+process finishes in-flight requests before exiting, so a restart never lands
+mid-publish.
+
+**One thing to know about media.** Uploaded files are served without a session, because
+Meta's servers fetch them and clients open review links without an account. Their
+filenames are 64 bits of randomness, which is what keeps them private — treat a media
+URL as a secret.
 
 ## The thing this solves that nothing else does
 
@@ -97,7 +140,8 @@ rather than showing invented figures.
 
 ```
 server/
-  server.js       HTTP API
+  server.js       HTTP API, default-deny on every /api route
+  auth.js         scrypt passwords, sessions, role guards
   store.js        creators, accounts, posts, media — JSON on disk, atomic writes
   connect.js      OAuth handshake, agency-side and creator-side, with PKCE
   cadence.js      posting slots, and the maths that fills them
@@ -107,8 +151,10 @@ server/
   platforms/      one adapter per platform, same shape for each
 public/
   index.html      the internal app — no build step, no framework
+  login.html      sign-in, and first-run owner setup
   invite.html     the creator connects their own accounts here
   review.html     the client approves a post here
+test/             42 tests over auth, publishing, approvals, invites, uploads
 ```
 
 Every adapter exports `meta`, `authUrl`, `exchangeCode`, `discover`, `validate`,
@@ -130,12 +176,18 @@ Threads means writing one file in `platforms/` and nothing else.
 
 ## One more thing worth knowing
 
-Uploads go straight to the platform with a resumable transfer, so there is no
-file-size ceiling of Studio's own making — a long YouTube cut is not capped the way
-a hosted scheduler caps it. Whatever the platform itself accepts, this accepts.
+Uploads stream to disk and then go straight to the platform with a resumable
+transfer — nothing is ever held in memory whole. So there is no file-size ceiling of
+Studio's own making: a long YouTube cut is not capped the way a hosted scheduler caps
+it. Whatever the platform itself accepts, this accepts, up to
+`STUDIO_MAX_UPLOAD_MB` (2GB by default).
 
 ## Not built yet
 
-Instagram Stories, TikTok photo posts, LinkedIn/Threads/X, drag-to-reschedule in the
+Instagram Stories, TikTok photo posts, LinkedIn and Threads, drag-to-reschedule in the
 planner, per-creator caption templates, and follower-count tracking over time. The
 adapter shape is where the new networks land.
+
+Storage is a JSON file with serialized atomic writes, which is right for one process
+and an agency-sized roster. If this ever runs more than one process, that is the piece
+to move to Postgres first — everything else is already stateless.

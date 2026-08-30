@@ -2,12 +2,13 @@
   "name": "ret-studio",
   "version": "0.1.0",
   "private": true,
-  "description": "Multi-creator social publishing studio: one planner across every creator's Instagram, TikTok, Facebook and YouTube.",
+  "description": "Multi-creator social publishing studio: one planner across every creator's TikTok, Instagram, X and YouTube.",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
     "dev": "node --watch server/server.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {
     "express": "^4.19.2"

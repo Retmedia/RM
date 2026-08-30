@@ -11,7 +11,10 @@ const DATA_ROOT = process.env.STUDIO_DATA
 const DB_FILE = path.join(DATA_ROOT, 'studio.json');
 const MEDIA_DIR = path.join(DATA_ROOT, 'media');
 
-const EMPTY = { creators: [], accounts: [], posts: [], media: [], invites: [], version: 1 };
+const EMPTY = {
+  users: [], sessions: [], creators: [], accounts: [],
+  posts: [], media: [], invites: [], version: 2,
+};
 
 let db = null;
 let writeChain = Promise.resolve();
@@ -31,6 +34,113 @@ async function load() {
 function persist() {
   writeChain = writeChain.then(() => writeJSONAtomic(DB_FILE, db));
   return writeChain;
+}
+
+/* ------------------------------------------------------------------- users */
+
+async function listUsers() {
+  const d = await load();
+  return d.users.map(({ passwordHash, ...rest }) => rest);
+}
+
+async function countUsers() {
+  const d = await load();
+  return d.users.length;
+}
+
+async function getUser(id) {
+  const d = await load();
+  return d.users.find((u) => u.id === id) || null;
+}
+
+async function findUserByEmail(email) {
+  const d = await load();
+  const needle = String(email || '').trim().toLowerCase();
+  return d.users.find((u) => u.email === needle) || null;
+}
+
+async function createUser({ email, name, role, passwordHash }) {
+  const d = await load();
+  const normalised = String(email).trim().toLowerCase();
+  if (d.users.some((u) => u.email === normalised)) {
+    throw new Error('Someone already uses that email address.');
+  }
+  const user = {
+    id: newId('usr'),
+    email: normalised,
+    name: String(name || '').trim() || normalised,
+    role: role === 'owner' ? 'owner' : 'manager',
+    passwordHash,
+    disabledAt: null,
+    createdAt: new Date().toISOString(),
+  };
+  d.users.push(user);
+  await persist();
+  const { passwordHash: _, ...rest } = user;
+  return rest;
+}
+
+async function updateUser(id, patch) {
+  const d = await load();
+  const user = d.users.find((u) => u.id === id);
+  if (!user) return null;
+  if (patch.name !== undefined) user.name = String(patch.name).trim();
+  if (patch.role !== undefined) user.role = patch.role === 'owner' ? 'owner' : 'manager';
+  if (patch.passwordHash !== undefined) user.passwordHash = patch.passwordHash;
+  if (patch.disabled !== undefined) {
+    user.disabledAt = patch.disabled ? new Date().toISOString() : null;
+    // Disabling someone has to end their live sessions too, or they keep
+    // working until the cookie happens to expire.
+    if (patch.disabled) d.sessions = d.sessions.filter((s) => s.userId !== id);
+  }
+  await persist();
+  const { passwordHash: _, ...rest } = user;
+  return rest;
+}
+
+async function deleteUser(id) {
+  const d = await load();
+  const before = d.users.length;
+  d.users = d.users.filter((u) => u.id !== id);
+  d.sessions = d.sessions.filter((s) => s.userId !== id);
+  await persist();
+  return d.users.length < before;
+}
+
+/* ---------------------------------------------------------------- sessions */
+
+async function createSession({ token, userId, userAgent, expiresAt }) {
+  const d = await load();
+  d.sessions.push({ token, userId, userAgent, expiresAt, createdAt: new Date().toISOString() });
+  await persist();
+}
+
+async function getSession(token) {
+  const d = await load();
+  const session = d.sessions.find((s) => s.token === token);
+  if (!session) return null;
+  if (session.expiresAt && session.expiresAt < new Date().toISOString()) {
+    d.sessions = d.sessions.filter((s) => s.token !== token);
+    await persist();
+    return null;
+  }
+  return session;
+}
+
+async function deleteSession(token) {
+  const d = await load();
+  const before = d.sessions.length;
+  d.sessions = d.sessions.filter((s) => s.token !== token);
+  if (d.sessions.length < before) await persist();
+}
+
+async function pruneSessions() {
+  const d = await load();
+  const now = new Date().toISOString();
+  const before = d.sessions.length;
+  d.sessions = d.sessions.filter((s) => !s.expiresAt || s.expiresAt >= now);
+  if (d.sessions.length < before) await persist();
+  return before - d.sessions.length;
 }
 
 /* ---------------------------------------------------------------- creators */
@@ -453,6 +563,17 @@ module.exports = {
   DATA_ROOT,
   MEDIA_DIR,
   load,
+  listUsers,
+  countUsers,
+  getUser,
+  findUserByEmail,
+  createUser,
+  updateUser,
+  deleteUser,
+  createSession,
+  getSession,
+  deleteSession,
+  pruneSessions,
   listCreators,
   createCreator,
   updateCreator,

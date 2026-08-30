@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>RET Studio</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { display: grid; place-items: center; min-height: 100vh; }
+    .box { width: min(400px, calc(100vw - 40px)); padding: 30px 0; }
+    .brand { justify-content: center; margin-bottom: 30px; }
+    .err { color: var(--danger); font-size: 13px; margin-top: 14px; min-height: 18px; }
+    .swap { text-align: center; margin-top: 20px; font-size: 13px; color: var(--faint); }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="brand"><span class="dot"></span> RET Studio</div>
+    <div class="card" id="panel">Loading…</div>
+  </div>
+
+  <script>
+    const panel = document.getElementById('panel');
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    async function boot() {
+      const res = await fetch('/api/session');
+      const { user, needsSetup } = await res.json();
+      if (user) return location.replace('/');
+      needsSetup ? drawSetup() : drawLogin();
+    }
+
+    function drawLogin() {
+      panel.innerHTML = `
+        <h2 style="margin-bottom:18px">Sign in</h2>
+        <label class="field"><span>Email</span><input type="email" id="email" autocomplete="username" /></label>
+        <label class="field"><span>Password</span><input type="password" id="password" autocomplete="current-password" /></label>
+        <button class="btn" id="go" style="width:100%">Sign in</button>
+        <div class="err" id="err"></div>`;
+      wire('/api/session', ['email', 'password'], 'Sign in');
+    }
+
+    function drawSetup() {
+      panel.innerHTML = `
+        <h2 style="margin-bottom:6px">Set up your studio</h2>
+        <p style="color:var(--muted);font-size:14px;margin:0 0 20px">
+          Nobody has an account yet. This creates the owner — you can add the rest of the team afterwards.</p>
+        <label class="field"><span>Your name</span><input type="text" id="name" autocomplete="name" /></label>
+        <label class="field"><span>Email</span><input type="email" id="email" autocomplete="username" /></label>
+        <label class="field"><span>Password — at least 10 characters, with a number</span>
+          <input type="password" id="password" autocomplete="new-password" /></label>
+        <button class="btn" id="go" style="width:100%">Create owner account</button>
+        <div class="err" id="err"></div>`;
+      wire('/api/setup', ['name', 'email', 'password'], 'Create owner account');
+    }
+
+    function wire(url, fields, label) {
+      const go = document.getElementById('go');
+      const err = document.getElementById('err');
+
+      const submit = async () => {
+        err.textContent = '';
+        go.disabled = true;
+        go.textContent = 'Working…';
+        const body = {};
+        for (const f of fields) body[f] = document.getElementById(f).value;
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'That did not work.');
+          location.replace('/');
+        } catch (e) {
+          err.textContent = e.message;
+          go.disabled = false;
+          go.textContent = label;
+        }
+      };
+
+      go.onclick = submit;
+      for (const f of fields) {
+        document.getElementById(f).addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') submit();
+        });
+      }
+      document.getElementById(fields[0]).focus();
+    }
+
+    boot();
+  </script>
+</body>
+</html>

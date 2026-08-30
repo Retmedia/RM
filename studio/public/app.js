@@ -9,6 +9,8 @@ const state = {
   media: [],
   platforms: [],
   allPlatforms: [],
+  users: [],
+  me: null,
   health: {},
   weekStart: startOfWeek(new Date()),
   filterCreator: null,
@@ -27,6 +29,12 @@ async function api(pathname, options = {}) {
     headers: options.body && !options.raw ? { 'Content-Type': 'application/json' } : undefined,
     ...options,
   });
+  // A session that expired mid-use should land on the sign-in screen rather
+  // than showing a wall of failed requests.
+  if (res.status === 401) {
+    location.replace('/login.html');
+    throw new Error('Signed out');
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error(body.error || `Request failed (${res.status})`), { body });
   return body;
@@ -77,11 +85,12 @@ function avatar(creator, big) {
 /* ------------------------------------------------------------------- load */
 
 async function refresh() {
-  const [creators, accounts, posts, media, platforms, allPlatforms, health] = await Promise.all([
+  const [creators, accounts, posts, media, platforms, allPlatforms, users, health] = await Promise.all([
     api('/api/creators'), api('/api/accounts'), api('/api/posts'),
-    api('/api/media'), api('/api/platforms'), api('/api/platforms/all'), api('/api/health'),
+    api('/api/media'), api('/api/platforms'), api('/api/platforms/all'),
+    api('/api/users'), api('/api/health'),
   ]);
-  Object.assign(state, { creators, accounts, posts, media, platforms, allPlatforms, health });
+  Object.assign(state, { creators, accounts, posts, media, platforms, allPlatforms, users, health });
 
   const today = new Date();
   const todayCount = posts.filter((p) => p.scheduledAt && sameDay(new Date(p.scheduledAt), today)).length;
@@ -93,6 +102,7 @@ async function refresh() {
   $('#count-week').textContent = weekCount || '';
   $('#count-creators').textContent = creators.length || '';
   $('#count-accounts').textContent = accounts.length || '';
+  $('#count-team').textContent = users.filter((u) => !u.disabledAt).length || '';
   $('#mode-note').textContent = health.dryRun ? 'Dry run — nothing goes live' : 'Live publishing';
 }
 
@@ -109,6 +119,7 @@ function render() {
     creators: renderCreators,
     insights: renderInsights,
     connect: renderConnect,
+    team: renderTeam,
   }[state.view] || renderToday)();
 }
 
@@ -1106,6 +1117,112 @@ function showInviteLink(link) {
   });
 }
 
+/* -- team -- */
+
+function renderTeam() {
+  const isOwner = state.me?.role === 'owner';
+
+  view.innerHTML = `
+    <div class="row between">
+      <div>
+        <h1>Team</h1>
+        <p class="sub" style="margin:0">Everyone works from their own account. Nobody shares a login.</p>
+      </div>
+      ${isOwner ? '<button class="btn" id="add-user">Add someone</button>' : ''}
+    </div>
+
+    <div class="card" style="margin-top:26px">
+      ${state.users.map((u) => `<div class="list-row">
+        <span class="avatar" style="background:${u.role === 'owner' ? 'var(--accent)' : '#5b8cff'}">${esc(initials(u.name))}</span>
+        <div style="flex:1;min-width:0">
+          <div class="title">${esc(u.name)}${u.id === state.me?.id ? ' <span style="color:var(--faint);font-weight:400">— you</span>' : ''}</div>
+          <div class="meta">${esc(u.email)}</div>
+        </div>
+        <span class="tag${u.role === 'owner' ? ' published' : ''}">${u.role}</span>
+        ${u.disabledAt ? '<span class="tag failed">off</span>' : ''}
+        ${isOwner && u.id !== state.me?.id ? `
+          <button class="btn quiet small" data-toggle-user="${u.id}" data-on="${u.disabledAt ? '1' : '0'}">
+            ${u.disabledAt ? 'Restore' : 'Switch off'}</button>
+          <button class="btn quiet small" data-drop-user="${u.id}">Remove</button>` : ''}
+        ${u.id === state.me?.id ? '<button class="btn ghost small" id="change-pw">Password</button>' : ''}
+      </div>`).join('')}
+    </div>
+
+    ${isOwner ? '' : '<p class="note" style="margin-top:18px">Only an owner can add or remove people.</p>'}`;
+
+  if (isOwner) {
+    $('#add-user').onclick = () => modal(`
+      <h2>Add someone</h2>
+      <p class="sub" style="margin-bottom:20px">They sign in with their own email and password. A manager runs the day to day; an owner can also change the team.</p>
+      <label class="field"><span>Name</span><input type="text" id="u-name" placeholder="Olivia" /></label>
+      <label class="field"><span>Email</span><input type="email" id="u-email" /></label>
+      <label class="field"><span>Role</span><select id="u-role">
+        <option value="manager">Manager</option><option value="owner">Owner</option>
+      </select></label>
+      <label class="field"><span>Starting password — at least 10 characters, with a number</span>
+        <input type="text" id="u-pass" /></label>
+      <button class="btn" id="u-save">Add</button>`, (root) => {
+      $('#u-save', root).onclick = async () => {
+        try {
+          await api('/api/users', {
+            method: 'POST',
+            body: JSON.stringify({
+              name: $('#u-name', root).value.trim(),
+              email: $('#u-email', root).value.trim(),
+              role: $('#u-role', root).value,
+              password: $('#u-pass', root).value,
+            }),
+          });
+          closeModal();
+          await refresh();
+          render();
+          toast('Added. Send them the password — they can change it once they are in.');
+        } catch (err) { toast(err.message, true); }
+      };
+    });
+
+    view.querySelectorAll('[data-toggle-user]').forEach((el) => {
+      el.onclick = async () => {
+        await api(`/api/users/${el.dataset.toggleUser}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ disabled: el.dataset.on !== '1' }),
+        });
+        await refresh();
+        render();
+      };
+    });
+
+    view.querySelectorAll('[data-drop-user]').forEach((el) => {
+      el.onclick = async () => {
+        if (!confirm('Remove this person? They are signed out immediately.')) return;
+        try {
+          await api(`/api/users/${el.dataset.dropUser}`, { method: 'DELETE' });
+          await refresh();
+          render();
+        } catch (err) { toast(err.message, true); }
+      };
+    });
+  }
+
+  const pw = $('#change-pw');
+  if (pw) pw.onclick = () => modal(`
+    <h2>Change your password</h2>
+    <label class="field"><span>New password — at least 10 characters, with a number</span>
+      <input type="password" id="p-new" /></label>
+    <button class="btn" id="p-save">Save</button>`, (root) => {
+    $('#p-save', root).onclick = async () => {
+      try {
+        await api(`/api/users/${state.me.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ password: $('#p-new', root).value }),
+        });
+        closeModal();
+        toast('Password changed.');
+      } catch (err) { toast(err.message, true); }
+    };
+  });
+}
+
 function approvalPanel(post) {
   const a = post.approval;
   if (!a?.required) return '';
@@ -1254,12 +1371,21 @@ document.querySelectorAll('.nav-item').forEach((b) => {
   b.onclick = () => go(b.dataset.view);
 });
 
+document.getElementById('sign-out').onclick = async () => {
+  await fetch('/api/session', { method: 'DELETE' });
+  location.replace('/login.html');
+};
+
 window.addEventListener('hashchange', () => {
   const name = location.hash.replace('#', '').split('?')[0];
   if (name && name !== state.view) { state.view = name; render(); }
 });
 
 (async function boot() {
+  const session = await fetch('/api/session').then((r) => r.json()).catch(() => ({}));
+  if (!session.user) return location.replace('/login.html');
+  state.me = session.user;
+
   const name = location.hash.replace('#', '').split('?')[0];
   if (name) state.view = name;
   await refresh();
