@@ -1,0 +1,13 @@
+{
+  "name": "cadent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cadent - one desk for every creator brand. Clients connect their own accounts from their own phone.",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node src/seed.js",
+    "preflight": "node src/preflight.js"
+  }
+}

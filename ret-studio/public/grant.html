@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Connect your accounts · Cadent</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E6B54'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/cadent.css">
+</head>
+<body>
+
+<main class="wrap" id="page">
+
+  <div class="mark" id="brandMark">Cadent</div>
+
+  <div id="loading" class="stack" style="margin-top:40px">
+    <p class="muted">Loading your link…</p>
+  </div>
+
+  <div id="dead" hidden class="stack" style="margin-top:40px">
+    <h1 style="font-size:24px">This link isn't active</h1>
+    <p class="muted">Links expire once they're replaced. Ask for a fresh one and it'll work right away.</p>
+  </div>
+
+  <div id="live" hidden>
+
+    <header class="head">
+      <h1 id="title">Connect your accounts</h1>
+      <p class="lede" id="lede"></p>
+    </header>
+
+    <ul class="trust">
+      <li>You sign in on your own phone. We never see or store your password.</li>
+      <li>You stay the owner. Disconnect any account whenever you want.</li>
+      <li>This link only works for your accounts, nobody else's.</li>
+    </ul>
+
+    <p class="notice" id="setup" hidden></p>
+
+    <div class="progress">
+      <h2>Accounts</h2>
+      <div class="bar"><i id="bar"></i></div>
+      <span class="count" id="count"></span>
+    </div>
+
+    <section class="accounts" id="accounts" aria-live="polite"></section>
+
+    <section class="plan" id="plan" hidden>
+      <h2>Post for me automatically</h2>
+      <p class="lede">Optional. Pick how often we post and where clips should travel. You can change this any time.</p>
+
+      <div class="field">
+        <span class="label">How often</span>
+        <div class="seg" id="cadence" role="group" aria-label="How often">
+          <button type="button" data-cadence="daily">Every day</button>
+          <button type="button" data-cadence="weekdays">Weekdays</button>
+          <button type="button" data-cadence="three">3× a week</button>
+          <button type="button" data-cadence="two">2× a week</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="time">Time of day</label>
+        <input type="time" id="time" value="09:00">
+        <p class="small dim" style="margin-top:8px" id="tzNote"></p>
+      </div>
+
+      <div class="field">
+        <span class="label">Where clips travel</span>
+        <div class="routes" id="routes"></div>
+        <p class="small dim" style="margin-top:10px">
+          We reuse the original title as the caption on the new platform.
+        </p>
+      </div>
+
+      <div class="plan-save">
+        <button class="btn btn-go" id="savePlan">Save my schedule</button>
+        <p class="saved" id="planMsg" role="status"></p>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p><b>What we do:</b> post clips you've already made, on the schedule above.</p>
+      <p><b>What we never do:</b> log into your apps, read your DMs, change your password, or post anything you haven't agreed to.</p>
+      <p id="footBrand"></p>
+    </footer>
+
+  </div>
+
+</main>
+
+<script src="/grant.js"></script>
+</body>
+</html>

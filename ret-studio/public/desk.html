@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cadent</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E6B54'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/cadent.css">
+</head>
+<body>
+
+<!-- signed out -->
+<main class="wrap login" id="login" hidden>
+  <div class="mark">Cadent</div>
+  <h1 style="font-size:26px;margin:20px 0 8px">Operator sign in</h1>
+  <p class="muted small" style="margin-bottom:20px">One login for every brand.</p>
+  <form class="stack" id="loginForm">
+    <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
+    <button class="btn btn-go" type="submit">Sign in</button>
+    <p class="small" id="loginMsg" role="status" style="color:var(--bad);min-height:20px"></p>
+  </form>
+</main>
+
+<!-- signed in -->
+<main class="desk" id="desk" hidden>
+
+  <div class="deskbar">
+    <div class="mark">Cadent</div>
+    <button class="btn-text" id="signOut">Sign out</button>
+  </div>
+
+  <p class="notice" id="notice" hidden></p>
+
+  <nav class="brands" id="brands" aria-label="Brands"></nav>
+
+  <section class="panel" id="brandPanel"></section>
+
+  <section class="panel">
+    <h3>Grant link</h3>
+    <p class="muted small" style="margin-top:8px">
+      Text this to the creator. They open it on their own phone and tap Connect. Minting a new link retires the old one.
+    </p>
+    <div class="linkrow">
+      <input id="linkBox" readonly placeholder="No link yet">
+      <button class="btn btn-quiet btn-sm" id="mint">New link</button>
+      <button class="btn btn-go btn-sm" id="copy">Copy link</button>
+    </div>
+    <p class="small" id="linkMsg" role="status" style="min-height:20px;margin-top:8px"></p>
+  </section>
+
+</main>
+
+<script src="/desk.js"></script>
+</body>
+</html>
