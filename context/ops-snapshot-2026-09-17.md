@@ -103,7 +103,19 @@ Every paragraph separated by blank line in plain text; HTML `<br><br>` or `<p>`.
 
 - skidkidstv Spotlight: Metricool cannot post Snap; Snap Web only; ≤5min vertical; CEO approved catch-up wave earlier
 
-## What this fold put in the repo
+## What to update in repo
+
+Original dump list, with fold status:
+
+1. `context/offers.md` — Lost/Hold/Open/Live + QBO Contracts lock. **Done.**
+2. `context/org.md` — Madeline, Rashid park, Client Ingest, Olivia/Maxine off. **Done.**
+3. `context/hands-off.md` — Smit, DocuSign banned, Lost shelf. **Done.**
+4. `context/clients/*` — FW, Xander backlog note, Blair invoice notes without inventing Meta Aug gross. **Done** (those three only).
+5. `cursor-automations/` — add/ensure `trybe-daily-15.md` recipe; README status that Mine Create is required. **Done** (still RECIPE ONLY until Mine Create).
+6. `context/digests/` or NEW `context/ops-snapshot-2026-09-17.md` — this pack. **Done** (this file). Standing locks also in `context/commercial-locks.md`.
+7. Any HQ HTML in repo: Overview should be a normal vertical stack (Snapshot → Income → Pipeline → Sets/Goals/Markers), not jammed tetris. **No HQ HTML on this default branch.** Rule recorded in `context/org.md`. Other unmerged branches have deck/crm HTML; do not import them from this fold.
+
+## What the first fold put in the repo (PR #2)
 
 1. This pack: `context/ops-snapshot-2026-09-17.md`
 2. Standing commercial locks: `context/commercial-locks.md`

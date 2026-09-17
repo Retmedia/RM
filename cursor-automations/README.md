@@ -22,4 +22,5 @@ Other HQ lanes mentioned in the snapshot (Lucas YT→FB, Blair YT long, fill_loo
 ## Source
 
 [`../context/ops-snapshot-2026-09-17.md`](../context/ops-snapshot-2026-09-17.md)  
-[`../context/commercial-locks.md`](../context/commercial-locks.md)
+[`../context/commercial-locks.md`](../context/commercial-locks.md)  
+[`../context/hands-off.md`](../context/hands-off.md) — no new Grok routines, Trybe password stays out of the repo.
