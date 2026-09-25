@@ -2,7 +2,8 @@
 
 **Owner:** CEO (Garrett)  
 **As of:** 2026-09-17  
-**Source:** HQ sync pack [`ops-snapshot-2026-09-17.md`](ops-snapshot-2026-09-17.md)
+**Source:** HQ sync pack [`ops-snapshot-2026-09-17.md`](ops-snapshot-2026-09-17.md)  
+**Also see:** [`hands-off.md`](hands-off.md) · [`offers.md`](offers.md)
 
 These are standing orders. Do not "helpfully" override them, chase around them, or grow automation around them.
 
