@@ -4,6 +4,8 @@ Folded into Retmedia/RM as `context/ops-snapshot-2026-09-17.md`.
 
 Canonical commercial locks live in [`commercial-locks.md`](commercial-locks.md). Do not override them from this dump.
 
+Bayside Window Cleaning was opened 2026-09-25 and is not part of this September 17 picture. See [`bayside-window-cleaning.md`](bayside-window-cleaning.md).
+
 Source of truth dump from Grok COO / RM HQ. No secrets. No invented money beyond CFO-verified AR below. Do not store passwords or tokens in this repo.
 
 ## Hard locks
