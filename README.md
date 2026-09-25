@@ -13,6 +13,7 @@ Index: [`context/README.md`](context/README.md)
 - **Client notes:** [`context/clients/`](context/clients/) — Foreign Waters, Xander, Blair only.
 - **Ops snapshot 2026-09-17:** [`context/ops-snapshot-2026-09-17.md`](context/ops-snapshot-2026-09-17.md)
 - **Trybe Daily Invites (15/day):** [`cursor-automations/trybe-daily-15.md`](cursor-automations/trybe-daily-15.md) — recipe only until Created in Cursor Mine. See [`cursor-automations/README.md`](cursor-automations/README.md).
+- **Blair Facebook Stories (20/day):** [`cursor-automations/blair-fb-stories-20.md`](cursor-automations/blair-fb-stories-20.md). Recipe only until Created in Cursor Mine. Facebook Page video posts with 10,000 or more views, from 2026-01-01 PT, oldest first, Stories only.
 
 Do not put passwords or tokens in this repo. Do not chase Lost, Smit, or Paulo from these notes.
 

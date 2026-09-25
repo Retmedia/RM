@@ -19,6 +19,7 @@ Do not chase from this note. Garrett names every send.
 - Live queues: Metricool. Blair/Lucas Graph archive stays separate from Metricool live queues.
 - Footage intake: Client Ingest bot (iCloud Shared and similar)
 - Blair YT long lane in Mine is still RECIPE ONLY as of mid-Sep
+- Facebook Stories republish of existing Page videos: recipe only, 20 a day, from 2026-01-01 PT oldest first, videos with 10,000 or more views, Stories only. See [`../../cursor-automations/blair-fb-stories-20.md`](../../cursor-automations/blair-fb-stories-20.md). Not live until Created in Cursor Mine. Blocked until the Page token and Page ID are on the machine, not in git.
 
 ## Snap (skidkidstv Spotlight)
 
