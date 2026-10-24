@@ -1,0 +1,29 @@
+# Starter channel list for Ekko Archive outreach.
+# Each handle below was verified against an actual youtube.com/@<handle> URL
+# returned by web search -- not guessed. Add more handles below as you find
+# them; one per line. Lines starting with # are ignored.
+#
+# Edit freely -- this file is yours. The scraper skips channels already
+# present in youtube_leads.csv on rerun, so adding new lines is safe.
+
+# --- Finance / personal-finance creators ---
+@GrahamStephan
+@WhiteboardFinance
+@minoritymindset
+@MappedOutMoney
+@AndreiJikh
+@meetkevin
+@humphrey
+
+# --- Long-form podcasts / interview shows ---
+@joerogan
+@lexfridman
+@thediaryofaceo
+
+# --- Education / explainers / productivity ---
+@aliabdaal
+@kurzgesagt
+@Vsauce
+@TEDEd
+@TED
+@crashcourse
