@@ -1,0 +1,93 @@
+name: Blair YouTube to Facebook
+
+# 17:00 UTC daily. That is 9:00am Pacific Standard Time.
+# During Pacific Daylight Time the same cron is 10:00am.
+on:
+  schedule:
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Skip Facebook upload. Still list, download, encode, and check frames."
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - "automations/blair-yt-fb/**"
+      - ".github/workflows/blair-yt-fb.yml"
+      - "README.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blair-yt-fb
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Run unit tests
+        working-directory: automations/blair-yt-fb
+        run: python -m unittest test_blair_yt_fb.py -v
+
+  post:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ffmpeg and yt-dlp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade yt-dlp
+          ffmpeg -version | head -n 1
+          ffprobe -version | head -n 1
+          yt-dlp --version
+          python --version
+
+      - name: Post new long-form videos
+        run: python automations/blair-yt-fb/blair_yt_fb.py
+
+      - name: Commit posted state
+        if: always() && env.DRY_RUN != 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- automations/blair-yt-fb/posted.json
+          if git diff --cached --quiet; then
+            echo "posted.json unchanged"
+            exit 0
+          fi
+          git commit -m "Update Blair YouTube to Facebook posted state"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
