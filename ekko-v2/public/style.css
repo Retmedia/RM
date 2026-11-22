@@ -553,6 +553,40 @@ textarea {
   font-family: inherit;
 }
 
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--amber);
+  margin-bottom: 1rem;
+}
+.banner.banner-warn {
+  border-left-color: var(--amber);
+  background: #78350f20;
+}
+.banner .banner-body { flex: 1; font-size: 0.9rem; color: var(--fg); }
+.banner .banner-body strong { color: var(--amber); }
+.banner button { white-space: nowrap; }
+
+.customer-card { padding: 1rem 1.25rem 1.25rem; }
+.customer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.customer-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.customer-meta {
+  font-size: 0.82rem;
+}
+
 @media (max-width: 720px) {
   body { grid-template-columns: 1fr; grid-template-areas: "main" "bar"; }
   aside { display: none; }

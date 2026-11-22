@@ -237,6 +237,29 @@ async function run(state) {
 
     const existing = await storage.getVideo(channelKey, v.id);
     if (existing && existing.transcript_status === 'ok') {
+      // Backfill missing metadata cheaply so operators don't have to run the
+      // separate "Refresh metadata" job for channels pulled before
+      // --write-info-json was wired in. Only fires when a field is actually
+      // missing; subsequent re-pulls skip this branch entirely.
+      const missingMetadata = !existing.upload_date || !Number.isFinite(existing.view_count);
+      if (missingMetadata) {
+        try {
+          const info = await fetchVideoMetadata(v.id, tDir, state.controller);
+          if (info) {
+            await storage.saveVideo(channelKey, {
+              ...existing,
+              title: info.title || existing.title,
+              duration: info.duration ?? existing.duration ?? null,
+              upload_date: info.upload_date || existing.upload_date || null,
+              view_count: info.view_count ?? existing.view_count ?? null,
+              thumbnail: info.thumbnail || existing.thumbnail || null,
+              description: info.description ?? existing.description ?? null,
+            });
+          }
+        } catch {
+          // Metadata refresh is best-effort; a failure here shouldn't stop the pull.
+        }
+      }
       state.progress.skipped++;
       state.progress.done++;
       emit();

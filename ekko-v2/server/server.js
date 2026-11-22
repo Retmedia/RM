@@ -13,13 +13,28 @@ const { buildVaultZip } = require('./export');
 const { renderDeliveryEmail } = require('./email');
 const { formatWordCount, wordCount, parsePastedTranscript, segmentsToVtt } = require('./format');
 const { parseVTT, pullTranscript } = require('./transcripts');
+const { YT_DLP } = require('./youtube');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, vault: storage.VAULT_ROOT });
+app.get('/api/health', async (_req, res) => {
+  // Report the age of the bundled yt-dlp binary so the UI can warn when it's
+  // stale. YouTube changes their internals every few weeks; a >60-day-old
+  // binary starts producing false "no captions" for videos that still have them.
+  let ytdlp = { installed: false };
+  try {
+    const stat = await fs.stat(YT_DLP);
+    ytdlp = {
+      installed: true,
+      mtime: stat.mtime.toISOString(),
+      ageDays: Math.floor((Date.now() - stat.mtimeMs) / 86_400_000),
+    };
+  } catch {
+    // Binary not present — install-yt-dlp script hasn't been run.
+  }
+  res.json({ ok: true, vault: storage.VAULT_ROOT, ytdlp });
 });
 
 app.get('/api/channels', async (_req, res, next) => {

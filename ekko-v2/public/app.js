@@ -290,6 +290,8 @@ function renderStatusBar() {
 
 function renderNavCounts() {
   $('#nav-job-count').textContent = String(activeJobs().length);
+  const navCust = $('#nav-customer-count');
+  if (navCust) navCust.textContent = String(customerCount());
   // Keep the active-jobs tile on Home in sync without rebuilding the form.
   if (state.view === 'home') {
     const tiles = $$('.stats-card .stat-tile');
@@ -337,6 +339,12 @@ function renderHome() {
       h('p', { class: 'subtitle' }, 'Pull a YouTube channel\'s entire transcript catalog into a local vault you own forever.'),
     ),
   ));
+
+  // Health warnings — before anything else so they aren't missed.
+  const staleBanner = renderStaleYtDlpBanner();
+  if (staleBanner) main.appendChild(staleBanner);
+  const failureBanner = renderHighFailureBanner();
+  if (failureBanner) main.appendChild(failureBanner);
 
   // Vault stats card — derived from rolled-up totals on each channel record.
   const s = state.stats || { channels: 0, delivered: 0, total_videos: 0, total_words: 0 };
@@ -409,6 +417,127 @@ function statTile(label, value, sub) {
     h('div', { class: 'stat-label' }, label),
     sub ? h('div', { class: 'stat-sub' }, sub) : null,
   );
+}
+
+// Yellow banner on Home when the bundled yt-dlp binary is more than 60 days
+// old. YouTube changes their internals every few weeks; a stale binary starts
+// producing false "no captions" for videos that still have them. Clicking the
+// button drops you at Settings where Update yt-dlp lives.
+function renderStaleYtDlpBanner() {
+  const y = state.health?.ytdlp;
+  if (!y || !y.installed || typeof y.ageDays !== 'number') return null;
+  if (y.ageDays < 60) return null;
+  return h('div', { class: 'card banner banner-warn' },
+    h('div', { class: 'banner-body' },
+      h('strong', {}, `yt-dlp is ${y.ageDays} days old.`),
+      ' YouTube changes its internals every few weeks. If pulls are starting to fail on channels that used to work, update the binary.',
+    ),
+    h('button', { onclick: () => navigate('settings') }, 'Open Settings →'),
+  );
+}
+
+// Yellow banner when any active job has an unusually high failure rate,
+// suggesting a rate-limit storm or a broader YouTube change. Lets the
+// operator pause + wait rather than come back to a half-failed archive.
+function renderHighFailureBanner() {
+  const bad = activeJobs().filter((j) => {
+    const p = j.progress || {};
+    return (p.done || 0) >= 5 && (p.failed || 0) / (p.done || 1) > 0.30;
+  });
+  if (!bad.length) return null;
+  return h('div', { class: 'card banner banner-warn' },
+    h('div', { class: 'banner-body' },
+      h('strong', {}, `High failure rate on ${bad.length} active pull${bad.length === 1 ? '' : 's'}.`),
+      ' YouTube may be rate-limiting your IP. Consider cancelling and resuming in 10–15 minutes — the retry ladder will do less damage on the second run.',
+    ),
+    h('button', { onclick: () => navigate('jobs') }, 'View Jobs →'),
+  );
+}
+
+// ---- Customers view ----
+// Aggregates the vault by customer_name so the operator can see per-client
+// delivery totals at a glance — useful for pulling up "what have I delivered
+// to Jamie?" mid-sales-call.
+function renderCustomers() {
+  setView('customers');
+  state.view = 'customers';
+  const main = $('#main');
+  main.innerHTML = '';
+  main.appendChild(h('div', { class: 'view-header' },
+    h('div', {},
+      h('h1', {}, 'Customers'),
+      h('p', { class: 'subtitle' }, 'Every channel grouped by who you delivered it for.'),
+    ),
+  ));
+
+  // Group channels by customer_name; unassigned channels bucket under "—".
+  const groups = new Map();
+  for (const c of state.channels) {
+    const name = (c.customer_name || '').trim() || '—';
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(c);
+  }
+  // Real customers first (alphabetical), unassigned last.
+  const sorted = [...groups.entries()].sort((a, b) => {
+    if (a[0] === '—') return 1;
+    if (b[0] === '—') return -1;
+    return a[0].localeCompare(b[0]);
+  });
+
+  if (!sorted.length) {
+    main.appendChild(h('div', { class: 'card' }, emptyState({
+      glyph: '◇',
+      title: 'No channels yet',
+      body: 'Archive a channel from Home and set a customer name on it to see it here.',
+    })));
+    return;
+  }
+
+  for (const [name, chans] of sorted) {
+    const totalVideos = chans.reduce((s, c) => s + (Number(c.total_videos) || 0), 0);
+    const totalWords = chans.reduce((s, c) => s + (Number(c.total_words) || 0), 0);
+    const delivered = chans.filter((c) => c.delivered).length;
+    const card = h('div', { class: 'card customer-card' },
+      h('div', { class: 'customer-head' },
+        h('h2', {}, name === '—' ? h('span', { class: 'dim' }, 'Unassigned') : name),
+        h('div', { class: 'customer-meta dim' },
+          `${chans.length} channel${chans.length === 1 ? '' : 's'} · ${totalVideos.toLocaleString('en-US')} videos · ${formatWordCountClient(totalWords)} words${delivered ? ` · ${delivered} delivered` : ''}`,
+        ),
+      ),
+    );
+    const tbl = h('table', {}, h('thead', {}, h('tr', {},
+      h('th', {}, 'Channel'),
+      h('th', {}, 'Videos'),
+      h('th', {}, 'Words'),
+      h('th', {}, 'Last pulled'),
+      h('th', {}, 'Status'),
+    )));
+    const tb = h('tbody', {});
+    for (const c of chans) {
+      const lastPull = c.last_pull_finished_at ? fmtDateTime(c.last_pull_finished_at) : '';
+      tb.appendChild(h('tr', { onclick: () => navigate('channel', { key: c.key }) },
+        h('td', {}, c.title || c.key),
+        h('td', { class: 'dim' }, String(c.total_videos || 0)),
+        h('td', { class: 'dim' }, formatWordCountClient(c.total_words || 0)),
+        h('td', { class: 'dim' }, lastPull),
+        h('td', {}, c.delivered
+          ? h('span', { class: 'tag ok' }, '✓ delivered')
+          : h('span', { class: 'tag' }, 'in progress')),
+      ));
+    }
+    tbl.appendChild(tb);
+    card.appendChild(tbl);
+    main.appendChild(card);
+  }
+}
+
+function customerCount() {
+  const names = new Set();
+  for (const c of state.channels) {
+    const name = (c.customer_name || '').trim();
+    if (name) names.add(name);
+  }
+  return names.size;
 }
 
 // Mirror server-side formatWordCount so the home stats tile matches what the
@@ -1264,6 +1393,10 @@ async function updateYtDlp() {
     status.textContent = (res.output || '').split('\n').filter(Boolean).pop() || 'Updated.';
     btn.textContent = '⤓ Update again';
     btn.disabled = false;
+    // Re-read health so the stale-ytdlp banner on Home clears immediately.
+    try {
+      state.health = await api('/api/health');
+    } catch { /* non-fatal */ }
   } catch (err) {
     toastError(err);
     status.textContent = 'Update failed: ' + err.message;
@@ -1424,6 +1557,8 @@ async function handleRoute() {
     await renderChannelView(key);
   } else if (hash === 'jobs') {
     renderJobsView();
+  } else if (hash === 'customers') {
+    renderCustomers();
   } else if (hash === 'settings') {
     renderSettings();
   } else {
